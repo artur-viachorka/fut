@@ -1,7 +1,7 @@
 import { checkTransferMarket } from './services/fetch.service';
 import { getMarketSearchCriteria } from './services/marketSearchCriteria.service';
 
-$(document).ready(() => {
+$(() => {
   const searchOnMarket = async () => {
     await checkTransferMarket(getMarketSearchCriteria());
   };
@@ -9,7 +9,7 @@ $(document).ready(() => {
     type: 'button',
     id: 'searchOnMarke',
     value: 'Search on market',
-  }).click(searchOnMarket);
+  }).on('click', searchOnMarket);
 
   $('body').append(searchOnMarketButton);
 });
