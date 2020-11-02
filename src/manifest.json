@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+
+  "name": "Extension Name",
+  "description": "Some Desc.",
+  "version": "1.1",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "*://*.ea.com/*"
+  ],
+  "browser_action": {
+		"default_icon": "assets/logo.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.ea.com/*"],
+      "run_at": "document_end",
+      "js": ["content.bundle.js"]
+    }
+  ]
+}

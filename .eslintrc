@@ -1,0 +1,40 @@
+{
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
+    "parser": "babel-eslint",
+    "env": {
+        "es6": true,
+        "browser": true,
+        "node": true,
+        "jest": true,
+        "jquery": true
+    },
+    "globals": {
+        "browser": true
+    },
+    "ignorePatterns": [ "services/*.json" ],
+    "rules": {
+        "no-console": ["error", { "allow": ["warn", "error"] }],
+        "indent": ["error", 2, { "SwitchCase": 1, "ignoredNodes": ["ConditionalExpression", "JSXAttribute", "JSXSpreadAttribute"] }],
+        "no-multi-spaces": "error",
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"],
+        "no-trailing-spaces": "error",
+        "keyword-spacing": "error",
+        "jsx-quotes": ["error", "prefer-double"],
+        "eol-last": ["error", "always"],
+        "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 0}],
+        "padded-blocks": ["error", "never"],
+        "no-useless-escape": "off",
+        "react/jsx-closing-bracket-location": "error",
+        "react/jsx-tag-spacing": ["error", { "beforeSelfClosing": "never" }],
+        "react/jsx-curly-spacing": ["error", { "when": "never", "children": true }],
+        "react/jsx-indent-props": ["error", 4],
+        "react/jsx-wrap-multilines": "error",
+        "react/self-closing-comp": "error",
+        "react/require-render-return": "error",
+        "react/jsx-max-props-per-line": ["error", { "maximum": 1, "when": "multiline" }]
+    }
+}
