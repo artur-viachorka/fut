@@ -1,4 +1,4 @@
-import { HOST, ROUTES } from '../constants';
+import { HOST } from '../constants';
 
 const executeOnPageSpace = (code) => {
   var script = document.createElement('script');
@@ -25,8 +25,4 @@ export const sendRequest = async (route, params) => {
     },
   });
   return await response.json();
-};
-
-export const checkTransferMarket = async (searchParams) => {
-  return await sendRequest(ROUTES.TRANSFERMARKET, searchParams);
 };

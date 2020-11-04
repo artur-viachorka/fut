@@ -1,15 +1,14 @@
-import { checkTransferMarket } from './services/fetch.service';
-import { getMarketSearchCriteria } from './services/marketSearchCriteria.service';
+import { initSearchMarketPage } from './services/marketSearchCriteria.service';
+import { waitUntilElementExists, setMutationObserver } from './services/ui.service';
 
 $(() => {
-  const searchOnMarket = async () => {
-    await checkTransferMarket(getMarketSearchCriteria());
-  };
-  const searchOnMarketButton = $('<input/>').attr({
-    type: 'button',
-    id: 'searchOnMarke',
-    value: 'Search on market',
-  }).on('click', searchOnMarket);
-
-  $('body').append(searchOnMarketButton);
+  waitUntilElementExists('.ut-root-view')
+    .then(() => {
+      setMutationObserver(
+        '.ut-root-view',
+        'addedNodes',
+        (node) => $(node).hasClass('ut-market-search-filters-view'),
+        initSearchMarketPage
+      );
+    });
 });
