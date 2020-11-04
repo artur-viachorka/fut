@@ -1,12 +1,16 @@
-import { timeout } from './helper.service';
+import { sleep } from './helper.service';
+
+export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
+  if (conditionCheck()) {
+    return Promise.resolve(valueToReturn);
+  } else {
+    await sleep(1);
+    return waitUntilTrue(conditionCheck, valueToReturn);
+  }
+};
 
 export const waitUntilElementExists = async (selector) => {
-  if ($(selector).length === 0) {
-    await timeout(1);
-    return waitUntilElementExists(selector);
-  } else {
-    return Promise.resolve($(selector));
-  }
+  return await waitUntilTrue(() => $(selector).length, $(selector));
 };
 
 export const setMutationObserver = (observeSelector, mutationType, condition, action) => {

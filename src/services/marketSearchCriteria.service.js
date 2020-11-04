@@ -2,9 +2,7 @@ import { reject, equals } from 'ramda';
 
 import { match } from './string.serivce';
 import { debounce } from './helper.service';
-import { sendRequest } from './fetch.service';
-
-import { ROUTES } from '../constants';
+import { saveToStorage, getFromStorage } from './storage.service';
 
 import PLAYERS from '../data/players.json';
 
@@ -17,9 +15,13 @@ export const searchPlayers = (name) => {
     .slice(0, 50);
 };
 
-const getPlayerId = () => {
-  const id = $('.ut-player-search-control--input-container input.ut-text-input-control.fut-player-name').attr('data-id');
-  return id || null;
+const getPlayerInfo = () => {
+  const playerInput = $('.ut-player-search-control--input-container input.ut-text-input-control.fut-player-name');
+  const id = playerInput.attr('data-id');
+  return {
+    value: id || null,
+    title: playerInput.val(),
+  };
 };
 
 const getQuality = () => {
@@ -30,12 +32,20 @@ const getQuality = () => {
     'bronze': { lev: 'bronze' },
   };
   const quality = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:first span.label').text();
-  return QUALITIES[quality.toLowerCase()] || {};
+  const parsedQuality = QUALITIES[quality.toLowerCase()];
+  return parsedQuality ? {
+    value: parsedQuality,
+    title: quality,
+  } : {};
 };
 
-const getRarityIds = () => {
+const getRarity = () => {
   const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1) img').attr('src');
-  return match(src, /(\d*)_(\d*)\.(png|jpeg|jpg)$/);
+  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1) span.label').text();
+  return {
+    value: match(src, /(\d*)_(\d*)\.(png|jpeg|jpg)$/),
+    title,
+  };
 };
 
 const getPosition = () => {
@@ -63,22 +73,39 @@ const getPosition = () => {
   };
 
   const position = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(2) span.label').text();
-  return POSITIONS[position.toLowerCase()] || {};
+
+  const parsedPosition = POSITIONS[position.toLowerCase()];
+  return parsedPosition ? {
+    value: parsedPosition,
+    title: position,
+  } : {};
 };
 
 const getNation = () => {
   const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4) img').attr('src');
-  return match(src, /(\d*)\.(png|jpeg|jpg)$/);
+  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4) span.label').text();
+  return {
+    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
+    title,
+  };
 };
 
 const getLeague = () => {
   const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5) img').attr('src');
-  return match(src, /(\d*)\.(png|jpeg|jpg)$/);
+  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5) span.label').text();
+  return {
+    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
+    title,
+  };
 };
 
 const getTeam = () => {
   const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6) img').attr('src');
-  return match(src, /(\d*)\.(png|jpeg|jpg)$/);
+  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6) span.label').text();
+  return {
+    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
+    title,
+  };
 };
 
 const getMaxBuyNow = () => {
@@ -143,36 +170,64 @@ export const addSaveFilterButton = () => {
   newButton.addClass('fut-add-filter-custom-button');
   newButton.css('background-color', '#257d67');
   newButton.on('click', async () => {
-    await checkTransferMarket();
+    await saveSearchFilterToStorage();
   });
   $('.ut-market-search-filters-view .button-container').append(newButton);
 };
 
 const getMarketSearchCriteria = () => {
+  const playerInfo = getPlayerInfo();
+  const quality = getQuality();
+  const position = getPosition();
+  const nation = getNation();
+  const league = getLeague();
+  const team = getTeam();
+  const rarity = getRarity();
+
+  if (playerInfo.value) {
+    nation.value = null;
+    nation.title = null;
+    league.value = null;
+    league.title = null;
+    team.value = null;
+    team.title = null;
+  }
+
   const params = {
     num: 21,
     start: 0,
     type: 'player',
-    maskedDefId: getPlayerId(),
-    ...getPosition(),
-    ...getQuality(),
-    nat: getNation(),
-    leag: getLeague(),
-    team: getTeam(),
+    maskedDefId: playerInfo.value,
+    ...position.value,
+    ...quality.value,
+    nat: nation.value,
+    leag: league.value,
+    team: team.value,
     maxb: getMaxBuyNow(),
-    rarityIds: getRarityIds(),
+    rarityIds: rarity.value,
   };
-  if (params.maskedDefId) {
-    params.nat = null;
-    params.leag = null;
-    params.team = null;
-  }
-  return reject(equals(null))(params);
+
+  return {
+    titles: {
+      playerName: playerInfo.title,
+      quality: quality.title,
+      position: position.title,
+      nation: nation.title,
+      leag: league.title,
+      team: team.title,
+      rarity: rarity.title,
+    },
+    requestParams: reject(equals(null))(params)
+  };
 };
 
-const checkTransferMarket = async () => {
-  const searchCriteria = getMarketSearchCriteria();
-  return await sendRequest(ROUTES.TRANSFERMARKET, searchCriteria);
+const saveSearchFilterToStorage = async () => {
+  const newFilter = getMarketSearchCriteria();
+
+  let { filters = [] } = await getFromStorage('filters');
+  await saveToStorage({
+    filters: filters.concat(newFilter),
+  });
 };
 
 export const initSearchMarketPage = () => {

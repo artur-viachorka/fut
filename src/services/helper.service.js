@@ -1,6 +1,6 @@
 export const convertSecondsToMs = (s) => (s || 0) * 1000;
 
-export const timeout = (seconds) => {
+export const sleep = (seconds) => {
   return new Promise((resolve) => setTimeout(resolve, convertSecondsToMs(seconds)));
 };
 
@@ -17,4 +17,12 @@ export function debounce(func, seconds, immediate) {
     timeout = setTimeout(later, convertSecondsToMs(seconds));
     if (callNow) func.apply(context, args);
   };
+}
+
+export function callAsPromise(context, handler, ...args) {
+  return new Promise((resolve) => {
+    return handler.call(context || this, ...args, (res) => {
+      resolve(res);
+    });
+  });
 }
