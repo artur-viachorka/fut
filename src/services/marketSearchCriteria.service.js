@@ -2,8 +2,11 @@ import { reject, equals } from 'ramda';
 
 import { match } from './string.serivce';
 import { debounce, uuid } from './helper.service';
+import { openUTNotification } from './notification.service';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { REACT_CONTAINER_ID } from '../scenariosConstructor/constants';
+
+import { EXTENSION_ACTIONS } from '../constants';
 
 import PLAYERS from '../data/players.json';
 
@@ -47,7 +50,7 @@ const getRarity = () => {
   const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1) span.label').text();
   return {
     value: match(src, /(\d*)_(\d*)\.(png|jpeg|jpg)$/),
-    title,
+    title: title === 'Rarity' ? null : title,
   };
 };
 
@@ -89,7 +92,7 @@ const getNation = () => {
   const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4) span.label').text();
   return {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title,
+    title: title === 'Nationality' ? null : title,
   };
 };
 
@@ -98,7 +101,7 @@ const getLeague = () => {
   const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5) span.label').text();
   return {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title,
+    title: title === 'League' ? null : title,
   };
 };
 
@@ -107,7 +110,7 @@ const getTeam = () => {
   const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6) span.label').text();
   return {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title,
+    title: title === 'Club' ? null : title,
   };
 };
 
@@ -238,12 +241,21 @@ const getMarketSearchCriteria = () => {
 };
 
 const saveSearchFilterToStorage = async () => {
-  const newFilter = getMarketSearchCriteria();
-
-  let { filters = [] } = await getFromStorage('filters');
-  await saveToStorage({
-    filters: filters.concat(newFilter),
-  });
+  try {
+    const newFilter = getMarketSearchCriteria();
+    const isFilterEmpty = Object.values(newFilter.titles).filter(Boolean).length === 0;
+    if (isFilterEmpty) {
+      openUTNotification({ text: 'Nothing to add. Select something.', error: true });
+      return;
+    }
+    let { filters = [] } = await getFromStorage('filters');
+    await saveToStorage({
+      filters: [newFilter, ...filters],
+    });
+    openUTNotification({ text: 'filter successfully added', success: true });
+  } catch (e) {
+    openUTNotification({ text: 'Eror while adding filter. Try Later.', error: true });
+  }
 };
 
 export const initSearchMarketPage = () => {

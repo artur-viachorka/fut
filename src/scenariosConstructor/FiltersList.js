@@ -3,6 +3,10 @@ import styled from 'styled-components';
 import { getFromStorage } from '../services/storage.service';
 import { getFirstSymbols } from '../services/string.serivce';
 
+import { EXTENSION_ACTIONS } from '../constants';
+
+import { Tooltip } from '@material-ui/core';
+
 const Hint = styled.span`
   font-size: 12px;
   color: grey;
@@ -55,9 +59,11 @@ const FiltersList = () => {
         </Hint>
       )}
       {filters.map((filter) => (
-        <Filter key={filter.id}>
-          <span>{`${getFirstSymbols(filter.titles.playerName)} ${filter.titles.playerRating || ''}`}</span>
-        </Filter>
+        <Tooltip key={filter.id} title={<span>Info</span>}>
+          <Filter>
+            <span>{`${getFirstSymbols(filter.titles.playerName)} ${filter.titles.playerRating || ''}`}</span>
+          </Filter>
+        </Tooltip>
       ))}
     </Container>
   );
