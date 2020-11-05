@@ -1,6 +1,9 @@
+import { Subject } from 'rxjs';
 import { initSearchMarketPage } from './services/marketSearchCriteria.service';
 import { waitUntilElementExists, setMutationObserver } from './services/ui.service';
 import { initConstructor } from './scenariosConstructor';
+
+export const addFilterSubject = new Subject();
 
 $(() => {
   initConstructor();

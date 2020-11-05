@@ -3,8 +3,7 @@ import styled from 'styled-components';
 import { getFromStorage } from '../services/storage.service';
 import { getFirstSymbols } from '../services/string.serivce';
 
-import { EXTENSION_ACTIONS } from '../constants';
-
+import { addFilterSubject } from '../contentScript';
 import { Tooltip } from '@material-ui/core';
 
 const Hint = styled.span`
@@ -49,8 +48,13 @@ const FiltersList = () => {
 
   useEffect(() => {
     loadFilters();
+    if(addFilterSubject) {
+      addFilterSubject.subscribe(() => {
+        loadFilters();
+      });
+    }
+    return addFilterSubject.unsubscribe;
   }, []);
-
   return (
     <Container>
       {!filters.length && (

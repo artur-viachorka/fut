@@ -1,13 +1,11 @@
 import { reject, equals } from 'ramda';
 
+import { addFilterSubject } from '../contentScript';
 import { match } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { REACT_CONTAINER_ID } from '../scenariosConstructor/constants';
-
-import { EXTENSION_ACTIONS } from '../constants';
-
 import PLAYERS from '../data/players.json';
 
 export const searchPlayers = (name) => {
@@ -252,6 +250,7 @@ const saveSearchFilterToStorage = async () => {
     await saveToStorage({
       filters: [newFilter, ...filters],
     });
+    addFilterSubject.next();
     openUTNotification({ text: 'filter successfully added', success: true });
   } catch (e) {
     openUTNotification({ text: 'Eror while adding filter. Try Later.', error: true });
