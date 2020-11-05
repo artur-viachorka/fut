@@ -1,8 +1,9 @@
 import { reject, equals } from 'ramda';
 
 import { match } from './string.serivce';
-import { debounce } from './helper.service';
+import { debounce, uuid } from './helper.service';
 import { saveToStorage, getFromStorage } from './storage.service';
+import { REACT_CONTAINER_ID } from '../scenariosConstructor/constants';
 
 import PLAYERS from '../data/players.json';
 
@@ -17,10 +18,12 @@ export const searchPlayers = (name) => {
 
 const getPlayerInfo = () => {
   const playerInput = $('.ut-player-search-control--input-container input.ut-text-input-control.fut-player-name');
+  const [playerName, playerRating] = playerInput.val().split(' / ');
   const id = playerInput.attr('data-id');
   return {
     value: id || null,
-    title: playerInput.val(),
+    title: playerName,
+    rating: playerRating,
   };
 };
 
@@ -175,6 +178,17 @@ export const addSaveFilterButton = () => {
   $('.ut-market-search-filters-view .button-container').append(newButton);
 };
 
+export const addConfigureScenariosButton = () => {
+  const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
+  newButton.text('Configure Scenarios');
+  newButton.addClass('fut-configure-scenarios-custom-button');
+  newButton.css('background-color', '#6b2121');
+  newButton.on('click', async () => {
+    $(`#${REACT_CONTAINER_ID}`).css('display', 'block');
+  });
+  $('.ut-market-search-filters-view .button-container').append(newButton);
+};
+
 const getMarketSearchCriteria = () => {
   const playerInfo = getPlayerInfo();
   const quality = getQuality();
@@ -208,8 +222,10 @@ const getMarketSearchCriteria = () => {
   };
 
   return {
+    id: uuid(),
     titles: {
       playerName: playerInfo.title,
+      playerRating: playerInfo.rating,
       quality: quality.title,
       position: position.title,
       nation: nation.title,
@@ -234,5 +250,6 @@ export const initSearchMarketPage = () => {
   if (!$('.fut-add-filter-custom-button').length) {
     copySearchInput();
     addSaveFilterButton();
+    addConfigureScenariosButton();
   }
 };

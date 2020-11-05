@@ -1,6 +1,6 @@
 import { initSearchMarketPage } from './services/marketSearchCriteria.service';
 import { waitUntilElementExists, setMutationObserver } from './services/ui.service';
-import { initConstructor } from './constructor';
+import { initConstructor } from './scenariosConstructor';
 
 $(() => {
   initConstructor();

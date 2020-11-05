@@ -1,0 +1,18 @@
+* {
+  box-sizing: border-box;
+}
+
+
+#react-app-container ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+#react-app-container ::-webkit-scrollbar-thumb {
+  background: #272727;
+  border-radius: 8px;
+}
+
+#react-app-container ::selection {
+  background: #000000;
+}

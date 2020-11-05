@@ -9,3 +9,7 @@ export const match = (str, regx) => {
   }
   return null;
 };
+
+export const getFirstSymbols = (str) => {
+  return str ? `${str.split(' ').map(word => word[0].toUpperCase()).join('.')}.` : '';
+};
