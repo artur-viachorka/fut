@@ -27,7 +27,7 @@ const Right = styled.div`
   flex-direction: column;
 `;
 
-const FiltersListContainer = styled.div`
+const RightHeader = styled.div`
   background: #1d1d1d;
   height: 100px;
   display: flex;
@@ -46,12 +46,12 @@ const Board = () => {
       <DndProvider backend={HTML5Backend}>
         <Container>
           <Left>
-            <ScenariosList/>
+            <FiltersList/>
           </Left>
           <Right>
-            <FiltersListContainer>
-              <FiltersList/>
-            </FiltersListContainer>
+            <RightHeader>
+              <ScenariosList/>
+            </RightHeader>
             <ScenarioConstructor>
               test constructor
             </ScenarioConstructor>

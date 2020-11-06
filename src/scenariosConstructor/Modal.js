@@ -17,8 +17,8 @@ const Wrapper = styled.div`
 `;
 
 const Container = styled.div`
-  width: 90%;
-  height: 90%;
+  width: 95%;
+  height: 95%;
   min-width: 600px;
   min-height: 600px;
   background: #222222;

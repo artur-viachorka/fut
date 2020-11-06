@@ -1,4 +1,4 @@
-import { reject, equals } from 'ramda';
+import { reject, equals, isEmpty } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
 import { match } from './string.serivce';
@@ -35,21 +35,30 @@ const getQuality = () => {
     'silver': { lev: 'silver' },
     'bronze': { lev: 'bronze' },
   };
-  const quality = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:first span.label').text();
-  const parsedQuality = QUALITIES[quality.toLowerCase()];
-  return parsedQuality ? {
-    value: parsedQuality,
-    title: quality,
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(0)');
+  const isSelected = input.hasClass('has-selection');
+  const src = input.find('img').attr('src');
+  const title = input.find('span.label').text();
+  const value = QUALITIES[title.toLowerCase()];
+
+  return isSelected && value ? {
+    value,
+    title,
+    img: src,
   } : {};
 };
 
 const getRarity = () => {
-  const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1) img').attr('src');
-  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1) span.label').text();
-  return {
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1)');
+  const isSelected = input.hasClass('has-selection');
+  const src = input.find('img').attr('src');
+  const title = input.find('span.label').text();
+
+  return isSelected ? {
     value: match(src, /(\d*)_(\d*)\.(png|jpeg|jpg)$/),
-    title: title === 'Rarity' ? null : title,
-  };
+    title,
+    img: src,
+  } : {};
 };
 
 const getPosition = () => {
@@ -76,40 +85,54 @@ const getPosition = () => {
     'st': { pos: 'ST' },
   };
 
-  const position = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(2) span.label').text();
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(2)');
+  const isSelected = input.hasClass('has-selection');
+  const title = input.find('span.label').text();
 
-  const parsedPosition = POSITIONS[position.toLowerCase()];
-  return parsedPosition ? {
-    value: parsedPosition,
-    title: position,
+  const value = POSITIONS[title.toLowerCase()];
+  return isSelected && value ? {
+    value,
+    title,
   } : {};
 };
 
 const getNation = () => {
-  const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4) img').attr('src');
-  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4) span.label').text();
-  return {
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4)');
+  const isSelected = input.hasClass('has-selection');
+  const src = input.find('img').attr('src');
+  const title = input.find('span.label').text();
+
+  return isSelected ? {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title: title === 'Nationality' ? null : title,
-  };
+    title,
+    img: src,
+  } : null;
 };
 
 const getLeague = () => {
-  const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5) img').attr('src');
-  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5) span.label').text();
-  return {
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5)');
+  const isSelected = input.hasClass('has-selection');
+  const src = input.find('img').attr('src');
+  const title = input.find('span.label').text();
+
+  return isSelected ? {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title: title === 'League' ? null : title,
-  };
+    title,
+    img: src,
+  } : null;
 };
 
 const getTeam = () => {
-  const src = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6) img').attr('src');
-  const title = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6) span.label').text();
-  return {
+  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6)');
+  const isSelected = input.hasClass('has-selection');
+  const src = input.find('img').attr('src');
+  const title = input.find('span.label').text();
+
+  return isSelected ? {
     value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
-    title: title === 'Club' ? null : title,
-  };
+    title,
+    img: src,
+  } : null;
 };
 
 const getMaxBuyNow = () => {
@@ -194,55 +217,75 @@ const getMarketSearchCriteria = () => {
   const playerInfo = getPlayerInfo();
   const quality = getQuality();
   const position = getPosition();
-  const nation = getNation();
-  const league = getLeague();
-  const team = getTeam();
   const rarity = getRarity();
+  const maxBuy = getMaxBuyNow();
+  let nation = getNation();
+  let league = getLeague();
+  let team = getTeam();
 
   if (playerInfo.value) {
-    nation.value = null;
-    nation.title = null;
-    league.value = null;
-    league.title = null;
-    team.value = null;
-    team.title = null;
+    nation = null;
+    league = null;
+    team = null;
   }
 
   const params = {
-    num: 21,
-    start: 0,
-    type: 'player',
     maskedDefId: playerInfo.value,
     ...position.value,
     ...quality.value,
-    nat: nation.value,
-    leag: league.value,
-    team: team.value,
-    maxb: getMaxBuyNow(),
+    nat: nation ? nation.value : null,
+    leag: league ? league.value : null,
+    team: team ? team.value : null,
+    maxb: maxBuy,
     rarityIds: rarity.value,
   };
 
+  console.log(isEmpty(nation));
+
   return {
+    noChanges: Object.values(params).filter(Boolean).length === 0,
     id: uuid(),
-    titles: {
-      playerName: playerInfo.title,
-      playerRating: playerInfo.rating,
-      quality: quality.title,
+    meta: {
+      player: playerInfo.value ? {
+        name: playerInfo.title,
+        rating: playerInfo.rating,
+      } : null,
+      quality: !isEmpty(quality) ? {
+        title: quality.title,
+        img: quality.img,
+      } : null,
+      rarity: !isEmpty(rarity) ? {
+        title: rarity.title,
+        img: rarity.img
+      } : null,
       position: position.title,
-      nation: nation.title,
-      leag: league.title,
-      team: team.title,
-      rarity: rarity.title,
+      nation: nation ? {
+        title: nation.title,
+        img: nation.img,
+      } : null,
+      league: league ? {
+        title: league.title,
+        img: league.img,
+      } : null,
+      team: team ? {
+        title: team.title,
+        img: team.img,
+      } : null,
+      maxBuy,
     },
-    requestParams: reject(equals(null))(params)
+    requestParams: reject(equals(null))({
+      num: 21,
+      start: 0,
+      type: 'player',
+      ...params,
+    })
   };
 };
 
 const saveSearchFilterToStorage = async () => {
   try {
     const newFilter = getMarketSearchCriteria();
-    const isFilterEmpty = Object.values(newFilter.titles).filter(Boolean).length === 0;
-    if (isFilterEmpty) {
+    if (newFilter.noChanges) {
       openUTNotification({ text: 'Nothing to add. Select something.', error: true });
       return;
     }
@@ -253,6 +296,7 @@ const saveSearchFilterToStorage = async () => {
     addFilterSubject.next();
     openUTNotification({ text: 'filter successfully added', success: true });
   } catch (e) {
+    console.error(e);
     openUTNotification({ text: 'Eror while adding filter. Try Later.', error: true });
   }
 };
