@@ -13,3 +13,10 @@ export const match = (str, regx) => {
 export const getFirstSymbols = (str) => {
   return str ? `${str.split(' ').map(word => word[0].toUpperCase()).join('.')}.` : '';
 };
+
+export const parseStringToInt = (value) => {
+  if (typeof value === 'number') {
+    return value;
+  }
+  return parseInt(value.replace(/\,/g, ''));
+};

@@ -1,7 +1,7 @@
 import { reject, equals, isEmpty } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
-import { match } from './string.serivce';
+import { match, parseStringToInt } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -137,7 +137,7 @@ const getTeam = () => {
 
 const getMaxBuyNow = () => {
   const value = $('.search-prices > div:nth-child(6) input').val();
-  return value ? parseInt(value.replace(/\,/g, '')) : null;
+  return value ? parseStringToInt(value) : null;
 };
 
 export const copySearchInput = async () => {
@@ -240,8 +240,6 @@ const getMarketSearchCriteria = () => {
     rarityIds: rarity.value,
   };
 
-  console.log(isEmpty(nation));
-
   return {
     noChanges: Object.values(params).filter(Boolean).length === 0,
     id: uuid(),
@@ -299,6 +297,54 @@ const saveSearchFilterToStorage = async () => {
     console.error(e);
     openUTNotification({ text: 'Eror while adding filter. Try Later.', error: true });
   }
+};
+
+export const getSearchFilters = async () => {
+  const { filters } = await getFromStorage('filters');
+  return filters || [];
+};
+
+export const deleteSearchFilter = async (filterId) => {
+  let { filters } = await getFromStorage('filters');
+  filters = filters.filter(filter => filter.id !== filterId);
+  await saveToStorage({
+    filters,
+  });
+  return filters;
+};
+
+export const copySearchFilter = async (filterId) => {
+  let { filters } = await getFromStorage('filters');
+  const filterToCopy = filters.find(filter => filter.id === filterId);
+  if (filterToCopy) {
+    filters = [{
+      ...filterToCopy,
+      id: uuid(),
+    }, ...filters];
+    await saveToStorage({
+      filters
+    });
+  }
+  return filters;
+};
+
+export const editSearchFilterMaxBuy = async (filterId, newMaxBuy) => {
+  let { filters } = await getFromStorage('filters');
+  filters = filters.map(filter => filter.id === filterId ? {
+    ...filter,
+    meta: {
+      ...filter.meta,
+      maxBuy: newMaxBuy,
+    },
+    requestParams: {
+      ...filter.requestParams,
+      maxb: parseStringToInt(newMaxBuy),
+    }
+  } : filter);
+  await saveToStorage({
+    filters
+  });
+  return filters;
 };
 
 export const initSearchMarketPage = () => {
