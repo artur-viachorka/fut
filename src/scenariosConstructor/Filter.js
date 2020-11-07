@@ -75,6 +75,7 @@ const FilterActions = styled.div`
   justify-content: center;
   align-items: center;
   width: 40px;
+  padding: 5px;
   border-left: 1px solid #2f2f2f;
   background: #2f2f2f;
   height: 100%;
@@ -82,13 +83,13 @@ const FilterActions = styled.div`
 
 const FilterAction = styled.span`
   cursor: pointer;
-  font-size: 22px;
+  font-size: 19px;
   background-color: #7b797b;
   color: white;
   padding: 8px;
   border-radius: 50%;
-  width: 33px;
-  height: 33px;
+  width: 30px;
+  height: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,7 +97,7 @@ const FilterAction = styled.span`
   transition: all 0.5s ease-out;
 
   &:first-child {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   &:hover {
