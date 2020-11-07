@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useDrag, useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import { AiFillCloseCircle } from 'react-icons/ai';
 import { FaRegCopy } from 'react-icons/fa';
@@ -9,6 +10,7 @@ import { deleteSearchFilter, editSearchFilterMaxBuy, copySearchFilter } from '..
 import TextField from './Inputs/TextField';
 
 import { debounce } from '../services/helper.service';
+import { DND_TYPES } from './constants';
 
 const Container = styled.div`
   align-items: center;
@@ -63,8 +65,36 @@ const FilterAction = styled.span`
   cursor: pointer;
 `;
 
-const Filter = ({ filter, setFilters }) => {
+const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }) => {
   const [maxBuy, setMaxBuy] = useState(filter.meta.maxBuy || '');
+  const originalIndex = findFilter(filter.id).index;
+
+  const [{ isDragging }, drag] = useDrag({
+    item: { type: DND_TYPES.FILTER, id: filter.id, originalIndex },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    end: (dropResult, monitor) => {
+      const { id: droppedId, originalIndex } = monitor.getItem();
+      const didDrop = monitor.didDrop();
+      if (!didDrop) {
+        moveFilter(droppedId, originalIndex);
+      } else if (onDragAndDropEnd) {
+        onDragAndDropEnd();
+      }
+    },
+  });
+
+  const [, drop] = useDrop({
+    accept: DND_TYPES.FILTER,
+    canDrop: () => false,
+    hover({ id: draggedId }) {
+      if (draggedId !== filter.id) {
+        const { index: overIndex } = findFilter(filter.id);
+        moveFilter(draggedId, overIndex);
+      }
+    },
+  });
 
   const changeFilterMaxBuyDebounced = useCallback(debounce(async (filterId, price) => {
     setFilters(await editSearchFilterMaxBuy(filterId, price));
@@ -76,7 +106,7 @@ const Filter = ({ filter, setFilters }) => {
   };
 
   return (
-    <Container>
+    <Container style={{ opacity: isDragging ? 0 : 1 }} ref={(node) => drag(drop(node))}>
       <FilterAction>
         <AiFillCloseCircle onClick={async () => setFilters(await deleteSearchFilter(filter.id))}/>
       </FilterAction>
@@ -102,6 +132,9 @@ const Filter = ({ filter, setFilters }) => {
 Filter.propTypes = {
   filter: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
+  findFilter: PropTypes.func.isRequired,
+  moveFilter: PropTypes.func.isRequired,
+  onDragAndDropEnd: PropTypes.func,
 };
 
 export default Filter;
