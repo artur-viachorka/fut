@@ -1,4 +1,4 @@
-import { reject, equals, isEmpty } from 'ramda';
+import { reject, equals, isEmpty, dissoc } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
 import { match, parseStringToInt } from './string.serivce';
@@ -241,7 +241,7 @@ const getMarketSearchCriteria = () => {
   };
 
   return {
-    noChanges: Object.values(params).filter(Boolean).length === 0,
+    noChanges: Object.values(dissoc('maxb', params)).filter(Boolean).length === 0,
     id: uuid(),
     meta: {
       player: playerInfo.value ? {

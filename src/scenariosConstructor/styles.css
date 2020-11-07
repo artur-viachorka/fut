@@ -2,7 +2,6 @@
   box-sizing: border-box;
 }
 
-
 #react-app-container ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
