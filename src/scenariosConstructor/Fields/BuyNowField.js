@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import TextField from './TextField';
@@ -94,15 +94,20 @@ const getRoundOnValue = (value) => {
 };
 
 export const BuyNowField = ({ value, onChange, placeholder }) => {
-  const inputValue = parseStringToInt(value) || '';
+  const [buyNowValue, setBuyNowValue] = useState(value);
+  const updateValueByStep = (increasing) => {
+    const value = parseStringToInt(buyNowValue) || 0;
+    const step = getStep(value, increasing);
+    const newValue = increasing ? value + step : value - step;
+    setBuyNowValue(newValue || null);
+    onChange(newValue || null);
+  };
+
   return (
     <Container>
       <StyledButton
-          disabled={!value}
-          onClick={() => {
-            const step = getStep(inputValue, false);
-            onChange(inputValue - step);
-          }}
+          disabled={!buyNowValue}
+          onClick={() => updateValueByStep()}
       >
         -
       </StyledButton>
@@ -111,27 +116,29 @@ export const BuyNowField = ({ value, onChange, placeholder }) => {
           <img src={COIN_ICON_SRC}/>
         </ImageContainer>
         <TextField
-            value={inputValue}
+            value={buyNowValue || NaN}
             type="number"
             placeholder={placeholder}
             onChange={(e) => {
-              onChange(parseStringToInt(e.target.value));
+              setBuyNowValue(parseStringToInt(e.target.value) || null);
             }}
             onBlur={(e) => {
-              const num = parseStringToInt(e.target.value);
+              let num = parseStringToInt(e.target.value);
               if (num >= BUY_INPUT_SETTINGS.max) {
-                return onChange(BUY_INPUT_SETTINGS.max);
+                num = BUY_INPUT_SETTINGS.max;
               }
-              onChange(roundNumber(num, getRoundOnValue(num)));
+              if (num <= BUY_INPUT_SETTINGS.min) {
+                num = null;
+              }
+              num = num ? roundNumber(num, getRoundOnValue(num)) : null;
+              setBuyNowValue(num);
+              onChange(num);
             }}
         />
       </Main>
       <StyledButton
-          disabled={inputValue >= BUY_INPUT_SETTINGS.max}
-          onClick={() => {
-            const step = getStep(inputValue, true);
-            onChange(inputValue + step);
-          }}
+          disabled={buyNowValue >= BUY_INPUT_SETTINGS.max}
+          onClick={() => updateValueByStep(true)}
       >
         +
       </StyledButton>

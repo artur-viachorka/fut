@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useDrag, useDrop } from 'react-dnd';
 import styled from 'styled-components';
@@ -108,7 +108,6 @@ const InputContainer = styled.div`
 `;
 
 const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }) => {
-  const [maxBuy, setMaxBuy] = useState(filter.meta.maxBuy || '');
   const originalIndex = findFilter(filter.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -143,7 +142,6 @@ const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }
   }, 0.5), []);
 
   const handleInputChange = (value) => {
-    setMaxBuy(value);
     changeFilterMaxBuyDebounced(filter.id, value || null);
   };
 
@@ -164,7 +162,7 @@ const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }
           }
         </AdditionalFilterTypes>
         <InputContainer>
-          <BuyNowField placeholder="Max buy now" value={maxBuy} onChange={handleInputChange}/>
+          <BuyNowField placeholder="Max buy now" value={filter.meta.maxBuy} onChange={handleInputChange}/>
         </InputContainer>
       </Main>
       <FilterActions>
