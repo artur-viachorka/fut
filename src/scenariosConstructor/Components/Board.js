@@ -3,9 +3,10 @@ import styled from 'styled-components';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { REACT_CONTAINER_ID } from './constants';
-import FiltersList from './FiltersList';
-import ScenariosList from './ScenariosList';
+import { REACT_CONTAINER_ID } from '../constants';
+import FiltersList from './Filters/FiltersList';
+import ScenariosList from './Scenarios/ScenariosList';
+import Builder from './Builder';
 import Modal from './Modal';
 
 const Container = styled.div`
@@ -17,7 +18,6 @@ const Container = styled.div`
 const Left = styled.div`
   width: 30%;
   height: 100%;
-  background: #1d1d1d;
   border-right: 1px solid #414141;
   overflow-y: auto;
 `;
@@ -30,16 +30,10 @@ const Right = styled.div`
 `;
 
 const RightHeader = styled.div`
-  background: #1d1d1d;
   height: 100px;
   display: flex;
   padding: 5px 10px;
   border-bottom: 1px solid #414141;
-`;
-
-const ScenarioConstructor = styled.div`
-  display: flex;
-  flex: 1;
 `;
 
 const Board = () => {
@@ -54,9 +48,7 @@ const Board = () => {
             <RightHeader>
               <ScenariosList/>
             </RightHeader>
-            <ScenarioConstructor>
-              test constructor
-            </ScenarioConstructor>
+            <Builder/>
           </Right>
         </Container>
       </DndProvider>

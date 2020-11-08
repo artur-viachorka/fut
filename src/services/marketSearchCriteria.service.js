@@ -304,6 +304,11 @@ export const getSearchFilters = async () => {
   return filters || [];
 };
 
+export const getSearchFilter = async (id) => {
+  const { filters } = await getFromStorage('filters');
+  return (filters || []).find(filter => filter.id === id);
+};
+
 export const setSearchFilters = async (filters) => {
   await saveToStorage({ filters });
 };

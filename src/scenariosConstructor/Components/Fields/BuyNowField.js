@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import TextField from './TextField';
-import { BUY_INPUT_SETTINGS } from '../constants';
-import { parseStringToInt } from '../../services/string.serivce';
-import { roundNumber } from '../../services/helper.service';
-import { COIN_ICON_SRC } from '../../constants';
+import { BUY_INPUT_SETTINGS } from '../../constants';
+import { parseStringToInt } from '../../../services/string.serivce';
+import { roundNumber } from '../../../services/helper.service';
+import { COIN_ICON_SRC } from '../../../constants';
 
 const Container = styled.div`
   width: 100%;
@@ -33,6 +33,16 @@ const StyledButton = styled.button`
   width: 35px;
   background-color: #7e42f5;
   color: #29ffc9;
+
+  &.left {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+  }
+
+  &.right {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
 `;
 
 const ImageContainer = styled.div`
@@ -57,6 +67,7 @@ const Main = styled.div`
   display: flex;
   flex: 1;
 `;
+
 const getStep = (value, increasing) => {
   let step = BUY_INPUT_SETTINGS.min;
   if (value >= BUY_INPUT_SETTINGS.max && increasing) {
@@ -106,6 +117,7 @@ export const BuyNowField = ({ value, onChange, placeholder }) => {
   return (
     <Container>
       <StyledButton
+          className="left"
           disabled={!buyNowValue}
           onClick={() => updateValueByStep()}
       >
@@ -116,7 +128,7 @@ export const BuyNowField = ({ value, onChange, placeholder }) => {
           <img src={COIN_ICON_SRC}/>
         </ImageContainer>
         <TextField
-            value={buyNowValue || NaN}
+            value={buyNowValue == null ? '' : buyNowValue}
             type="number"
             placeholder={placeholder}
             onChange={(e) => {
@@ -137,6 +149,7 @@ export const BuyNowField = ({ value, onChange, placeholder }) => {
         />
       </Main>
       <StyledButton
+          className="right"
           disabled={buyNowValue >= BUY_INPUT_SETTINGS.max}
           onClick={() => updateValueByStep(true)}
       >

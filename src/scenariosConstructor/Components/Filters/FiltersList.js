@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDrop } from 'react-dnd';
 import styled from 'styled-components';
-import Filter from './Filter';
+import { DNDFilter } from './Filter';
 import update from 'immutability-helper';
 
-import { getSearchFilters, setSearchFilters } from '../services/marketSearchCriteria.service';
-import { addFilterSubject } from '../contentScript';
-import { DND_TYPES } from './constants';
+import { getSearchFilters, setSearchFilters } from '../../../services/marketSearchCriteria.service';
+import { deleteSearchFilter, editSearchFilterMaxBuy, copySearchFilter } from '../../../services/marketSearchCriteria.service';
+import { debounce } from '../../../services/helper.service';
+import { addFilterSubject } from '../../../contentScript';
+import { DND_TYPES } from '../../constants';
 
 const Hint = styled.span`
   font-size: 12px;
@@ -59,6 +61,10 @@ const FiltersList = () => {
     };
   };
 
+  const changeFilterMaxBuyDebounced = useCallback(debounce(async (filterId, price) => {
+    setFilters(await editSearchFilterMaxBuy(filterId, price));
+  }, 0.5), []);
+
   return (
     <Container ref={drop}>
       {filters && !filters.length && (
@@ -67,7 +73,16 @@ const FiltersList = () => {
         </Hint>
       )}
       {(filters || []).map((filter) => (
-        <Filter filter={filter} setFilters={setFilters} moveFilter={moveFilter} findFilter={findFilter} onDragAndDropEnd={() => setSearchFilters(filters)} key={filter.id}/>
+        <DNDFilter
+            filter={filter}
+            onDelete={async () => setFilters(await deleteSearchFilter(filter.id))}
+            onEditMaxBuy={changeFilterMaxBuyDebounced}
+            onCopy={async () => setFilters(await copySearchFilter(filter.id))}
+            moveFilter={moveFilter}
+            findFilter={findFilter}
+            onDragAndDropEnd={() => setSearchFilters(filters)}
+            key={filter.id}
+        />
       ))}
     </Container>
   );

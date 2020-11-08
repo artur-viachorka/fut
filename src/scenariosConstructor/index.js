@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { REACT_CONTAINER_ID } from './constants';
-import Board from './Board';
+import Board from './Components/Board';
 import './styles.css';
 
 export const initConstructor = () => {

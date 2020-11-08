@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { getFromStorage } from '../services/storage.service';
+import { getFromStorage } from '../../../services/storage.service';
 
 const Hint = styled.span`
   font-size: 12px;
   color: grey;
   font-style: italic;
+  display: flex;
+  align-items: center;
 `;
 
 const ScenariosList = () => {

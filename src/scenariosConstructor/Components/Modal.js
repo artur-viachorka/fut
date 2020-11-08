@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { AiFillCloseCircle } from 'react-icons/ai';
+import { BACKGROUND_1 } from '../../constants';
 
 const Wrapper = styled.div`
   position: fixed;
@@ -21,7 +22,8 @@ const Container = styled.div`
   height: 95%;
   min-width: 600px;
   min-height: 600px;
-  background: #222222;
+  background-image: url(${BACKGROUND_1});
+  background-size: cover;
   display: flex;
   flex-direction: column;
   border-radius: 5px;
@@ -37,7 +39,6 @@ const Header = styled.header`
   justify-content: space-between;
   color: white;
   font-size: 17px;
-  background: #1c1c1c;
   border-bottom: 1px solid #414141;
 `;
 
