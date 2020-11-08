@@ -20,7 +20,7 @@ const Container = styled.div`
   align-items: center;
   flex: 1;
   height: 100%;
-  padding: 15px;
+  padding: 10px;
 `;
 
 const FiltersList = () => {

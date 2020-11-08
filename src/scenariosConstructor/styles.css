@@ -15,3 +15,9 @@
 #react-app-container ::selection {
   background: #000000;
 }
+
+#react-app-container input::-webkit-outer-spin-button,
+#react-app-container input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

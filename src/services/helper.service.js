@@ -1,3 +1,5 @@
+import { parseStringToInt } from './string.serivce';
+
 export const convertSecondsToMs = (s) => (s || 0) * 1000;
 
 export const sleep = (seconds) => {
@@ -37,4 +39,8 @@ export const uuid = function() {
     let v = c == 'x' ? r : (r&0x3|0x8);
     return v.toString(16);
   });
+};
+
+export const roundNumber = (value, roundOn) => {
+  return (parseStringToInt(value) / roundOn).toFixed() * roundOn;
 };

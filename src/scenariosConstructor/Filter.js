@@ -6,7 +6,7 @@ import { FaRegCopy, FaTrash } from 'react-icons/fa';
 
 import { deleteSearchFilter, editSearchFilterMaxBuy, copySearchFilter } from '../services/marketSearchCriteria.service';
 
-import TextField from './Inputs/TextField';
+import BuyNowField from './Fields/BuyNowField';
 
 import { debounce } from '../services/helper.service';
 import { DND_TYPES } from './constants';
@@ -22,10 +22,6 @@ const Container = styled.div`
   font-size: 18px;
   text-transform: uppercase;
   margin-bottom: 10px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
 `;
 
 const Position = styled.span`
@@ -146,9 +142,9 @@ const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }
     setFilters(await editSearchFilterMaxBuy(filterId, price));
   }, 0.5), []);
 
-  const handleInputChange = (e) => {
-    setMaxBuy(e.target.value);
-    changeFilterMaxBuyDebounced(filter.id, e.target.value);
+  const handleInputChange = (value) => {
+    setMaxBuy(value);
+    changeFilterMaxBuyDebounced(filter.id, value || null);
   };
 
   return (
@@ -168,7 +164,7 @@ const Filter = ({ filter, setFilters, findFilter, moveFilter, onDragAndDropEnd }
           }
         </AdditionalFilterTypes>
         <InputContainer>
-          <TextField id="max-buy" size="small" type="number" color="secondary" variant="outlined" label="Max buy" value={maxBuy} onChange={handleInputChange}/>
+          <BuyNowField placeholder="Max buy now" value={maxBuy} onChange={handleInputChange}/>
         </InputContainer>
       </Main>
       <FilterActions>

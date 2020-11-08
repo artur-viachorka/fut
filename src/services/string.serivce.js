@@ -15,6 +15,9 @@ export const getFirstSymbols = (str) => {
 };
 
 export const parseStringToInt = (value) => {
+  if (value == null) {
+    return null;
+  }
   if (typeof value === 'number') {
     return value;
   }
