@@ -19,20 +19,17 @@ const Container = styled.div`
   font-size: 18px;
   text-transform: uppercase;
   margin-bottom: 10px;
-`;
-
-const Position = styled.span`
-
-`;
-
-const PlayerInfo = styled.span`
-  
+  background: rgb(20, 20, 22);
 `;
 
 const FilterHeader = styled.header`
   margin-bottom: 5px;
   font-size: 13px;
   text-transform: capitalize;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const FIlterTypeImage = styled.img`
@@ -123,8 +120,8 @@ const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy
       <Main>
         {(filter.meta.position || filter.meta.player) && (
           <FilterHeader>
-            {filter.meta.position && <Position>{filter.meta.position}</Position>}
-            {filter.meta.player && <PlayerInfo>{`${filter.meta.player.name || ''} ${filter.meta.player.rating || ''}`}</PlayerInfo>}
+            {filter.meta.player && <span>{`${filter.meta.player.name || ''} ${filter.meta.player.rating || ''}`}</span>}
+            {filter.meta.position && <span>{filter.meta.position}</span>}
           </FilterHeader>
         )}
         <AdditionalFilterTypes>
