@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { AiFillCloseCircle } from 'react-icons/ai';
-import { BACKGROUND_1 } from '../../constants';
 
 const Wrapper = styled.div`
   position: fixed;
@@ -22,7 +21,7 @@ const Container = styled.div`
   height: 95%;
   min-width: 600px;
   min-height: 600px;
-  background-image: url(${BACKGROUND_1});
+  background-color: #0e0f1d;
   background-size: cover;
   display: flex;
   flex-direction: column;

@@ -23,6 +23,7 @@ const Container = styled.div`
   flex: 1;
   height: 100%;
   padding: 10px;
+  min-width: 320px;
 `;
 
 const FiltersList = () => {

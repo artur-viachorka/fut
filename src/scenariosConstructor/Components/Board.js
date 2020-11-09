@@ -6,7 +6,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { REACT_CONTAINER_ID } from '../constants';
 import FiltersList from './Filters/FiltersList';
 import ScenariosList from './Scenarios/ScenariosList';
-import Builder from './Builder';
+import ScenarioBuilder from './ScenarioBuilder/ScenarioBuilder';
 import Modal from './Modal';
 
 const Container = styled.div`
@@ -18,6 +18,7 @@ const Container = styled.div`
 const Left = styled.div`
   width: 30%;
   height: 100%;
+  min-width: 330px;
   border-right: 1px solid #414141;
   overflow-y: auto;
 `;
@@ -48,7 +49,7 @@ const Board = () => {
             <RightHeader>
               <ScenariosList/>
             </RightHeader>
-            <Builder/>
+            <ScenarioBuilder/>
           </Right>
         </Container>
       </DndProvider>
