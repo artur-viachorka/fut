@@ -4,6 +4,8 @@ import { waitUntilElementExists, setMutationObserver } from './services/ui.servi
 import { initConstructor } from './scenariosConstructor';
 
 export const addFilterSubject = new Subject();
+export const editScenarioSubject = new Subject();
+export const selectScenarioSubject = new Subject();
 
 $(() => {
   initConstructor();

@@ -26,8 +26,8 @@ const StepAction = styled.span`
   cursor: pointer;
   font-size: 18px;
   position: absolute;
-  right: -8px;
-  top: -8px;
+  right: 3px;
+  top: 3px;
 `;
 
 const StepNumber = styled.span`
@@ -38,13 +38,12 @@ const StepNumber = styled.span`
   align-items: center;
   font-size: 25px;
   background: rgb(45 45 45);
-  margin-right: 10px;
 `;
 
 const Main = styled.main`
   display: flex;
   flex: 1;
-  padding: 10px;
+  padding: 10px 15px;
 `;
 
 const Inputs = styled.div`
@@ -52,6 +51,7 @@ const Inputs = styled.div`
   flex: 1;
   flex-direction: column;
   margin-left: 15px;
+  justify-content: space-around;
 `;
 
 const Row = styled.div`
@@ -60,19 +60,18 @@ const Row = styled.div`
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-around;
+`;
 
-  &.grow {
-    flex: 1;
-  }
-
-  > * {
-    width: 48%;
-  }
+const NumberFieldContainer = styled.div`
+  width: 48%;
+  min-width: 150px;
 `;
 
 const FilterContainer = styled.div`
   width: 50%;
   min-width: 320px;
+  display: flex;
+  align-items: center;
   > div {
     margin: 0;
     border-color: #6b5897;
@@ -108,6 +107,23 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
     });
   };
 
+  const changeFilterMaxBuyDebounced = (price) => {
+    edit({
+      ...step,
+      filter: {
+        ...step.filter,
+        requestParams: {
+          ...step?.filter?.requestParams,
+          maxb: price,
+        },
+        meta: {
+          ...step?.filter?.meta,
+          maxBuy: price,
+        }
+      }
+    });
+  };
+
   return (
     <Container
         ref={(node) => {
@@ -120,51 +136,55 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
       <StepNumber>{index + 1}</StepNumber>
       <Main>
         <FilterContainer>
-          <Filter filter={step.filter}/>
+          <Filter filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
         </FilterContainer>
         <Inputs>
           <Row>
-            <NumberField
-                onChange={(e) => {
-                  const value = parseStringToInt(e.target.value);
-                  setWorkingHours(value);
-                }}
-                onBlur={editWorkingHours}
-                min={0}
-                max={15}
-                value={workingHours}
-                isReduceDisabled={!workingHours}
-                isIncreaseDisabled={workingHours >= 15}
-                onUpdateValueByStep={editWorkingHours}
-                getStep={() => 1}
-                label="Working Hours *"
-                placeholder="Minutes"
-                renderIcon={() => <IoIosTimer/>}
-            />
-            <NumberField
-                onChange={(e) => {
-                  const value = parseStringToInt(e.target.value || null);
-                  setPauseAfterStep(value);
-                }}
-                onBlur={editPauseAfterStep}
-                min={0}
-                max={50}
-                value={pauseAfterStep}
-                isReduceDisabled={!pauseAfterStep}
-                isIncreaseDisabled={pauseAfterStep >= 50}
-                onUpdateValueByStep={editPauseAfterStep}
-                getStep={() => 1}
-                label="Pause after step"
-                placeholder="Minutes"
-                renderIcon={() => <IoIosTimer/>}
-            />
-          </Row>
-          <Row className="grow">
             <CheckboxField
-                label="Sell on Market"
+                label="Automatically Sell on Market"
                 checked={!!shouldSellOnMarket}
                 onChange={editShouldSellOnMarket}
             />
+          </Row>
+          <Row>
+            <NumberFieldContainer>
+              <NumberField
+                  onChange={(e) => {
+                    const value = parseStringToInt(e.target.value);
+                    setWorkingHours(value);
+                  }}
+                  onBlur={editWorkingHours}
+                  min={0}
+                  max={15}
+                  value={workingHours}
+                  isReduceDisabled={!workingHours}
+                  isIncreaseDisabled={workingHours >= 15}
+                  onUpdateValueByStep={editWorkingHours}
+                  getStep={() => 1}
+                  label="Working Hours *"
+                  placeholder="Minutes"
+                  renderIcon={() => <IoIosTimer/>}
+              />
+            </NumberFieldContainer>
+            <NumberFieldContainer>
+              <NumberField
+                  onChange={(e) => {
+                    const value = parseStringToInt(e.target.value || null);
+                    setPauseAfterStep(value);
+                  }}
+                  onBlur={editPauseAfterStep}
+                  min={0}
+                  max={50}
+                  value={pauseAfterStep}
+                  isReduceDisabled={!pauseAfterStep}
+                  isIncreaseDisabled={pauseAfterStep >= 50}
+                  onUpdateValueByStep={editPauseAfterStep}
+                  getStep={() => 1}
+                  label="Pause after step"
+                  placeholder="Minutes"
+                  renderIcon={() => <IoIosTimer/>}
+              />
+            </NumberFieldContainer>
           </Row>
         </Inputs>
         {remove && (

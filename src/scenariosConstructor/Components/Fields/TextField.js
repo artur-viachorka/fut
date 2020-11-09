@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
@@ -7,13 +7,26 @@ const Container = styled.div`
   flex: 1;
   input {
     width: 100%;
-    padding: 10px;
+    padding: 0 10px;
+
+    &::selection {
+      color: white;
+      background: #7e43f5 !important;
+    }
   }
 `;
-const TextField = ({ value, onChange, type, placeholder, ...rest }) => {
+const TextField = ({ value, onChange, type, focusOnInit, placeholder, ...rest }) => {
+  const inputReference = useRef(null);
+
+  useEffect(() => {
+    if (focusOnInit) {
+      inputReference.current?.focus();
+    }
+  }, []);
+
   return (
     <Container>
-      <input value={value} type={type} placeholder={placeholder} onChange={onChange} {...rest}/>
+      <input ref={inputReference} value={value} type={type} placeholder={placeholder} onChange={onChange} {...rest}/>
     </Container>
   );
 };
@@ -23,6 +36,7 @@ TextField.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   type: PropTypes.string,
+  focusOnInit: PropTypes.bool,
 };
 
 export default TextField;

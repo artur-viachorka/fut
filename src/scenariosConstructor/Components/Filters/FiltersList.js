@@ -11,9 +11,14 @@ import { addFilterSubject } from '../../../contentScript';
 import { DND_TYPES } from '../../constants';
 
 const Hint = styled.span`
-  font-size: 12px;
   color: grey;
   font-style: italic;
+  flex: 1;
+  font-size: 20px;
+  justify-content: center;
+  text-align: center;
+  display: flex;
+  align-items: center;
 `;
 
 const Container = styled.div`
@@ -70,7 +75,7 @@ const FiltersList = () => {
     <Container ref={drop}>
       {filters && !filters.length && (
         <Hint>
-          Use search the transfer market form to add filter
+          Use search the transfer market form to add filter.
         </Hint>
       )}
       {(filters || []).map((filter) => (

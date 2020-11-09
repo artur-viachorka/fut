@@ -21,3 +21,7 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
+.landscape #NotificationLayer {
+  top: 0 !important;
+}
