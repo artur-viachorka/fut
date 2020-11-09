@@ -6,6 +6,7 @@ import { AiFillCloseCircle } from 'react-icons/ai';
 import { IoIosTimer } from 'react-icons/io';
 
 import NumberField from '../Fields/NumberField';
+import CheckboxField from '../Fields/CheckboxField';
 import Filter from '../Filters/Filter';
 import { DND_TYPES } from '../../constants';
 import { parseStringToInt } from '../../../services/string.serivce';
@@ -58,7 +59,11 @@ const Row = styled.div`
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-around;  
+  justify-content: space-around;
+
+  &.grow {
+    flex: 1;
+  }
 
   > * {
     width: 48%;
@@ -77,6 +82,7 @@ const FilterContainer = styled.div`
 const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
   const [workingHours, setWorkingHours] = useState(step.workingHours);
+  const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
 
   const editWorkingHours = (value) => {
     setWorkingHours(value);
@@ -91,6 +97,14 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
     edit({
       ...step,
       pauseAfterStep: value,
+    });
+  };
+
+  const editShouldSellOnMarket = (value) => {
+    setShouldSellOnMarket(value);
+    edit({
+      ...step,
+      shouldSellOnMarket: value,
     });
   };
 
@@ -143,6 +157,13 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
                 label="Pause after step"
                 placeholder="Minutes"
                 renderIcon={() => <IoIosTimer/>}
+            />
+          </Row>
+          <Row className="grow">
+            <CheckboxField
+                label="Sell on Market"
+                checked={!!shouldSellOnMarket}
+                onChange={editShouldSellOnMarket}
             />
           </Row>
         </Inputs>
