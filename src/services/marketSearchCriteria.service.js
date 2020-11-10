@@ -1,11 +1,11 @@
 import { reject, equals, isEmpty, dissoc } from 'ramda';
 
-import { addFilterSubject } from '../contentScript';
+import { addFilterSubject, openModalSubject } from '../contentScript';
+import { MODALS } from '../fut-react-app/constants';
 import { match, parseStringToInt } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
 import { saveToStorage, getFromStorage } from './storage.service';
-import { REACT_CONTAINER_ID } from '../scenariosConstructor/constants';
 import PLAYERS from '../data/players.json';
 
 export const searchPlayers = (name) => {
@@ -207,9 +207,16 @@ export const addConfigureScenariosButton = () => {
   newButton.text('Configure Scenarios');
   newButton.addClass('fut-configure-scenarios-custom-button');
   newButton.css('background-color', '#6b2121');
-  newButton.on('click', async () => {
-    $(`#${REACT_CONTAINER_ID}`).css('display', 'block');
-  });
+  newButton.on('click', () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
+  $('.ut-market-search-filters-view .button-container').append(newButton);
+};
+
+export const addOpenRunnerButton = () => {
+  const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
+  newButton.text('Open Runner');
+  newButton.addClass('fut-open-runner-custom-button');
+  newButton.css('background-color', 'blue');
+  newButton.on('click', () => openModalSubject.next({ modal: MODALS.RUNNER }));
   $('.ut-market-search-filters-view .button-container').append(newButton);
 };
 
@@ -361,5 +368,6 @@ export const initSearchMarketPage = () => {
     copySearchInput();
     addSaveFilterButton();
     addConfigureScenariosButton();
+    addOpenRunnerButton();
   }
 };
