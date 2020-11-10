@@ -215,7 +215,7 @@ export const addOpenRunnerButton = () => {
   const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
   newButton.text('Open Runner');
   newButton.addClass('fut-open-runner-custom-button');
-  newButton.css('background-color', 'blue');
+  newButton.css('background-color', '#0379bf');
   newButton.on('click', () => openModalSubject.next({ modal: MODALS.RUNNER }));
   $('.ut-market-search-filters-view .button-container').append(newButton);
 };
