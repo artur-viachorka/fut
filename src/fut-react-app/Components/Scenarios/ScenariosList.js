@@ -26,8 +26,8 @@ const Hint = styled.span`
 const Scenario = styled.div`
   display: flex;
   border-radius: 50%;
-  width: 80px;
-  height: 80px;
+  min-width: 74px;
+  min-height: 74px;
   text-align: center;
   justify-content: center;
   align-items: center;
@@ -54,9 +54,11 @@ const ScenariosList = () => {
   useEffect(() => {
     loadScenarios();
     if (editScenarioSubject) {
-      editScenarioSubject.subscribe(() => {
+      editScenarioSubject.subscribe((res) => {
         loadScenarios();
-        setSelectedScenario(null);
+        if (!res?.withoutReseting) {
+          setSelectedScenario(null);
+        }
       });
     }
     return editScenarioSubject.unsubscribe;

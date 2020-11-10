@@ -42,7 +42,7 @@ const getRoundOnValue = (value) => {
   return step;
 };
 
-export const BuyNowField = ({ value, onChange, placeholder }) => {
+export const BuyNowField = ({ value, onChange, placeholder, isReadOnly }) => {
   const [buyNowValue, setBuyNowValue] = useState(value);
 
   const updateValue = (num) => {
@@ -64,12 +64,14 @@ export const BuyNowField = ({ value, onChange, placeholder }) => {
         getStep={getStep}
         placeholder={placeholder}
         imageSource={COIN_ICON_SRC}
+        isReadOnly={isReadOnly}
     />
   );
 };
 
 BuyNowField.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  isReadOnly: PropTypes.bool,
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
 };

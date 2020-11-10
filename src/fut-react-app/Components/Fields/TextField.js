@@ -15,7 +15,7 @@ const Container = styled.div`
     }
   }
 `;
-const TextField = ({ value, onChange, type, focusOnInit, placeholder, ...rest }) => {
+const TextField = ({ value, onChange, type, focusOnInit, placeholder, isReadOnly, ...rest }) => {
   const inputReference = useRef(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const TextField = ({ value, onChange, type, focusOnInit, placeholder, ...rest })
 
   return (
     <Container>
-      <input ref={inputReference} value={value} type={type} placeholder={placeholder} onChange={onChange} {...rest}/>
+      <input disabled={isReadOnly} ref={inputReference} value={value} type={type} placeholder={placeholder} onChange={onChange} {...rest}/>
     </Container>
   );
 };
@@ -37,6 +37,7 @@ TextField.propTypes = {
   placeholder: PropTypes.string,
   type: PropTypes.string,
   focusOnInit: PropTypes.bool,
+  isReadOnly: PropTypes.bool,
 };
 
 export default TextField;

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import update from 'immutability-helper';
 import { FaRegSave } from 'react-icons/fa';
 
-import { DNDStep } from './Step';
+import Step, { DNDStep } from './Step';
 import MarkColorPicker from './MarkColorPicker';
 import TextField from '../Fields/TextField';
 import { DND_TYPES } from '../../constants';
@@ -35,6 +36,7 @@ const ScenarioHeader = styled.header`
   justify-content: space-between;
   margin-bottom: 10px;
   font-size: 15px;
+  height: 30px;
 `;
 
 const Steps = styled.div`
@@ -100,7 +102,7 @@ const ScenarioActions = styled.div`
   flex-direction: row;
 `;
 
-const ScenarioBuilder = () => {
+const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
   const [scenario, setScenario] = useState(null);
   const [isNameEditting, setIsNameEditting] = useState(false);
   const [, drop] = useDrop({
@@ -185,7 +187,7 @@ const ScenarioBuilder = () => {
           <>
             <ScenarioHeader>
               <ScenarioName>
-                {!isNameEditting && <span onClick={() => setIsNameEditting(true)}>{scenario.name}</span>}
+                {!isNameEditting && <span onClick={() => setIsNameEditting(!isReadOnly)}>{scenario.name}</span>}
                 {isNameEditting && (
                   <EditNameInput>
                     <TextField
@@ -203,68 +205,89 @@ const ScenarioBuilder = () => {
                   </EditNameInput>
                 )}
               </ScenarioName>
-              <ScenarioActions>
-                <ScenarioAction
-                    onClick={async () => {
-                      const isSaved = await saveScenario(scenario);
-                      if (isSaved) {
-                        setScenario(null);
-                      }
-                    }}
-                >
-                  <FaRegSave/>
-                </ScenarioAction>
-                {scenario.id && (
-                  <>
-                    <ScenarioAction
-                        onClick={async () => {
-                          const isCopied = await copyScenario(scenario);
-                          if (isCopied) {
-                            setScenario(null);
-                          }
-                        }}
-                    >
-                      <FaRegCopy/>
-                    </ScenarioAction>
-                    <ScenarioAction
-                        onClick={async () => {
-                          const isDeleted = await deleteScenario(scenario.id);
-                          if (isDeleted) {
-                            setScenario(null);
-                          }
-                        }}
-                    >
-                      <FaTrash/>
-                    </ScenarioAction>
-                  </>
-                )}
-              </ScenarioActions>
+              {!isReadOnly && (
+                <ScenarioActions>
+                  <ScenarioAction
+                      onClick={async () => {
+                        const isSaved = await saveScenario(scenario, fromRunner);
+                        if (isSaved && !fromRunner) {
+                          setScenario(null);
+                        }
+                      }}
+                  >
+                    <FaRegSave/>
+                  </ScenarioAction>
+                  {scenario.id && !fromRunner && (
+                    <>
+                      <ScenarioAction
+                          onClick={async () => {
+                            const isCopied = await copyScenario(scenario);
+                            if (isCopied) {
+                              setScenario(null);
+                            }
+                          }}
+                      >
+                        <FaRegCopy/>
+                      </ScenarioAction>
+                      <ScenarioAction
+                          onClick={async () => {
+                            const isDeleted = await deleteScenario(scenario.id);
+                            if (isDeleted) {
+                              setScenario(null);
+                            }
+                          }}
+                      >
+                        <FaTrash/>
+                      </ScenarioAction>
+                    </>
+                  )}
+                </ScenarioActions>
+              )}
             </ScenarioHeader>
-            <MarkColorPicker activeColor={scenario.markColor} onMarkPicked={setScenarioMarkColor}/>
+            <MarkColorPicker activeColor={scenario.markColor} onMarkPicked={(value) => setScenarioMarkColor(isReadOnly ? scenario.markColor : value)}/>
             <Steps>
               {scenario.steps.map((step, index) => (
-                <DNDStep
-                    edit={editStep}
-                    moveStep={moveStep}
-                    findStep={findStep}
-                    remove={removeStep}
-                    key={step.id}
-                    step={step}
-                    index={index}
-                />
+                isReadOnly ? (
+                  <Step
+                      key={step.id}
+                      step={step}
+                      index={index}
+                      isReadOnly={isReadOnly}
+                  />
+                ) : (
+                  <DNDStep
+                      edit={editStep}
+                      moveStep={moveStep}
+                      findStep={findStep}
+                      remove={removeStep}
+                      key={step.id}
+                      step={step}
+                      index={index}
+                  />
+                )
               ))}
             </Steps>
           </>
         )
         : (
           <Hint>
-            <div>Drag and drop filter from left side to create worker scenario.</div>
-            <div>Or select it in the header to edit.</div>
+            {hint ? <div>{hint}</div> : (
+              <>
+                <div>Drag and drop filter from left side to create worker scenario.</div>
+                <div>Or select it in the header to edit.</div>
+              </>
+            )}
           </Hint>
         )
       }
     </Container>
   );
+};
+
+ScenarioBuilder.propTypes = {
+  isReadOnly: PropTypes.bool,
+  fromRunner: PropTypes.bool,
+  hint: PropTypes.string,
 };
 
 export default ScenarioBuilder;

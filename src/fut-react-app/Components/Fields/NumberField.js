@@ -55,6 +55,8 @@ const StyledButton = styled.button`
 
   &[disabled] {
     background-color: #643acc;
+    color: #a4afac;
+    cursor: default;
   }
 `;
 
@@ -95,6 +97,7 @@ export const NumberField = ({
   label,
   min,
   max,
+  isReadOnly,
 }) => {
   const updateValueByStep = (increasing) => {
     const parsedValue = parseStringToInt(value) || 0;
@@ -120,7 +123,7 @@ export const NumberField = ({
         {getStep && (
           <StyledButton
               className="left"
-              disabled={isReduceDisabled}
+              disabled={isReduceDisabled || isReadOnly}
               onClick={() => updateValueByStep()}
           >
             -
@@ -137,12 +140,13 @@ export const NumberField = ({
               placeholder={placeholder}
               onChange={onChange}
               onBlur={onBlurHandler}
+              isReadOnly={isReadOnly}
           />
         </Main>
         {getStep && (
           <StyledButton
               className="right"
-              disabled={isIncreaseDisabled}
+              disabled={isIncreaseDisabled || isReadOnly}
               onClick={() => updateValueByStep(true)}
           >
             +
@@ -167,6 +171,7 @@ NumberField.propTypes = {
   min: PropTypes.number,
   max: PropTypes.number,
   renderIcon: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 export default NumberField;

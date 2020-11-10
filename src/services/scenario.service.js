@@ -39,13 +39,13 @@ export const getScenarios = async () => {
 };
 
 const isScenarioInvalid = (scenario) => {
-  return scenario.steps.some(step => !step?.filter?.requestParams?.maxb || !step.workingHours);
+  return scenario.steps.some(step => !step?.filter?.requestParams?.maxb || !step.workingMinutes);
 };
 
-export const saveScenario = async (updatedScenario) => {
+export const saveScenario = async (updatedScenario, withoutReseting) => {
   try {
     if (isScenarioInvalid(updatedScenario)) {
-      return openUTNotification({ text: 'Max Buy and Working Hours are required for every step', error: true });
+      return openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
     }
     let scenarios = await getScenarios();
     const existingScenario = scenarios.find(scenario => scenario.id === updatedScenario.id);
@@ -57,7 +57,7 @@ export const saveScenario = async (updatedScenario) => {
       openUTNotification({ text: 'Scenario was successfully created', success: true });
     }
     await setScenarios(scenarios);
-    editScenarioSubject.next();
+    editScenarioSubject.next({ withoutReseting });
     return true;
   } catch (e) {
     console.error(e);
@@ -90,7 +90,7 @@ export const deleteScenario = async (scenarioId) => {
 export const copyScenario = async (scenarioToCopy) => {
   try {
     if (isScenarioInvalid(scenarioToCopy)) {
-      return openUTNotification({ text: 'Max Buy and Working Hours are required for every step', error: true });
+      return openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
     }
     let scenarios = await getScenarios();
     if (scenarioToCopy?.id) {

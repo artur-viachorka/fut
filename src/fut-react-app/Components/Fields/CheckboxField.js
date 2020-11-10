@@ -49,10 +49,10 @@ const Container = styled.label`
   font-size: 12px;
 `;
 
-const CheckboxField = ({ checked, label, onChange, ...props }) => (
+const CheckboxField = ({ checked, label, onChange, isReadOnly, ...props }) => (
   <Container>
     <CheckboxContainer>
-      <HiddenCheckbox checked={checked} onChange={(e) => onChange(e.target.checked)} {...props}/>
+      <HiddenCheckbox disabled={isReadOnly} checked={checked} onChange={(e) => onChange(e.target.checked)} {...props}/>
       <StyledCheckbox checked={checked}>
         <Icon viewBox="0 0 24 24">
           <polyline points="20 6 9 17 4 12"/>
@@ -67,6 +67,7 @@ CheckboxField.propTypes = {
   onChange: PropTypes.func.isRequired,
   label: PropTypes.string.isRequired,
   checked: PropTypes.bool.isRequired,
+  isReadOnly: PropTypes.bool,
 };
 
 export default CheckboxField;

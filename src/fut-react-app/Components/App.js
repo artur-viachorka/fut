@@ -23,7 +23,7 @@ const App = () => {
     return openModalSubject.unsubscribe;
   }, []);
   const [isConstructorModalVisible, setIsConstructorModalVisible] = useState(false);
-  const [isRunnerModalVisible, setIsRunnerModalVisible] = useState(false);
+  const [isRunnerModalVisible, setIsRunnerModalVisible] = useState(true);
   return (
     <DndProvider backend={HTML5Backend}>
       {isConstructorModalVisible && <ConstructorModal onClose={() => setIsConstructorModalVisible(false)}/>}

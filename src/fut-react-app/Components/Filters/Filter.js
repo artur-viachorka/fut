@@ -102,7 +102,7 @@ const InputContainer = styled.div`
   margin-top: 5px;
 `;
 
-const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy }) => {
+const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy, isReadOnly }) => {
   const handleInputChange = (value) => {
     if (onEditMaxBuy) {
       onEditMaxBuy(filter.id, value || null);
@@ -133,7 +133,7 @@ const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy
           }
         </AdditionalFilterTypes>
         <InputContainer>
-          <BuyNowField placeholder="Max buy now" value={filter.meta.maxBuy} onChange={handleInputChange}/>
+          <BuyNowField isReadOnly={isReadOnly} placeholder="Max buy now" value={filter.meta.maxBuy} onChange={handleInputChange}/>
         </InputContainer>
       </Main>
       {(onCopy || onDelete) && (
@@ -154,7 +154,7 @@ const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy
   );
 };
 
-export const DNDFilter = ({ filter, findFilter, moveFilter, onDragAndDropEnd, onEditMaxBuy, onDelete, onCopy }) => {
+export const DNDFilter = ({ filter, findFilter, moveFilter, onDragAndDropEnd, onEditMaxBuy, onDelete, onCopy, isReadOnly }) => {
   const originalIndex = findFilter(filter.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -193,6 +193,7 @@ export const DNDFilter = ({ filter, findFilter, moveFilter, onDragAndDropEnd, on
         drop={drop}
         filter={filter}
         isDragging={isDragging}
+        isReadOnly={isReadOnly}
     />
   );
 };
@@ -205,6 +206,7 @@ DNDFilter.propTypes = {
   onEditMaxBuy: PropTypes.func,
   onDelete: PropTypes.func,
   onCopy: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 Filter.propTypes = {
@@ -215,6 +217,7 @@ Filter.propTypes = {
   isDragging: PropTypes.bool,
   drag: PropTypes.func,
   drop: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 export default Filter;

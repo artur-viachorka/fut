@@ -45,12 +45,12 @@ const CloseIconWrapper = styled.span`
   cursor: pointer;
 `;
 
-const Modal = ({ children, onClose }) => {
+const Modal = ({ children, onClose, title }) => {
   return (
     <Wrapper onClick={onClose}>
       <Container onClick={(e) => e.stopPropagation()}>
         <Header>
-          <span>Manage Scenarios</span>
+          <span>{title}</span>
           <CloseIconWrapper>
             <AiFillCloseCircle onClick={onClose}/>
           </CloseIconWrapper>
@@ -62,6 +62,7 @@ const Modal = ({ children, onClose }) => {
 };
 
 Modal.propTypes = {
+  title: PropTypes.string.isRequired,
   children: PropTypes.node,
   onClose: PropTypes.func.isRequired,
 };

@@ -78,16 +78,16 @@ const FilterContainer = styled.div`
   }
 `;
 
-const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
+const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly }) => {
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
-  const [workingHours, setWorkingHours] = useState(step.workingHours);
+  const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
 
-  const editWorkingHours = (value) => {
-    setWorkingHours(value);
+  const editWorkingMinutes = (value) => {
+    setWorkingMinutes(value);
     edit({
       ...step,
-      workingHours: value,
+      workingMinutes: value,
     });
   };
 
@@ -136,7 +136,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
       <StepNumber>{index + 1}</StepNumber>
       <Main>
         <FilterContainer>
-          <Filter filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
+          <Filter isReadOnly={isReadOnly} filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
         </FilterContainer>
         <Inputs>
           <Row>
@@ -144,6 +144,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
                 label="Automatically Sell on Market"
                 checked={!!shouldSellOnMarket}
                 onChange={editShouldSellOnMarket}
+                isReadOnly={isReadOnly}
             />
           </Row>
           <Row>
@@ -151,17 +152,18 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
               <NumberField
                   onChange={(e) => {
                     const value = parseStringToInt(e.target.value);
-                    setWorkingHours(value);
+                    setWorkingMinutes(value);
                   }}
-                  onBlur={editWorkingHours}
+                  onBlur={editWorkingMinutes}
                   min={0}
                   max={15}
-                  value={workingHours}
-                  isReduceDisabled={!workingHours}
-                  isIncreaseDisabled={workingHours >= 15}
-                  onUpdateValueByStep={editWorkingHours}
+                  isReadOnly={isReadOnly}
+                  value={workingMinutes}
+                  isReduceDisabled={!workingMinutes}
+                  isIncreaseDisabled={workingMinutes >= 15}
+                  onUpdateValueByStep={editWorkingMinutes}
                   getStep={() => 1}
-                  label="Working Hours *"
+                  label="Working Minutes *"
                   placeholder="Minutes"
                   renderIcon={() => <IoIosTimer/>}
               />
@@ -175,6 +177,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
                   onBlur={editPauseAfterStep}
                   min={0}
                   max={50}
+                  isReadOnly={isReadOnly}
                   value={pauseAfterStep}
                   isReduceDisabled={!pauseAfterStep}
                   isIncreaseDisabled={pauseAfterStep >= 50}
@@ -197,7 +200,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit }) => {
   );
 };
 
-export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep }) => {
+export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly }) => {
   const originalIndex = findStep(step.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -236,6 +239,7 @@ export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep,
         index={index}
         isDragging={isDragging}
         edit={edit}
+        isReadOnly={isReadOnly}
     />
   );
 };
@@ -248,12 +252,14 @@ DNDStep.propTypes = {
   onDragAndDropEnd: PropTypes.func,
   findStep: PropTypes.func.isRequired,
   moveStep: PropTypes.func.isRequired,
+  isReadOnly: PropTypes.bool,
 };
 
 Step.propTypes = {
   remove: PropTypes.func,
   step: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
+  isReadOnly: PropTypes.bool,
   isDragging: PropTypes.bool,
   drag: PropTypes.func,
   drop: PropTypes.func,

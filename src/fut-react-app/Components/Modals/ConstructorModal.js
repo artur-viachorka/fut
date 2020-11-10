@@ -37,7 +37,7 @@ const RightHeader = styled.div`
 
 const ConstructorModal = ({ onClose }) => {
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} title="Manage Scenarios">
       <Container>
         <Left>
           <FiltersList/>
