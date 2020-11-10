@@ -27,6 +27,8 @@ const Scenario = styled.div`
   display: flex;
   border-radius: 50%;
   min-width: 74px;
+  width: 74px;
+  height: 74px;
   min-height: 74px;
   text-align: center;
   justify-content: center;
