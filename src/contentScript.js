@@ -8,6 +8,7 @@ export const editScenarioSubject = new Subject();
 export const selectScenarioSubject = new Subject();
 export const openModalSubject = new Subject();
 export const editStepWithoutSavingSubject = new Subject();
+export const updateExecutableRunnerDataObject = new Subject();
 
 $(() => {
   initReactApp();

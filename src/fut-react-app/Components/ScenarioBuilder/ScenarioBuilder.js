@@ -102,7 +102,7 @@ const ScenarioActions = styled.div`
   flex-direction: row;
 `;
 
-const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
+const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar }) => {
   const [scenario, setScenario] = useState(null);
   const [isNameEditting, setIsNameEditting] = useState(false);
   const [, drop] = useDrop({
@@ -252,6 +252,7 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
                       key={step.id}
                       step={step}
                       index={index}
+                      renderStatusBar={renderStepStatusBar}
                       isReadOnly={isReadOnly}
                   />
                 ) : (
@@ -262,6 +263,7 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
                       remove={removeStep}
                       key={step.id}
                       step={step}
+                      renderStatusBar={renderStepStatusBar}
                       index={index}
                   />
                 )
@@ -288,6 +290,7 @@ ScenarioBuilder.propTypes = {
   isReadOnly: PropTypes.bool,
   fromRunner: PropTypes.bool,
   hint: PropTypes.string,
+  renderStepStatusBar: PropTypes.func,
 };
 
 export default ScenarioBuilder;

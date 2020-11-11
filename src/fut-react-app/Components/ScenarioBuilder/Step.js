@@ -56,6 +56,7 @@ const Inputs = styled.div`
 
 const Row = styled.div`
   width: 100%;
+  margin: 3px 0;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -65,6 +66,7 @@ const Row = styled.div`
 const NumberFieldContainer = styled.div`
   width: 48%;
   min-width: 150px;
+  margin: 3px 0;
 `;
 
 const FilterContainer = styled.div`
@@ -78,7 +80,12 @@ const FilterContainer = styled.div`
   }
 `;
 
-const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly }) => {
+const StatusBarContainer = styled.div`
+  height: 100%;
+  display: flex;
+`;
+
+const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar }) => {
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
   const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
@@ -190,6 +197,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly })
             </NumberFieldContainer>
           </Row>
         </Inputs>
+        {renderStatusBar && <StatusBarContainer>{renderStatusBar(step)}</StatusBarContainer>}
         {remove && (
           <StepAction title="Remove step" onClick={() => remove(step.id)}>
             <AiFillCloseCircle/>
@@ -200,7 +208,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly })
   );
 };
 
-export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly }) => {
+export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly, renderStatusBar }) => {
   const originalIndex = findStep(step.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -240,6 +248,7 @@ export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep,
         isDragging={isDragging}
         edit={edit}
         isReadOnly={isReadOnly}
+        renderStatusBar={renderStatusBar}
     />
   );
 };
@@ -253,6 +262,7 @@ DNDStep.propTypes = {
   findStep: PropTypes.func.isRequired,
   moveStep: PropTypes.func.isRequired,
   isReadOnly: PropTypes.bool,
+  renderStatusBar: PropTypes.func,
 };
 
 Step.propTypes = {
@@ -264,6 +274,7 @@ Step.propTypes = {
   drag: PropTypes.func,
   drop: PropTypes.func,
   edit: PropTypes.func,
+  renderStatusBar: PropTypes.func,
 };
 
 export default Step;

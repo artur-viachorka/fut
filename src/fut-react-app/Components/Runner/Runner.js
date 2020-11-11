@@ -4,11 +4,13 @@ import { FaPlay, FaPause, FaStop } from 'react-icons/fa';
 
 import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
 import ScenariosList from '../Scenarios/ScenariosList';
+import RunnerStepStatus from './RunnerStepStatus';
 
-import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+import { selectScenarioSubject, editStepWithoutSavingSubject, updateExecutableRunnerDataObject } from '../../../contentScript';
 import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
+import { executeScenario } from '../../../services/runner.service';
 
-import Countdown from '../Countdown';
+import CountdownTimer from '../CountdownTimer';
 
 const Container = styled.div`
   display: flex;
@@ -22,20 +24,20 @@ const Header = styled.div`
   display: flex;
   padding-right: 10px;
   flex-direction: row;
+  justify-content: space-between;
   border-bottom: 1px solid #414141;
 `;
 
 const ScenariosContainer = styled.div`
   display: flex;
-  flex: 1;
   padding: 0 10px;
-  max-width: 70%;
+  overflow: hidden;
 `;
 
 const RunnerInfo = styled.div`
-  min-width: 300px;
+  min-width: 250px;
   border: 1px solid #414141;
-  margin: 10px auto;
+  margin: 10px 0;
   padding: 10px 25px;
   border-radius: 5px;
   display: flex;
@@ -86,12 +88,11 @@ const RunnerActions = styled.div`
 const Runner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentScenarioDuration, setCurrentScenarioDuration] = useState(null);
 
   const [selectedScenario, setSelectedScenario] = useState(null);
+  const [executableRunnerData, setExecutableRunnerData] = useState(null);
 
   const resetScenario = (scenario) => {
-    setCurrentScenarioDuration(scenario ? getScenarioDurationInSeconds(scenario) : null);
     setSelectedScenario(scenario);
   };
 
@@ -102,9 +103,15 @@ const Runner = () => {
     const editStepWithoutSavingSubscription = editStepWithoutSavingSubject.subscribe(({ scenario }) => {
       resetScenario(scenario);
     });
+
+    const updateExecutableRunnerDataSubscription = updateExecutableRunnerDataObject.subscribe((runner) => {
+      setExecutableRunnerData(runner);
+    });
+
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
+      updateExecutableRunnerDataSubscription.unsubscribe();
     };
   }, []);
 
@@ -125,6 +132,7 @@ const Runner = () => {
                       return;
                     }
                     setIsRunning(true);
+                    executeScenario(selectedScenario);
                   }}
               >
                 <FaPlay/>
@@ -153,18 +161,16 @@ const Runner = () => {
                   if (isRunning || isPaused) {
                     setIsPaused(false);
                     setIsRunning(false);
-                    setCurrentScenarioDuration(getScenarioDurationInSeconds(selectedScenario));
                   }
                 }}
             >
               <FaStop/>
             </RunnerAction>
           </RunnerActions>
-          {currentScenarioDuration && isRunning && (
-            <Countdown
+          {selectedScenario && isRunning && (
+            <CountdownTimer
                 isPaused={isPaused}
-                onTimerPaused={setCurrentScenarioDuration}
-                timerSeconds={currentScenarioDuration}
+                timerSeconds={getScenarioDurationInSeconds(selectedScenario)}
                 onTimerExceeded={() => {
                   setIsRunning(false);
                   setIsPaused(false);
@@ -173,7 +179,18 @@ const Runner = () => {
           )}
         </RunnerInfo>
       </Header>
-      <ScenarioBuilder hint="Select scenario to manage runner." isReadOnly={isRunning || isPaused} fromRunner={true}/>
+      <ScenarioBuilder
+          renderStepStatusBar={(step) => (
+            <RunnerStepStatus
+                isPaused={isPaused}
+                isStepRunning={isRunning && step.id === executableRunnerData?.currentStepId}
+                step={step}
+            />
+          )}
+          hint="Select scenario to manage runner."
+          isReadOnly={isRunning || isPaused}
+          fromRunner={true}
+      />
     </Container>
   );
 };

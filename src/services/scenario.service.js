@@ -83,8 +83,12 @@ export const setScenarios = async (scenarios) => {
   await saveToStorage({ scenarios });
 };
 
+export const getStepDurationInSeconds = (step) => {
+  return (step.workingMinutes + (step.pauseAfterStep || 0)) * 60;
+};
+
 export const getScenarioDurationInSeconds = (scenario) => {
-  return (scenario?.steps || []).reduce((accumulator, step) => accumulator + step.workingMinutes + (step.pauseAfterStep || 0), 0) * 60;
+  return (scenario?.steps || []).reduce((accumulator, step) => accumulator + getStepDurationInSeconds(step), 0);
 };
 
 export const deleteScenario = async (scenarioId) => {
