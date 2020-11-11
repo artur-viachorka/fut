@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { IoIosTimer } from 'react-icons/io';
 import styled from 'styled-components';
@@ -26,19 +26,35 @@ const Icon = styled.span`
 
 const Countdown = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused }) => {
   const [timer, setTimer] = useState(null);
-  const [timerIntervalId, setTimerIntervalId] = useState(null);
+  const isDestroyedRef = useRef(false);
 
-  const clearTimerInterval = () => {
-    clearInterval(timerIntervalId);
-    setTimerIntervalId(null);
+  const pausedRef = useRef(isPaused);
+  pausedRef.current = isPaused;
+
+  const startTimer = (func) => {
+    const timerResult = func();
+    setTimer(timerResult);
+
+    const isTimerExceeded = timerResult.seconds <= 0 && timerResult.hours <= 0 && timerResult.minutes <= 0;
+
+    if (isTimerExceeded) {
+      if (onTimerExceeded) {
+        onTimerExceeded();
+      }
+      return;
+    }
+    if (isDestroyedRef.current) {
+      return;
+    }
+    if (pausedRef.current) {
+      const left = ((timerResult.hours || 0) * 3600) + ((timerResult.minutes || 0) * 60) + timerResult.seconds;
+      onTimerPaused(left);
+      return;
+    }
+    setTimeout(startTimer, 1000, func);
   };
 
-  const resetTimerInterval = (func) => {
-    const intervalId = setInterval(func, 1000);
-    setTimerIntervalId(intervalId);
-  };
-
-  const getIntrevalHandler = () => {
+  const getTimerHandler = () => {
     let countDownDate = new Date();
     countDownDate.setSeconds(countDownDate.getSeconds() + timerSeconds);
     countDownDate = countDownDate.getTime();
@@ -47,34 +63,24 @@ const Countdown = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused }) =
       const distance = countDownDate - now;
       let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      if (seconds <= 0 && hours <= 0 && minutes <= 0) {
-        if (onTimerExceeded) {
-          onTimerExceeded();
-        }
-        clearTimerInterval();
-        hours = 0;
-        minutes = 0;
-        seconds = 0;
-      }
-      setTimer({
-        hours, minutes, seconds,
-      });
+      let seconds = Math.ceil((distance % (1000 * 60)) / 1000);
+      return {
+        hours: hours < 0 ? 0 : hours,
+        minutes: minutes < 0 ? 0 : minutes,
+        seconds: seconds < 0 ? 0 : seconds,
+      };
     };
   };
 
   useEffect(() => {
-    if (isPaused) {
-      clearTimerInterval();
-      if (onTimerPaused && timer) {
-        const left = ((timer.hours || 0) * 3600) + ((timer.minutes || 0) * 60) + timer.seconds;
-        onTimerPaused(left);
-      }
-    } else {
-      resetTimerInterval(getIntrevalHandler());
+    if (!isPaused) {
+      startTimer(getTimerHandler());
     }
-    return clearTimerInterval;
   }, [isPaused]);
+
+  useEffect(() => {
+    return () => isDestroyedRef.current = true;
+  }, []);
 
   if (!timer) {
     return null;
@@ -82,7 +88,7 @@ const Countdown = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused }) =
 
   return (
     <Container>
-      <div>{`${addZero(timer.hours)}:${addZero(timer.minutes)}:${addZero(timer.seconds)}`}</div>
+      <div>{`${timer.hours ? `${addZero(timer.hours)}:` : ''}${addZero(timer.minutes)}:${addZero(timer.seconds)}`}</div>
       <Icon>
         <IoIosTimer/>
       </Icon>

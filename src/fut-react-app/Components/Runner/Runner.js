@@ -165,10 +165,10 @@ const Runner = () => {
                 isPaused={isPaused}
                 onTimerPaused={setCurrentScenarioDuration}
                 timerSeconds={currentScenarioDuration}
-                // onTimerExceeded={() => {
-                //   setIsRunning(false);
-                //   setIsPaused(false);
-                // }}
+                onTimerExceeded={() => {
+                  setIsRunning(false);
+                  setIsPaused(false);
+                }}
             />
           )}
         </RunnerInfo>
