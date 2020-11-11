@@ -70,6 +70,14 @@ const CountdownTimer = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused
       let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       let seconds = Math.ceil((distance % (1000 * 60)) / 1000);
+      if (seconds === 60) {
+        minutes += 1;
+        if (minutes >= 60) {
+          hours += 1;
+          minutes = 0;
+        }
+        seconds = 0;
+      }
       return {
         hours: hours < 0 ? 0 : hours,
         minutes: minutes < 0 ? 0 : minutes,
