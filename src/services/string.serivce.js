@@ -15,7 +15,7 @@ export const getFirstSymbols = (str) => {
 };
 
 export const parseStringToInt = (value) => {
-  if (value == null) {
+  if (value == null || isNaN(value) || value === '') {
     return null;
   }
   if (typeof value === 'number') {

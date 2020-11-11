@@ -2,6 +2,7 @@ import { uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
 import { editScenarioSubject } from '../contentScript';
 import { saveToStorage, getFromStorage } from './storage.service';
+import { MAX_SCENARIO_DURATION_IN_HOURS } from '../fut-react-app/constants';
 
 export const createNewScenario = (filter) => {
   const newStep = {
@@ -38,14 +39,26 @@ export const getScenarios = async () => {
   return scenarios || [];
 };
 
-const isScenarioInvalid = (scenario) => {
-  return scenario.steps.some(step => !step?.filter?.requestParams?.maxb || !step.workingMinutes);
+export const isScenarioInputsInvalid = (scenario, shouldNotify) => {
+  const isInvalid = scenario.steps.some(step => !step?.filter?.requestParams?.maxb || !step.workingMinutes);
+  if (isInvalid && shouldNotify) {
+    openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
+  }
+  return isInvalid;
+};
+
+export const checkIsMaxDurationExceeded = (scenario, shouldNotify) => {
+  const isInvalid = getScenarioDurationInSeconds(scenario) / 3600 > MAX_SCENARIO_DURATION_IN_HOURS;
+  if (isInvalid && shouldNotify) {
+    openUTNotification({ text: `Scenario duration is too long. Max duration is ${MAX_SCENARIO_DURATION_IN_HOURS} hours`, error: true });
+  }
+  return isInvalid;
 };
 
 export const saveScenario = async (updatedScenario, withoutReseting) => {
   try {
-    if (isScenarioInvalid(updatedScenario)) {
-      return openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
+    if (isScenarioInputsInvalid(updatedScenario, true) || checkIsMaxDurationExceeded(updatedScenario, true)) {
+      return;
     }
     let scenarios = await getScenarios();
     const existingScenario = scenarios.find(scenario => scenario.id === updatedScenario.id);
@@ -70,6 +83,10 @@ export const setScenarios = async (scenarios) => {
   await saveToStorage({ scenarios });
 };
 
+export const getScenarioDurationInSeconds = (scenario) => {
+  return (scenario?.steps || []).reduce((accumulator, step) => accumulator + step.workingMinutes + (step.pauseAfterStep || 0), 0) * 60;
+};
+
 export const deleteScenario = async (scenarioId) => {
   try {
     let scenarios = await getScenarios();
@@ -89,8 +106,8 @@ export const deleteScenario = async (scenarioId) => {
 
 export const copyScenario = async (scenarioToCopy) => {
   try {
-    if (isScenarioInvalid(scenarioToCopy)) {
-      return openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
+    if (isScenarioInputsInvalid(scenarioToCopy, true) || checkIsMaxDurationExceeded(scenarioToCopy, true)) {
+      return;
     }
     let scenarios = await getScenarios();
     if (scenarioToCopy?.id) {

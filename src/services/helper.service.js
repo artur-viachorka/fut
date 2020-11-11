@@ -44,3 +44,5 @@ export const uuid = function() {
 export const roundNumber = (value, roundOn) => {
   return (parseStringToInt(value) / roundOn).toFixed() * roundOn;
 };
+
+export const addZero = (num) => num < 10 ? `0${num}` : num;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { getScenarios } from '../../../services/scenario.service';
 import { selectScenarioSubject, editScenarioSubject } from '../../../contentScript';
@@ -32,7 +33,9 @@ const Scenario = styled.div`
   min-height: 74px;
   text-align: center;
   justify-content: center;
+  word-break: break-word;
   align-items: center;
+  opacity: ${(props) => props.isReadOnly ? '0.5' : '1'};
   background: ${(props) => props.markColor || MARK_COLORS[0]};
   border: 3px solid ${(props) => props.isSelected ? 'white' : (props.markColor || MARK_COLORS[0])};
   transition: all 0.5s ease-out;
@@ -41,11 +44,11 @@ const Scenario = styled.div`
   margin-right: 5px;
 
   &:hover {
-    border-color: white;
+    border-color: ${(props) => props.isReadOnly ? (props.markColor || MARK_COLORS[0]) : 'white'};;
   }
 `;
 
-const ScenariosList = () => {
+const ScenariosList = ({ isReadOnly }) => {
   const [scenarios, setScenarios] = useState(null);
   const [selectedScenarioId, setSelectedScenario] = useState(null);
   const loadScenarios = async () => {
@@ -55,15 +58,13 @@ const ScenariosList = () => {
 
   useEffect(() => {
     loadScenarios();
-    if (editScenarioSubject) {
-      editScenarioSubject.subscribe((res) => {
-        loadScenarios();
-        if (!res?.withoutReseting) {
-          setSelectedScenario(null);
-        }
-      });
-    }
-    return editScenarioSubject.unsubscribe;
+    const editScenarioSubscription = editScenarioSubject.subscribe((res) => {
+      loadScenarios();
+      if (!res?.withoutReseting) {
+        setSelectedScenario(null);
+      }
+    });
+    return editScenarioSubscription.unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -79,9 +80,13 @@ const ScenariosList = () => {
       )}
       {(scenarios || []).map((scenario) => (
         <Scenario
+            isReadOnly={isReadOnly}
             title={scenario.name}
             isSelected={scenario.id === selectedScenarioId}
             onClick={() => {
+              if (isReadOnly) {
+                return;
+              }
               if (scenario.id === selectedScenarioId) {
                 setSelectedScenario(null);
                 selectScenarioSubject.next({ scenario: null });
@@ -99,6 +104,10 @@ const ScenariosList = () => {
       ))}
     </Container>
   );
+};
+
+ScenariosList.propTypes = {
+  isReadOnly: PropTypes.bool,
 };
 
 export default ScenariosList;

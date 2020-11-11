@@ -7,6 +7,7 @@ export const addFilterSubject = new Subject();
 export const editScenarioSubject = new Subject();
 export const selectScenarioSubject = new Subject();
 export const openModalSubject = new Subject();
+export const editStepWithoutSavingSubject = new Subject();
 
 $(() => {
   initReactApp();

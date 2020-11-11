@@ -5,7 +5,10 @@ import { FaPlay, FaPause, FaStop } from 'react-icons/fa';
 import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
 import ScenariosList from '../Scenarios/ScenariosList';
 
-import { selectScenarioSubject } from '../../../contentScript';
+import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
+
+import Countdown from '../Countdown';
 
 const Container = styled.div`
   display: flex;
@@ -17,6 +20,7 @@ const Container = styled.div`
 const Header = styled.div`
   height: 100px;
   display: flex;
+  padding-right: 10px;
   flex-direction: row;
   border-bottom: 1px solid #414141;
 `;
@@ -32,11 +36,12 @@ const RunnerInfo = styled.div`
   min-width: 300px;
   border: 1px solid #414141;
   margin: 10px auto;
-  padding: 10px;
+  padding: 10px 25px;
   border-radius: 5px;
   display: flex;
   align-items: center;
   flex-direction: row;
+  justify-content: space-between;
 `;
 
 const RunnerAction = styled.div`
@@ -81,30 +86,46 @@ const RunnerActions = styled.div`
 const Runner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentScenarioDuration, setCurrentScenarioDuration] = useState(null);
 
   const [selectedScenario, setSelectedScenario] = useState(null);
 
+  const resetScenario = (scenario) => {
+    setCurrentScenarioDuration(scenario ? getScenarioDurationInSeconds(scenario) : null);
+    setSelectedScenario(scenario);
+  };
+
   useEffect(() => {
-    if (selectScenarioSubject) {
-      selectScenarioSubject.subscribe(({ scenario }) => {
-        setSelectedScenario(scenario);
-      });
-    }
-    return selectScenarioSubject.unsubscribe;
+    const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
+      resetScenario(scenario);
+    });
+    const editStepWithoutSavingSubscription = editStepWithoutSavingSubject.subscribe(({ scenario }) => {
+      resetScenario(scenario);
+    });
+    return () => {
+      selectScenarioSubscription.unsubscribe();
+      editStepWithoutSavingSubscription.unsubscribe();
+    };
   }, []);
 
   return (
     <Container>
       <Header>
         <ScenariosContainer>
-          <ScenariosList/>
+          <ScenariosList isReadOnly={isRunning}/>
         </ScenariosContainer>
         <RunnerInfo>
           <RunnerActions>
             {!isPaused && !isRunning && (
               <RunnerAction
                   title="Run"
-                  onClick={() => setIsRunning(true)}
+                  disabled={!selectedScenario}
+                  onClick={() => {
+                    if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
+                      return;
+                    }
+                    setIsRunning(true);
+                  }}
               >
                 <FaPlay/>
               </RunnerAction>
@@ -132,12 +153,24 @@ const Runner = () => {
                   if (isRunning || isPaused) {
                     setIsPaused(false);
                     setIsRunning(false);
+                    setCurrentScenarioDuration(getScenarioDurationInSeconds(selectedScenario));
                   }
                 }}
             >
               <FaStop/>
             </RunnerAction>
           </RunnerActions>
+          {currentScenarioDuration && isRunning && (
+            <Countdown
+                isPaused={isPaused}
+                onTimerPaused={setCurrentScenarioDuration}
+                timerSeconds={currentScenarioDuration}
+                // onTimerExceeded={() => {
+                //   setIsRunning(false);
+                //   setIsPaused(false);
+                // }}
+            />
+          )}
         </RunnerInfo>
       </Header>
       <ScenarioBuilder hint="Select scenario to manage runner." isReadOnly={isRunning || isPaused} fromRunner={true}/>

@@ -1,5 +1,12 @@
+@import url('https://fonts.googleapis.com/css?family=Lato');
+
+
 * {
   box-sizing: border-box;
+}
+
+#react-app-container {
+  font-family: 'Lato', sans-serif;
 }
 
 #react-app-container ::-webkit-scrollbar {

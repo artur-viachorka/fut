@@ -10,17 +10,15 @@ import { MODALS } from '../constants';
 
 const App = () => {
   useEffect(() => {
-    if (openModalSubject) {
-      openModalSubject.subscribe(({ modal }) => {
-        if (modal === MODALS.RUNNER) {
-          setIsRunnerModalVisible(true);
-        }
-        if (modal === MODALS.SCENARIO_CONSTRUCTOR) {
-          setIsConstructorModalVisible(true);
-        }
-      });
-    }
-    return openModalSubject.unsubscribe;
+    const openModalSubscription = openModalSubject.subscribe(({ modal }) => {
+      if (modal === MODALS.RUNNER) {
+        setIsRunnerModalVisible(true);
+      }
+      if (modal === MODALS.SCENARIO_CONSTRUCTOR) {
+        setIsConstructorModalVisible(true);
+      }
+    });
+    return openModalSubscription.unsubscribe;
   }, []);
   const [isConstructorModalVisible, setIsConstructorModalVisible] = useState(false);
   const [isRunnerModalVisible, setIsRunnerModalVisible] = useState(true);

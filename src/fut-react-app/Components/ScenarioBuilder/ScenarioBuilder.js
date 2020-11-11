@@ -12,7 +12,7 @@ import { DND_TYPES } from '../../constants';
 import { getSearchFilter } from '../../../services/marketSearchCriteria.service';
 import { createNewScenario, addNewStepToScenario, removeStepFromScenario, saveScenario, copyScenario, deleteScenario } from '../../../services/scenario.service';
 import { FaRegCopy, FaTrash } from 'react-icons/fa';
-import { selectScenarioSubject } from '../../../contentScript';
+import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
 
 const Container = styled.div`
   display: flex;
@@ -36,7 +36,7 @@ const ScenarioHeader = styled.header`
   justify-content: space-between;
   margin-bottom: 10px;
   font-size: 15px;
-  height: 30px;
+  min-height: 30px;
 `;
 
 const Steps = styled.div`
@@ -124,12 +124,10 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
   });
 
   useEffect(() => {
-    if (selectScenarioSubject) {
-      selectScenarioSubject.subscribe(({ scenario }) => {
-        setScenario(scenario);
-      });
-    }
-    return selectScenarioSubject.unsubscribe;
+    const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
+      setScenario(scenario);
+    });
+    return selectScenarioSubscription.unsubscribe;
   }, []);
 
   const removeStep = (id) => {
@@ -160,10 +158,12 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint }) => {
 
   const editStep = (editedStep) => {
     const steps = scenario.steps.map((step) => step.id === editedStep.id ? editedStep : step);
-    setScenario({
+    const newScenario = {
       ...scenario,
       steps,
-    });
+    };
+    editStepWithoutSavingSubject.next({ scenario: newScenario });
+    setScenario(newScenario);
   };
 
   const setScenarioMarkColor = (markColor) => {

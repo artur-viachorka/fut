@@ -41,12 +41,10 @@ const FiltersList = () => {
 
   useEffect(() => {
     loadFilters();
-    if (addFilterSubject) {
-      addFilterSubject.subscribe(() => {
-        loadFilters();
-      });
-    }
-    return addFilterSubject.unsubscribe;
+    const addFilterSubscription = addFilterSubject.subscribe(() => {
+      loadFilters();
+    });
+    return addFilterSubscription.unsubscribe;
   }, []);
 
   const moveFilter = (id, atIndex) => {
