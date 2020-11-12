@@ -1,51 +1,79 @@
 import { updateExecutableRunnerDataObject } from '../contentScript';
 import { convertMinutesToSeconds, convertSecondsToMs } from './helper.service';
 import { Subject } from 'rxjs';
+import { first } from 'rxjs/operators';
 
 const pauseRunnerSubject = new Subject();
+const stopRunnerSubject = new Subject();
 
-const runnerState = {
-  currentStepId: null,
-};
-
-export const stepSleep = (seconds) => {
+export const stepSleep = (currentStepId, seconds) => {
   return new Promise((resolve, reject) => {
     let timeout = null;
-    const subscription = pauseRunnerSubject.subscribe(() => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      reject();
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    });
-    setTimeout(resolve, convertSecondsToMs(seconds));
+    pauseRunnerSubject
+      .pipe(first())
+      .subscribe(({ status }) => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        reject({ status, currentStepId });
+      });
+    stopRunnerSubject
+      .pipe(first())
+      .subscribe(({ status }) => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        reject({ status });
+      });
+    timeout = setTimeout(resolve, convertSecondsToMs(seconds));
   });
 };
 
-export const executeRunner = async (scenario, startFromStepId, runnerJobSecondsLeftForCurrentStep) => {
-  const steps = scenario.steps.map(step => ({
+const setTimeOnSteps = (steps, workerTimeLeftOnStep) => {
+  return steps.map(step => ({
     ...step,
-    workingSeconds: runnerJobSecondsLeftForCurrentStep && step.id === startFromStepId ? runnerJobSecondsLeftForCurrentStep.workingSecondsLeft : convertMinutesToSeconds(step.workingMinutes),
-    pauseAfterStepSeconds: runnerJobSecondsLeftForCurrentStep && step.id === startFromStepId ?runnerJobSecondsLeftForCurrentStep.pauseAfterStepSecondsLeft : convertMinutesToSeconds(step.pauseAfterStep),
+    workingSeconds: step.id === workerTimeLeftOnStep?.stepId && workerTimeLeftOnStep?.workingSecondsLeft != null ? workerTimeLeftOnStep.workingSecondsLeft : convertMinutesToSeconds(step.workingMinutes),
+    pauseAfterStepSeconds: step.id === workerTimeLeftOnStep?.stepId && workerTimeLeftOnStep?.pauseAfterStepSecondsLeft != null ? workerTimeLeftOnStep.pauseAfterStepSecondsLeft : convertMinutesToSeconds(step.pauseAfterStep),
   }));
-  const stepToStartFrom = steps.find(step => step.id === startFromStepId);
-  const foundedIndex = steps.indexOf(stepToStartFrom);
-  const stepIndexToStartFrom = foundedIndex === -1 ? 0 : foundedIndex;
+};
+
+export const EXECUTOR_STATUS = {
+  PROGRESS: 'progress',
+  IDLE: 'idle',
+  PAUSE: 'pause',
+  STOP: 'stop',
+};
+
+export const executeRunner = async (scenario, workerTimeLeftOnStep) => {
+  const steps = setTimeOnSteps(scenario.steps, workerTimeLeftOnStep);
+  let stepIndexToStartFrom = steps.findIndex(step => step.id === workerTimeLeftOnStep?.stepId);
+  stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
   try {
     for (let i = stepIndexToStartFrom; i < steps.length; i++) {
       const step = steps[i];
-      runnerState.currentStepId = step.id;
+      if (workerTimeLeftOnStep && step.workingSeconds + step.pauseAfterStepSeconds <= 1) {
+        continue;
+      }
       updateExecutableRunnerDataObject.next({
         currentStepId: step.id,
+        status: EXECUTOR_STATUS.PROGRESS,
       });
-      await stepSleep(step.workingSeconds);
-      await stepSleep(step.pauseAfterStepSeconds);
+      await stepSleep(step.id, step.workingSeconds);
+      updateExecutableRunnerDataObject.next({
+        currentStepId: step.id,
+        status: EXECUTOR_STATUS.IDLE,
+      });
+      await stepSleep(step.id, step.pauseAfterStepSeconds);
     }
-    runnerState.currentStepId = null;
-  } catch (e) {
-    console.error('STOPPED');
+    updateExecutableRunnerDataObject.next({
+      status: EXECUTOR_STATUS.STOP,
+    });
+  } catch ({ status, currentStepId }) {
+    updateExecutableRunnerDataObject.next({
+      status: status,
+      currentStepId,
+    });
+    console.error(status);
   }
 };
 
@@ -55,14 +83,17 @@ export const executeRunner = async (scenario, startFromStepId, runnerJobSecondsL
 //   if ()
 // };
 
-export const continueRunner = (scenario, runnerJobSecondsLeft) => {
-  executeRunner(scenario, runnerState.currentStepId, runnerJobSecondsLeft[runnerState.currentStepId]);
+export const continueRunner = (scenario, workerTimeLeftOnStep) => {
+  executeRunner(scenario, workerTimeLeftOnStep);
 };
 
 export const pauseRunner = () => {
-  pauseRunnerSubject.next();
+  pauseRunnerSubject.next({ status: EXECUTOR_STATUS.PAUSE });
 };
 
 export const stopRunner = () => {
-  pauseRunnerSubject.next();
+  stopRunnerSubject.next({ status: EXECUTOR_STATUS.STOP });
+  updateExecutableRunnerDataObject.next({
+    status: EXECUTOR_STATUS.STOP
+  });
 };

@@ -8,7 +8,7 @@ import RunnerStepStatus from './RunnerStepStatus';
 
 import { selectScenarioSubject, editStepWithoutSavingSubject, updateExecutableRunnerDataObject } from '../../../contentScript';
 import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded, getLeftStepTimeSeconds } from '../../../services/scenario.service';
-import { executeRunner, pauseRunner, continueRunner, stopRunner } from '../../../services/runner.service';
+import { executeRunner, pauseRunner, continueRunner, stopRunner, EXECUTOR_STATUS } from '../../../services/runner.service';
 
 import CountdownTimer from '../CountdownTimer';
 
@@ -106,6 +106,17 @@ const Runner = () => {
 
     const updateExecutableRunnerDataSubscription = updateExecutableRunnerDataObject.subscribe((runner) => {
       setExecutableRunnerData(runner);
+      if (runner.status === EXECUTOR_STATUS.PROGRESS) {
+        setIsRunning(true);
+        setIsPaused(false);
+      }
+      if (runner.status === EXECUTOR_STATUS.PAUSE) {
+        setIsPaused(true);
+      }
+      if (runner.status === EXECUTOR_STATUS.STOP) {
+        setIsRunning(false);
+        setIsPaused(false);
+      }
     });
 
     return () => {
@@ -114,7 +125,6 @@ const Runner = () => {
       updateExecutableRunnerDataSubscription.unsubscribe();
     };
   }, []);
-
   return (
     <Container>
       <Header>
@@ -131,9 +141,7 @@ const Runner = () => {
                     if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
                       return;
                     }
-                    setIsRunning(true);
                     executeRunner(selectedScenario);
-                    setRunnerJobSecondsLeft({});
                   }}
               >
                 <FaPlay/>
@@ -143,7 +151,6 @@ const Runner = () => {
               <RunnerAction
                   title="Pause"
                   onClick={() => {
-                    setIsPaused(true);
                     pauseRunner();
                   }}
               >
@@ -154,8 +161,10 @@ const Runner = () => {
               <RunnerAction
                   title="Continue"
                   onClick={() => {
-                    setIsPaused(false);
-                    continueRunner(selectedScenario, runnerJobSecondsLeft);
+                    continueRunner(selectedScenario, {
+                      stepId: executableRunnerData?.currentStepId,
+                      ...runnerJobSecondsLeft[executableRunnerData?.currentStepId],
+                    });
                   }}
               >
                 <FaPlay/>
@@ -166,8 +175,6 @@ const Runner = () => {
                 disabled={!isRunning}
                 onClick={() => {
                   if (isRunning || isPaused) {
-                    setIsPaused(false);
-                    setIsRunning(false);
                     stopRunner();
                   }
                 }}
@@ -188,18 +195,23 @@ const Runner = () => {
         </RunnerInfo>
       </Header>
       <ScenarioBuilder
-          renderStepStatusBar={(step) => (
-            <RunnerStepStatus
-                isPaused={isPaused}
-                isStepRunning={isRunning && step.id === executableRunnerData?.currentStepId}
-                step={step}
-                onTimerPaused={(secondsLeft) => {
-                  setRunnerJobSecondsLeft({
-                    [step.id]: getLeftStepTimeSeconds(step, secondsLeft),
-                  });
-                }}
-            />
-          )}
+          renderStepStatusBar={(step) => {
+            const isStepRunning = step.id === executableRunnerData?.currentStepId;
+            return (
+              <RunnerStepStatus
+                  isPaused={isPaused}
+                  isIdle={isStepRunning && EXECUTOR_STATUS.IDLE === executableRunnerData?.status}
+                  isWorking={isStepRunning && EXECUTOR_STATUS.PROGRESS === executableRunnerData?.status}
+                  isStepRunning={isStepRunning}
+                  step={step}
+                  onTimerPaused={(secondsLeft) => {
+                    setRunnerJobSecondsLeft({
+                      [step.id]: getLeftStepTimeSeconds(step, secondsLeft),
+                    });
+                  }}
+              />
+            );
+          }}
           hint="Select scenario to manage runner."
           isReadOnly={isRunning || isPaused}
           fromRunner={true}

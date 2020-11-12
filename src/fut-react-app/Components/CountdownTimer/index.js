@@ -39,6 +39,13 @@ const CountdownTimer = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused
     const timeResult = func();
     setTime(timeResult);
 
+    if (pausedRef.current) {
+      if (onTimerPaused) {
+        onTimerPaused(convertTimeToSeconds(timeResult));
+      }
+      return;
+    }
+
     const isTimerExceeded = timeResult.seconds <= 0 && timeResult.hours <= 0 && timeResult.minutes <= 0;
 
     if (isTimerExceeded) {
@@ -48,12 +55,6 @@ const CountdownTimer = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused
       return;
     }
     if (isDestroyedRef.current) {
-      return;
-    }
-    if (pausedRef.current) {
-      if (onTimerPaused) {
-        onTimerPaused(convertTimeToSeconds(timeResult));
-      }
       return;
     }
     setTimeout(startTimer, 1000, func);

@@ -15,11 +15,12 @@ export const getFirstSymbols = (str) => {
 };
 
 export const parseStringToInt = (value) => {
-  if (value == null || isNaN(value) || value === '') {
+  if (value == null || value === '') {
     return null;
   }
   if (typeof value === 'number') {
     return value;
   }
-  return parseInt(value.replace(/\,/g, ''));
+  const parsedValue = parseInt(value.replace(/\,/g, ''));
+  return isNaN(parsedValue) ? null : parsedValue;
 };
