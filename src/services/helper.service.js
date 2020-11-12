@@ -1,6 +1,7 @@
 import { parseStringToInt } from './string.serivce';
 
 export const convertSecondsToMs = (s) => (s || 0) * 1000;
+export const convertMinutesToSeconds = (m) => (m || 0) * 60;
 
 export const sleep = (seconds) => {
   return new Promise((resolve) => setTimeout(resolve, convertSecondsToMs(seconds)));

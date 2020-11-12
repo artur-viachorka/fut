@@ -1,5 +1,6 @@
 import { uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
+import { convertMinutesToSeconds } from './helper.service';
 import { editScenarioSubject } from '../contentScript';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { MAX_SCENARIO_DURATION_IN_HOURS } from '../fut-react-app/constants';
@@ -81,6 +82,14 @@ export const saveScenario = async (updatedScenario, withoutReseting) => {
 
 export const setScenarios = async (scenarios) => {
   await saveToStorage({ scenarios });
+};
+
+export const getLeftStepTimeSeconds = (step, secondsLeft) => {
+  const pauseAfterStepSeconds = convertMinutesToSeconds(step.pauseAfterStep);
+  return {
+    workingSecondsLeft: secondsLeft - pauseAfterStepSeconds > 0 ? secondsLeft - pauseAfterStepSeconds : 0,
+    pauseAfterStepSecondsLeft: secondsLeft > pauseAfterStepSeconds > 0 ? pauseAfterStepSeconds : secondsLeft,
+  };
 };
 
 export const getStepDurationInSeconds = (step) => {

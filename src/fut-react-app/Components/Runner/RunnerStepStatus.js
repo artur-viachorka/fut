@@ -23,12 +23,13 @@ const Wrapper = styled.div`
   border-radius: 5px;
 `;
 
-const RunnerStepStatus = ({ step, isPaused, isStepRunning }) => {
+const RunnerStepStatus = ({ step, isPaused, isStepRunning, onTimerPaused }) => {
   return (
     <Container>
       <Wrapper isStepRunning={isStepRunning}>
         <CountdownTimer
             isPaused={isPaused || !isStepRunning}
+            onTimerPaused={onTimerPaused}
             timerSeconds={getStepDurationInSeconds(step)}
         />
       </Wrapper>
@@ -40,6 +41,7 @@ RunnerStepStatus.propTypes = {
   step: PropTypes.object.isRequired,
   isPaused: PropTypes.bool,
   isStepRunning: PropTypes.bool,
+  onTimerPaused: PropTypes.func,
 };
 
 export default RunnerStepStatus;
