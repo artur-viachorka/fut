@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
-import { getStepDurationInSeconds } from '../../../services/scenario.service';
 import CountdownTimer from '../CountdownTimer';
 
 const Container = styled.div`
@@ -23,29 +22,68 @@ const Wrapper = styled.div`
   border-radius: 5px;
 `;
 
-const RunnerStepStatus = ({ step, isPaused, isStepRunning, onTimerPaused, isIdle, isWorking }) => {
+const Hint = styled.span`
+  font-size: 12px;
+  color: grey;
+`;
+
+const RunnerStepStatus = ({
+  isPaused,
+  isStepRunning,
+  isWorking,
+  isIdle,
+  workingSeconds,
+  idleSeconds,
+  onWorkingTimerExceeded,
+  onWorkingTimerPaused,
+  onIdleTimerExceeded,
+  onIdleTimerPaused,
+
+}) => {
   return (
     <Container>
       <Wrapper isStepRunning={isStepRunning}>
-        <CountdownTimer
-            isPaused={isPaused || !isStepRunning}
-            onTimerPaused={onTimerPaused}
-            timerSeconds={getStepDurationInSeconds(step)}
-        />
-        {isWorking && 'WORKING...'}
-        {isIdle && 'IDLE...'}
+        {!isWorking && !isIdle && (
+          <Hint>Status Bar</Hint>
+        )}
+        {isWorking && (
+          <>
+            <CountdownTimer
+                isPaused={isPaused || !isStepRunning}
+                onTimerPaused={onWorkingTimerPaused}
+                onTimerExceeded={onWorkingTimerExceeded}
+                timerSeconds={workingSeconds}
+            />
+            <span>working...</span>
+          </>
+        )}
+        {isIdle && (
+          <>
+            <CountdownTimer
+                isPaused={isPaused || !isStepRunning}
+                onTimerPaused={onIdleTimerPaused}
+                onTimerExceeded={onIdleTimerExceeded}
+                timerSeconds={idleSeconds}
+            />
+            <span>idle...</span>
+          </>
+        )}
       </Wrapper>
     </Container>
   );
 };
 
 RunnerStepStatus.propTypes = {
-  step: PropTypes.object.isRequired,
   isPaused: PropTypes.bool,
-  isIdle: PropTypes.bool,
-  isWorking: PropTypes.bool,
   isStepRunning: PropTypes.bool,
-  onTimerPaused: PropTypes.func,
+  isWorking: PropTypes.bool,
+  isIdle: PropTypes.bool,
+  workingSeconds: PropTypes.number,
+  idleSeconds: PropTypes.number,
+  onWorkingTimerExceeded: PropTypes.func.isRequired,
+  onWorkingTimerPaused: PropTypes.func.isRequired,
+  onIdleTimerExceeded: PropTypes.func.isRequired,
+  onIdleTimerPaused: PropTypes.func.isRequired,
 };
 
 export default RunnerStepStatus;

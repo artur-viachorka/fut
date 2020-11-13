@@ -6,11 +6,19 @@ import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
 import ScenariosList from '../Scenarios/ScenariosList';
 import RunnerStepStatus from './RunnerStepStatus';
 
-import { selectScenarioSubject, editStepWithoutSavingSubject, updateExecutableRunnerDataObject } from '../../../contentScript';
-import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded, getLeftStepTimeSeconds } from '../../../services/scenario.service';
-import { executeRunner, pauseRunner, continueRunner, stopRunner, EXECUTOR_STATUS } from '../../../services/runner.service';
+import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
+import {
+  executeStep,
+  executeStepIdle,
+  pauseStep,
+  finishStepWork,
+  finishStepIdle,
+  stopStep,
+} from '../../../services/runner.service';
 
 import CountdownTimer from '../CountdownTimer';
+import { convertMinutesToSeconds } from '../../../services/helper.service';
 
 const Container = styled.div`
   display: flex;
@@ -90,10 +98,52 @@ const Runner = () => {
   const [isPaused, setIsPaused] = useState(false);
 
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [executableRunnerData, setExecutableRunnerData] = useState(null);
-  const [runnerJobSecondsLeft, setRunnerJobSecondsLeft] = useState({});
+  const [runningStep, setRunningStep] = useState(null);
+  const [runningStatus, setRunningStatus] = useState(null);
   const resetScenario = (scenario) => {
+    scenario = scenario ? {
+      ...scenario,
+      steps: scenario.steps.map(step => ({
+        ...step,
+        workingSeconds: convertMinutesToSeconds(step.workingMinutes),
+        pauseAfterStepSeconds: convertMinutesToSeconds(step.pauseAfterStep)
+      }))
+    } : null;
     setSelectedScenario(scenario);
+  };
+
+  const start = async (runningStepInfoAfterContinue) => {
+    const REQUEST_INTERVAL_IN_SECONDS = 2;
+    let stepIndexToStartFrom = selectedScenario.steps.findIndex(step => step.id === runningStepInfoAfterContinue?.id);
+    stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
+    const steps = selectedScenario.steps
+      .slice(stepIndexToStartFrom)
+      .map((step) => step.id === runningStepInfoAfterContinue?.id ? runningStepInfoAfterContinue : step)
+      .filter((step) => step.workingSeconds > REQUEST_INTERVAL_IN_SECONDS || step.pauseAfterStepSeconds > 0);
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        setRunningStep(step);
+        if (step.workingSeconds >= REQUEST_INTERVAL_IN_SECONDS) {
+          setRunningStatus('working');
+          await executeStep(step, REQUEST_INTERVAL_IN_SECONDS);
+        }
+        if (step.pauseAfterStepSeconds > 0) {
+          setRunningStatus('idle');
+          await executeStepIdle(step);
+        }
+      }
+      setRunningStep(null);
+      setRunningStatus(null);
+      setIsRunning(false);
+      setIsPaused(false);
+    } catch (e) {
+      if (e?.status === 'stop') {
+        setRunningStep(null);
+        setRunningStatus(null);
+      }
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -104,25 +154,9 @@ const Runner = () => {
       resetScenario(scenario);
     });
 
-    const updateExecutableRunnerDataSubscription = updateExecutableRunnerDataObject.subscribe((runner) => {
-      setExecutableRunnerData(runner);
-      if (runner.status === EXECUTOR_STATUS.PROGRESS) {
-        setIsRunning(true);
-        setIsPaused(false);
-      }
-      if (runner.status === EXECUTOR_STATUS.PAUSE) {
-        setIsPaused(true);
-      }
-      if (runner.status === EXECUTOR_STATUS.STOP) {
-        setIsRunning(false);
-        setIsPaused(false);
-      }
-    });
-
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
-      updateExecutableRunnerDataSubscription.unsubscribe();
     };
   }, []);
   return (
@@ -141,7 +175,8 @@ const Runner = () => {
                     if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
                       return;
                     }
-                    executeRunner(selectedScenario);
+                    setIsRunning(true);
+                    start();
                   }}
               >
                 <FaPlay/>
@@ -151,7 +186,7 @@ const Runner = () => {
               <RunnerAction
                   title="Pause"
                   onClick={() => {
-                    pauseRunner();
+                    setIsPaused(true);
                   }}
               >
                 <FaPause/>
@@ -161,10 +196,9 @@ const Runner = () => {
               <RunnerAction
                   title="Continue"
                   onClick={() => {
-                    continueRunner(selectedScenario, {
-                      stepId: executableRunnerData?.currentStepId,
-                      ...runnerJobSecondsLeft[executableRunnerData?.currentStepId],
-                    });
+                    setIsRunning(true);
+                    setIsPaused(false);
+                    start(runningStep);
                   }}
               >
                 <FaPlay/>
@@ -175,7 +209,9 @@ const Runner = () => {
                 disabled={!isRunning}
                 onClick={() => {
                   if (isRunning || isPaused) {
-                    stopRunner();
+                    setIsRunning(false);
+                    setIsPaused(false);
+                    stopStep();
                   }
                 }}
             >
@@ -186,27 +222,39 @@ const Runner = () => {
             <CountdownTimer
                 isPaused={isPaused}
                 timerSeconds={getScenarioDurationInSeconds(selectedScenario)}
-                onTimerExceeded={() => {
-                  setIsRunning(false);
-                  setIsPaused(false);
-                }}
             />
           )}
         </RunnerInfo>
       </Header>
       <ScenarioBuilder
           renderStepStatusBar={(step) => {
-            const isStepRunning = step.id === executableRunnerData?.currentStepId;
+            const isStepRunning = step.id === runningStep?.id;
             return (
               <RunnerStepStatus
                   isPaused={isPaused}
-                  isIdle={isStepRunning && EXECUTOR_STATUS.IDLE === executableRunnerData?.status}
-                  isWorking={isStepRunning && EXECUTOR_STATUS.PROGRESS === executableRunnerData?.status}
+                  isIdle={isStepRunning && runningStatus === 'idle'}
+                  isWorking={isStepRunning && runningStatus === 'working'}
+                  idleSeconds={isStepRunning ? runningStep?.pauseAfterStepSeconds : convertMinutesToSeconds(step.pauseAfterStep)}
+                  workingSeconds={isStepRunning ? runningStep?.workingSeconds : convertMinutesToSeconds(step.workingMinutes)}
                   isStepRunning={isStepRunning}
-                  step={step}
-                  onTimerPaused={(secondsLeft) => {
-                    setRunnerJobSecondsLeft({
-                      [step.id]: getLeftStepTimeSeconds(step, secondsLeft),
+                  onWorkingTimerExceeded={() => {
+                    finishStepWork(step);
+                  }}
+                  onIdleTimerExceeded={() => {
+                    finishStepIdle(step);
+                  }}
+                  onWorkingTimerPaused={(secondsLeft) => {
+                    pauseStep(step);
+                    setRunningStep({
+                      ...runningStep,
+                      workingSeconds: secondsLeft,
+                    });
+                  }}
+                  onIdleTimerPaused={(secondsLeft) => {
+                    pauseStep(step);
+                    setRunningStep({
+                      ...runningStep,
+                      pauseAfterStepSeconds: secondsLeft,
                     });
                   }}
               />
