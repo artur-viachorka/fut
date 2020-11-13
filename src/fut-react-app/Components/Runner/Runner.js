@@ -7,7 +7,7 @@ import ScenariosList from '../Scenarios/ScenariosList';
 import RunnerStepStatus from './RunnerStepStatus';
 
 import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
-import { getScenarioDurationInSeconds, isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
+import { isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
 import {
   executeStep,
   executeStepIdle,
@@ -93,6 +93,17 @@ const RunnerActions = styled.div`
   flex-direction: row;
 `;
 
+const getLeftoverSteps = (steps, runningStep, workingRequestInterval) => {
+  let stepIndexToStartFrom = steps.findIndex(step => step.id === runningStep?.id);
+  stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
+  return steps
+    .slice(stepIndexToStartFrom)
+    .map((step) => step.id === runningStep?.id ? runningStep : step)
+    .filter((step) => step.workingSeconds > workingRequestInterval || step.pauseAfterStepSeconds > 0);
+};
+
+const REQUEST_INTERVAL_IN_SECONDS = 2;
+
 const Runner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -100,6 +111,7 @@ const Runner = () => {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [runningStep, setRunningStep] = useState(null);
   const [runningStatus, setRunningStatus] = useState(null);
+  const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
   const resetScenario = (scenario) => {
     scenario = scenario ? {
       ...scenario,
@@ -112,14 +124,24 @@ const Runner = () => {
     setSelectedScenario(scenario);
   };
 
-  const start = async (runningStepInfoAfterContinue) => {
-    const REQUEST_INTERVAL_IN_SECONDS = 2;
-    let stepIndexToStartFrom = selectedScenario.steps.findIndex(step => step.id === runningStepInfoAfterContinue?.id);
-    stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
-    const steps = selectedScenario.steps
-      .slice(stepIndexToStartFrom)
-      .map((step) => step.id === runningStepInfoAfterContinue?.id ? runningStepInfoAfterContinue : step)
-      .filter((step) => step.workingSeconds > REQUEST_INTERVAL_IN_SECONDS || step.pauseAfterStepSeconds > 0);
+  useEffect(() => {
+    if (!selectedScenario) {
+      return;
+    }
+    const duration = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS)
+      .reduce((accumulator, step) => accumulator + step.workingSeconds + step.pauseAfterStepSeconds, 0);
+    setScenarioDurationLeft(duration);
+  }, [runningStep]);
+
+  const stop = () => {
+    setRunningStep(null);
+    setRunningStatus(null);
+    setIsRunning(false);
+    setIsPaused(false);
+  };
+
+  const start = async (runningStep) => {
+    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS);
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
@@ -133,14 +155,10 @@ const Runner = () => {
           await executeStepIdle(step);
         }
       }
-      setRunningStep(null);
-      setRunningStatus(null);
-      setIsRunning(false);
-      setIsPaused(false);
+      stop();
     } catch (e) {
       if (e?.status === 'stop') {
-        setRunningStep(null);
-        setRunningStatus(null);
+        stop();
       }
       console.error(e);
     }
@@ -212,16 +230,18 @@ const Runner = () => {
                     setIsRunning(false);
                     setIsPaused(false);
                     stopStep();
+                    stop();
                   }
                 }}
             >
               <FaStop/>
             </RunnerAction>
           </RunnerActions>
-          {selectedScenario && isRunning && (
+          {selectedScenario && isRunning && scenarioDurationLeft && (
             <CountdownTimer
                 isPaused={isPaused}
-                timerSeconds={getScenarioDurationInSeconds(selectedScenario)}
+                key={scenarioDurationLeft}
+                timerSeconds={scenarioDurationLeft}
             />
           )}
         </RunnerInfo>
