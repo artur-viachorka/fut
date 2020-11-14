@@ -8,8 +8,8 @@ const finishWorkingStepSubject = new Subject();
 const finishIdleStepSubject = new Subject();
 const stopRunnerSubject = new Subject();
 
-export const EXECUTOR_STATUS = {
-  PROGRESS: 'progress',
+export const RUNNER_STATUS = {
+  WORKING: 'working',
   IDLE: 'idle',
   PAUSE: 'pause',
   STOP: 'stop',
@@ -25,7 +25,7 @@ export const executeStep = async (step, requestInterval) => {
       .subscribe(() => {
         isWorking = false;
         reject({
-          status: EXECUTOR_STATUS.PAUSE,
+          status: RUNNER_STATUS.PAUSE,
         });
       });
 
@@ -34,7 +34,7 @@ export const executeStep = async (step, requestInterval) => {
       .subscribe(() => {
         isWorking = false;
         reject({
-          status: EXECUTOR_STATUS.STOP,
+          status: RUNNER_STATUS.STOP,
         });
       });
 
@@ -67,7 +67,7 @@ export const executeStepIdle = (step) => {
       .pipe(first())
       .subscribe(() => {
         reject({
-          status: EXECUTOR_STATUS.PAUSE,
+          status: RUNNER_STATUS.PAUSE,
         });
       });
 
@@ -75,7 +75,7 @@ export const executeStepIdle = (step) => {
       .pipe(first())
       .subscribe(() => {
         reject({
-          status: EXECUTOR_STATUS.STOP,
+          status: RUNNER_STATUS.STOP,
         });
       });
 

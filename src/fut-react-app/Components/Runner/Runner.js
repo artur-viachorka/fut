@@ -15,6 +15,7 @@ import {
   finishStepWork,
   finishStepIdle,
   stopStep,
+  RUNNER_STATUS,
 } from '../../../services/runner.service';
 
 import CountdownTimer from '../CountdownTimer';
@@ -147,17 +148,17 @@ const Runner = () => {
         const step = steps[i];
         setRunningStep(step);
         if (step.workingSeconds >= REQUEST_INTERVAL_IN_SECONDS) {
-          setRunningStatus('working');
+          setRunningStatus(RUNNER_STATUS.WORKING);
           await executeStep(step, REQUEST_INTERVAL_IN_SECONDS);
         }
         if (step.pauseAfterStepSeconds > 0) {
-          setRunningStatus('idle');
+          setRunningStatus(RUNNER_STATUS.IDLE);
           await executeStepIdle(step);
         }
       }
       stop();
     } catch (e) {
-      if (e?.status === 'stop') {
+      if (e?.status === RUNNER_STATUS.STOP) {
         stop();
       }
       console.error(e);
@@ -252,8 +253,8 @@ const Runner = () => {
             return (
               <RunnerStepStatus
                   isPaused={isPaused}
-                  isIdle={isStepRunning && runningStatus === 'idle'}
-                  isWorking={isStepRunning && runningStatus === 'working'}
+                  isIdle={isStepRunning && runningStatus === RUNNER_STATUS.IDLE}
+                  isWorking={isStepRunning && runningStatus === RUNNER_STATUS.WORKING}
                   idleSeconds={isStepRunning ? runningStep?.pauseAfterStepSeconds : convertMinutesToSeconds(step.pauseAfterStep)}
                   workingSeconds={isStepRunning ? runningStep?.workingSeconds : convertMinutesToSeconds(step.workingMinutes)}
                   isStepRunning={isStepRunning}
