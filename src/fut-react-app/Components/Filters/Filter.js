@@ -9,7 +9,6 @@ import BuyNowField from '../Fields/BuyNowField';
 import { DND_TYPES } from '../../constants';
 
 const Container = styled.div`
-  min-width: 320px;
   align-items: center;
   position: relative;
   display: flex;

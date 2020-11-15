@@ -94,14 +94,6 @@ const RunnerActions = styled.div`
   flex-direction: row;
 `;
 
-const getLeftoverSteps = (steps, runningStep) => {
-  let stepIndexToStartFrom = steps.findIndex(step => step.id === runningStep?.id);
-  stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
-  return steps
-    .slice(stepIndexToStartFrom)
-    .map((step) => step.id === runningStep?.id ? runningStep : step);
-};
-
 const Runner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -110,7 +102,6 @@ const Runner = () => {
   const [runningStep, setRunningStep] = useState(null);
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
-  const REQUEST_INTERVAL_IN_SECONDS = 2;
 
   const resetScenario = (scenario) => {
     scenario = scenario ? {
@@ -124,15 +115,6 @@ const Runner = () => {
     setSelectedScenario(scenario);
   };
 
-  useEffect(() => {
-    if (!selectedScenario) {
-      return;
-    }
-    const duration = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS)
-      .reduce((accumulator, step) => accumulator + step.workingSeconds + step.pauseAfterStepSeconds, 0);
-    setScenarioDurationLeft(duration);
-  }, [runningStep]);
-
   const stop = () => {
     setRunningStep(null);
     setRunningStatus(null);
@@ -140,14 +122,26 @@ const Runner = () => {
     setIsPaused(false);
   };
 
+  const getLeftoverSteps = (steps, runningStep, requestIntervalInSeconds) => {
+    let stepIndexToStartFrom = steps.findIndex(step => step.id === runningStep?.id);
+    stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
+    return steps
+      .slice(stepIndexToStartFrom)
+      .map((step) => step.id === runningStep?.id ? runningStep : step)
+      .filter((step) => step.workingSeconds > requestIntervalInSeconds || (step.workingSeconds <= requestIntervalInSeconds && step.pauseAfterStepSeconds > 0));
+  };
+
   const start = async (runningStep) => {
-    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS)
-      .filter((step) => step.workingSeconds > REQUEST_INTERVAL_IN_SECONDS || step.pauseAfterStepSeconds > 0);
+    const REQUEST_INTERVAL_IN_SECONDS = 2;
+    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS);
+    const duration = steps
+      .reduce((accumulator, step) =>accumulator + (step.workingSeconds <= REQUEST_INTERVAL_IN_SECONDS ? 0 : step.workingSeconds) + step.pauseAfterStepSeconds, 0);
+    setScenarioDurationLeft(duration);
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
         setRunningStep(step);
-        if (step.workingSeconds >= REQUEST_INTERVAL_IN_SECONDS) {
+        if (step.workingSeconds > REQUEST_INTERVAL_IN_SECONDS) {
           setRunningStatus(RUNNER_STATUS.WORKING);
           await executeStep(step, REQUEST_INTERVAL_IN_SECONDS);
         }
@@ -260,9 +254,17 @@ const Runner = () => {
                   isStepRunning={isStepRunning}
                   onWorkingTimerExceeded={() => {
                     finishStepWork(step);
+                    setRunningStep({
+                      ...runningStep,
+                      workingSeconds: 0,
+                    });
                   }}
                   onIdleTimerExceeded={() => {
                     finishStepIdle(step);
+                    setRunningStep({
+                      ...runningStep,
+                      pauseAfterStepSeconds: 0,
+                    });
                   }}
                   onWorkingTimerPaused={(secondsLeft) => {
                     pauseStep(step);
@@ -281,6 +283,7 @@ const Runner = () => {
               />
             );
           }}
+          activeStepId={runningStep?.id}
           hint="Select scenario to manage runner."
           isReadOnly={isRunning || isPaused}
           fromRunner={true}

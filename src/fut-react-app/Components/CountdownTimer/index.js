@@ -10,18 +10,26 @@ const Container = styled.div`
   justify-content: center;
   flex-direction: row;
   flex-wrap: wrap;
-  color: white;
   font-size: 20px;
   font-weight: 600;
+  color: ${(props) => props.almostFinished ? 'rgb(149 149 149)' : 'white' };
+  ${(props) => props.almostFinished && `
+    animation: flickerAnimation 1s infinite;
+    @keyframes flickerAnimation {
+      0%   { opacity:1; }
+      50%  { opacity:0; }
+      100% { opacity:1; }
+    }
+  `};
 `;
 
 const Icon = styled.span`
-  color: white;
   font-size: 28px;
   margin-left: 3px;
   display: flex;
   justify-content: center;
   align-items: center;
+  color: ${(props) => props.almostFinished ? 'rgb(175 72 72)' : 'white' };
 `;
 
 const CountdownTimer = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused }) => {
@@ -103,10 +111,12 @@ const CountdownTimer = ({ timerSeconds, onTimerPaused, onTimerExceeded, isPaused
     return null;
   }
 
+  const isTimeAlmostFinished = !time.hours && !time.minutes && time.seconds < 10;
+
   return (
-    <Container>
-      <div>{`${time.hours ? `${addZero(time.hours)}:` : ''}${addZero(time.minutes)}:${addZero(time.seconds)}`}</div>
-      <Icon>
+    <Container almostFinished={isTimeAlmostFinished}>
+      <div className="countdown-time">{`${time.hours ? `${addZero(time.hours)}:` : ''}${addZero(time.minutes)}:${addZero(time.seconds)}`}</div>
+      <Icon almostFinished={isTimeAlmostFinished} className="countdown-icon">
         <IoIosTimer/>
       </Icon>
     </Container>

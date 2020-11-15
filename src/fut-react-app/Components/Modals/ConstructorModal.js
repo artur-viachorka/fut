@@ -25,6 +25,7 @@ const Right = styled.div`
   display: flex;
   flex: 1;
   width: 70%;
+  overflow: hidden;
   flex-direction: column;
 `;
 

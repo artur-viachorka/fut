@@ -18,8 +18,9 @@ const Container = styled.div`
   width: 100%;
   margin-bottom: 10px;
   border-radius: 3px;
-  border: 1px solid rgb(45 45 45);
+  border: 1px solid ${(props) => props.isActive ? 'rgb(126 67 245)' : 'rgb(45 45 45)'};
   background: rgba(21, 21, 23, 0.88);
+  opacity: ${(props) => props.isDragging ? '0' : '1'};
 `;
 
 const StepAction = styled.span`
@@ -38,17 +39,22 @@ const StepNumber = styled.span`
   align-items: center;
   font-size: 25px;
   background: rgb(45 45 45);
+  ${(props) => props.isActive && `
+  background: #7e43f5;
+`}
 `;
 
 const Main = styled.main`
   display: flex;
   flex: 1;
   padding: 10px 15px;
+  justify-content: space-around;
+  overflow-x: auto;
 `;
 
 const Inputs = styled.div`
   display: flex;
-  flex: 1;
+  max-width: 370px;
   flex-direction: column;
   margin-left: 15px;
   justify-content: space-around;
@@ -70,8 +76,7 @@ const NumberFieldContainer = styled.div`
 `;
 
 const FilterContainer = styled.div`
-  width: 50%;
-  min-width: 320px;
+  max-width: 400px;
   display: flex;
   align-items: center;
   > div {
@@ -80,12 +85,7 @@ const FilterContainer = styled.div`
   }
 `;
 
-const StatusBarContainer = styled.div`
-  height: 100%;
-  display: flex;
-`;
-
-const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar }) => {
+const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar, isActive }) => {
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
   const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
@@ -138,9 +138,10 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             drag(drop(node));
           }
         }}
-        style={{ opacity: isDragging ? 0 : 1 }}
+        isActive={isActive}
+        isDragging={isDragging}
     >
-      <StepNumber>{index + 1}</StepNumber>
+      <StepNumber isActive={isActive}>{index + 1}</StepNumber>
       <Main>
         <FilterContainer>
           <Filter isReadOnly={isReadOnly} filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
@@ -197,18 +198,18 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             </NumberFieldContainer>
           </Row>
         </Inputs>
-        {renderStatusBar && <StatusBarContainer>{renderStatusBar(step)}</StatusBarContainer>}
         {remove && (
           <StepAction title="Remove step" onClick={() => remove(step.id)}>
             <AiFillCloseCircle/>
           </StepAction>
         )}
       </Main>
+      {renderStatusBar && renderStatusBar(step)}
     </Container>
   );
 };
 
-export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly, renderStatusBar }) => {
+export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly, renderStatusBar, isActive }) => {
   const originalIndex = findStep(step.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -249,6 +250,7 @@ export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep,
         edit={edit}
         isReadOnly={isReadOnly}
         renderStatusBar={renderStatusBar}
+        isActive={isActive}
     />
   );
 };
@@ -263,6 +265,7 @@ DNDStep.propTypes = {
   moveStep: PropTypes.func.isRequired,
   isReadOnly: PropTypes.bool,
   renderStatusBar: PropTypes.func,
+  isActive: PropTypes.bool,
 };
 
 Step.propTypes = {
@@ -275,6 +278,7 @@ Step.propTypes = {
   drop: PropTypes.func,
   edit: PropTypes.func,
   renderStatusBar: PropTypes.func,
+  isActive: PropTypes.bool,
 };
 
 export default Step;
