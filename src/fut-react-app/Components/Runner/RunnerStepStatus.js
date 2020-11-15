@@ -10,8 +10,8 @@ const Container = styled.div`
   display: flex;
   width: 215px;
   flex-direction: column;
-  padding: 10px;
   background: #1e1e20;
+  padding: 10px;
   border-left: 1px solid #1e1e20;
 `;
 
@@ -29,8 +29,11 @@ const Header = styled.div`
   justify-content: space-between;
   align-self: flex-end;
   width: 100%;
-  border-bottom: 1px solid #212121;
-  padding-bottom: 2px;
+  border-bottom: 1px solid #282238;
+  padding: 5px;
+  border-radius: 4px;
+  background: #282238;
+  margin-bottom: 5px;
 
   > span {
     color: white;
@@ -63,7 +66,6 @@ const Logs = styled.ul`
   flex-direction: column;
   overflow-y: auto;
   font-size: 11px;
-  margin-top: 5px;
 
   > li {
     margin-bottom: 2px;
