@@ -10,13 +10,18 @@ const Container = styled.div`
   display: flex;
   width: 215px;
   flex-direction: column;
-  padding: 15px;
-  border-left: 1px solid ${props => props.isStepRunning ? '#7e43f5' : 'rgb(70 70 70)'};
+  padding: 10px;
+  background: #1e1e20;
+  border-left: 1px solid #1e1e20;
 `;
 
 const Hint = styled.span`
   font-size: 12px;
   color: grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
 `;
 
 const Header = styled.div`
@@ -52,6 +57,26 @@ const Header = styled.div`
   }
 `;
 
+const Logs = styled.ul`
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  font-size: 11px;
+  margin-top: 5px;
+
+  > li {
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    text-transform: capitalize;
+
+    > span {
+      max-width: 90%;
+    }
+  }
+`;
+
 const RunnerStepStatus = ({
   isPaused,
   isStepRunning,
@@ -63,7 +88,7 @@ const RunnerStepStatus = ({
   onWorkingTimerPaused,
   onIdleTimerExceeded,
   onIdleTimerPaused,
-
+  logs,
 }) => {
   return (
     <Container isStepRunning={isStepRunning}>
@@ -101,8 +126,18 @@ const RunnerStepStatus = ({
           />
         </Header>
       )}
-      {!isWorking && !isIdle && (
-        <Hint>Status Bar</Hint>
+      {!!logs?.length && (
+        <Logs>
+          {logs.map((log, index) => (
+            <li key={index} title={log}>
+              <FaAngleRight/>
+              <span>{log}</span>
+            </li>
+          ))}
+        </Logs>
+      )}
+      {!isWorking && !isIdle && !logs?.length && (
+        <Hint>Working Status</Hint>
       )}
     </Container>
   );
@@ -119,6 +154,7 @@ RunnerStepStatus.propTypes = {
   onWorkingTimerPaused: PropTypes.func.isRequired,
   onIdleTimerExceeded: PropTypes.func.isRequired,
   onIdleTimerPaused: PropTypes.func.isRequired,
+  logs: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default RunnerStepStatus;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { prop } from 'ramda';
 import { FaPlay, FaPause, FaStop } from 'react-icons/fa';
 
 import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
@@ -100,6 +101,7 @@ const Runner = () => {
 
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [runningStep, setRunningStep] = useState(null);
+  const [logs, setLogs] = useState(null);
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
 
@@ -120,6 +122,15 @@ const Runner = () => {
     setRunningStatus(null);
     setIsRunning(false);
     setIsPaused(false);
+  };
+
+  const addLog = (stepId, text) => {
+    setLogs([
+      ...(logs || []),
+      {
+        stepId, text,
+      }
+    ]);
   };
 
   const getLeftoverSteps = (steps, runningStep, requestIntervalInSeconds) => {
@@ -158,7 +169,6 @@ const Runner = () => {
       console.error(e);
     }
   };
-
   useEffect(() => {
     const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
       resetScenario(scenario);
@@ -244,6 +254,7 @@ const Runner = () => {
       <ScenarioBuilder
           renderStepStatusBar={(step) => {
             const isStepRunning = step.id === runningStep?.id;
+            const stepLogs = (logs || []).filter(log => step.id === log.stepId).map(prop('text'));
             return (
               <RunnerStepStatus
                   isPaused={isPaused}
@@ -252,6 +263,7 @@ const Runner = () => {
                   idleSeconds={isStepRunning ? runningStep?.pauseAfterStepSeconds : convertMinutesToSeconds(step.pauseAfterStep)}
                   workingSeconds={isStepRunning ? runningStep?.workingSeconds : convertMinutesToSeconds(step.workingMinutes)}
                   isStepRunning={isStepRunning}
+                  logs={stepLogs}
                   onWorkingTimerExceeded={() => {
                     finishStepWork(step);
                     setRunningStep({

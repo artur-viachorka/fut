@@ -16,6 +16,7 @@ const Container = styled.div`
   position: relative;
   flex-direction: row;
   width: 100%;
+  height: 160px;
   margin-bottom: 10px;
   border-radius: 3px;
   border: 1px solid ${(props) => props.isActive ? 'rgb(126 67 245)' : 'rgb(45 45 45)'};
@@ -47,9 +48,8 @@ const StepNumber = styled.span`
 const Main = styled.main`
   display: flex;
   flex: 1;
-  padding: 10px 15px;
+  padding: 0 10px;
   justify-content: space-around;
-  overflow-x: auto;
 `;
 
 const Inputs = styled.div`
