@@ -8,7 +8,7 @@ import { IoIosTimer } from 'react-icons/io';
 import NumberField from '../Fields/NumberField';
 import CheckboxField from '../Fields/CheckboxField';
 import Filter from '../Filters/Filter';
-import { DND_TYPES } from '../../constants';
+import { DND_TYPES } from '../../../constants';
 import { parseStringToInt } from '../../../services/string.serivce';
 
 const Container = styled.div`

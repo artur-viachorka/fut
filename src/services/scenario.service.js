@@ -3,7 +3,7 @@ import { openUTNotification } from './notification.service';
 import { convertMinutesToSeconds } from './helper.service';
 import { editScenarioSubject } from '../contentScript';
 import { saveToStorage, getFromStorage } from './storage.service';
-import { MAX_SCENARIO_DURATION_IN_HOURS } from '../fut-react-app/constants';
+import { MAX_SCENARIO_DURATION_IN_HOURS } from '../constants';
 
 export const createNewScenario = (filter) => {
   const newStep = {

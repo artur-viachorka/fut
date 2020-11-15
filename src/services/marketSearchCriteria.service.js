@@ -1,7 +1,7 @@
 import { reject, equals, isEmpty, dissoc } from 'ramda';
 
 import { addFilterSubject, openModalSubject } from '../contentScript';
-import { MODALS } from '../fut-react-app/constants';
+import { MODALS } from '../constants';
 import { match, parseStringToInt } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';

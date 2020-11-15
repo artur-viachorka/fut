@@ -8,7 +8,7 @@ import { FaRegSave } from 'react-icons/fa';
 import Step, { DNDStep } from './Step';
 import MarkColorPicker from './MarkColorPicker';
 import TextField from '../Fields/TextField';
-import { DND_TYPES } from '../../constants';
+import { DND_TYPES } from '../../../constants';
 import { getSearchFilter } from '../../../services/marketSearchCriteria.service';
 import { createNewScenario, addNewStepToScenario, removeStepFromScenario, saveScenario, copyScenario, deleteScenario } from '../../../services/scenario.service';
 import { FaRegCopy, FaTrash } from 'react-icons/fa';

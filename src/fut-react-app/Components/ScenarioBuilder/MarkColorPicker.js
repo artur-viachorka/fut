@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
-import { MARK_COLORS } from '../../constants';
+import { MARK_COLORS } from '../../../constants';
 import { FaCheck } from 'react-icons/fa';
 
 const Container = styled.div`

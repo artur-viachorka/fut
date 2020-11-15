@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { REACT_CONTAINER_ID } from './constants';
+import { REACT_CONTAINER_ID } from '../constants';
 import App from './Components/App';
 import './styles.css';
 

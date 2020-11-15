@@ -8,7 +8,7 @@ import { getSearchFilters, setSearchFilters } from '../../../services/marketSear
 import { deleteSearchFilter, editSearchFilterMaxBuy, copySearchFilter } from '../../../services/marketSearchCriteria.service';
 import { debounce } from '../../../services/helper.service';
 import { addFilterSubject } from '../../../contentScript';
-import { DND_TYPES } from '../../constants';
+import { DND_TYPES } from '../../../constants';
 
 const Hint = styled.span`
   color: grey;

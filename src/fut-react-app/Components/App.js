@@ -6,7 +6,7 @@ import ConstructorModal from './Modals/ConstructorModal';
 import RunnerModal from './Modals/RunnerModal';
 
 import { openModalSubject } from '../../contentScript';
-import { MODALS } from '../constants';
+import { MODALS } from '../../constants';
 
 const App = () => {
   useEffect(() => {

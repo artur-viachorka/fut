@@ -6,7 +6,7 @@ import { FaRegCopy, FaTrash } from 'react-icons/fa';
 
 import BuyNowField from '../Fields/BuyNowField';
 
-import { DND_TYPES } from '../../constants';
+import { DND_TYPES } from '../../../constants';
 
 const Container = styled.div`
   align-items: center;

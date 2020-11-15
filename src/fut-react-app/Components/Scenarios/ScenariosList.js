@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { getScenarios } from '../../../services/scenario.service';
 import { selectScenarioSubject, editScenarioSubject } from '../../../contentScript';
-import { MARK_COLORS } from '../../constants';
+import { MARK_COLORS } from '../../../constants';
 
 const Container = styled.div`
   width: 100%;

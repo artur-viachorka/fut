@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import NumberField from './NumberField';
-import { BUY_INPUT_SETTINGS } from '../../constants';
+import { COIN_ICON_SRC, BUY_INPUT_SETTINGS } from '../../../constants';
 import { parseStringToInt } from '../../../services/string.serivce';
 import { roundNumber } from '../../../services/helper.service';
-import { COIN_ICON_SRC } from '../../../constants';
 
 const getStep = (value, increasing) => {
   let step = BUY_INPUT_SETTINGS.min;
