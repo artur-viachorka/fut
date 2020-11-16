@@ -61,11 +61,13 @@ const bidResultMock = {
 };
 
 export const searchOnTransfermarketRequest = async (params) => {
+  console.log('search', params);
   return mockedSearchResult;
   return await sendRequest(ROUTES.TRANSFERMARKET, params);
 };
 
 export const bidPlayerRequest = async (player) => {
+  console.log('bid', player);
   return bidResultMock;
   return await sendRequest(ROUTES.BID, { bid: player.buyNowPrice }, [{ name: 'tradeId', value: player.tradeId }]);
 };

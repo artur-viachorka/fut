@@ -16,6 +16,8 @@ export const DND_TYPES = {
 export const BUY_INPUT_SETTINGS = {
   min: 200,
   max: 15000000,
+  maxBid: 14999000,
+  useMaxBidApproachBefore: 5000,
   steps: [
     {
       min: 200,
@@ -58,6 +60,8 @@ export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
   from: 2,
   to: 2.5,
 };
+export const PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS = 1;
 
 export const MAX_PAGES_TO_SEARCH_ON = 10;
-export const PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS = 1;
+export const SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION = 20;
+export const PERCENT_AFTER_WHICH_RESET_MIN_BUY = 40;

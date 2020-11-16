@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { searchPlayersOnMarket, buyPlayer, getSearchRequestIntervalInMs } from './fut.service';
-import { PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS } from '../constants';
+import { searchPlayersOnMarket, buyPlayer, getSearchRequestIntervalInMs, calculateMinBuyNow, calculateMaxBid } from './fut.service';
+import { BUY_INPUT_SETTINGS, PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS } from '../constants';
 import { sleep } from './helper.service';
 
 export const pauseRunnerSubject = new Subject();
@@ -20,6 +20,8 @@ export const RUNNER_STATUS = {
 export const executeStep = async (step) => {
   return new Promise((resolve, reject) => {
     let isWorking = true;
+    let minBuyNow = null;
+    let maxBid = null;
 
     pauseRunnerSubject
       .pipe(first())
@@ -53,7 +55,20 @@ export const executeStep = async (step) => {
         if (!isWorking) {
           resolve();
         } else {
-          const players = await searchPlayersOnMarket(step.filter.requestParams);
+          const params = { ...step.filter.requestParams };
+          if (params.maxb < BUY_INPUT_SETTINGS.useMaxBidApproachBefore) {
+            maxBid = calculateMaxBid(maxBid, params.maxb);
+          } else {
+            minBuyNow = calculateMinBuyNow(minBuyNow, params.maxb);
+          }
+          if (minBuyNow) {
+            params.minb = minBuyNow;
+          }
+          if (maxBid) {
+            params.macr = maxBid;
+          }
+          const players = await searchPlayersOnMarket(params);
+
           if (players?.length) {
             logRunnerSubject.next({
               stepId: step.id,

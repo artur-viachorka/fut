@@ -214,6 +214,7 @@ const Runner = () => {
                     if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
                       return;
                     }
+                    setLogs({});
                     setIsRunning(true);
                     start();
                   }}
