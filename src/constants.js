@@ -1,6 +1,7 @@
 export const HOST = 'https://utas.external.s2.fut.ea.com/ut/game/fifa21/';
 export const ROUTES = {
   TRANSFERMARKET: 'transfermarket',
+  BID: 'trade/{tradeId}/bid',
 };
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
@@ -52,3 +53,10 @@ export const MODALS = {
   SCENARIO_CONSTRUCTOR: 'scenario_constructor',
   RUNNER: 'runner',
 };
+
+export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
+  from: 2,
+  to: 2.5,
+};
+
+export const MAX_PAGES_TO_SEARCH_ON = 10;

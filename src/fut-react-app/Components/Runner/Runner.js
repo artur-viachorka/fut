@@ -21,6 +21,7 @@ import {
 
 import CountdownTimer from '../CountdownTimer';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
+import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS } from '../../../constants';
 
 const Container = styled.div`
   display: flex;
@@ -143,18 +144,18 @@ const Runner = () => {
   };
 
   const start = async (runningStep) => {
-    const REQUEST_INTERVAL_IN_SECONDS = 2;
-    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, REQUEST_INTERVAL_IN_SECONDS);
+    const requestInterval = SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to;
+    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, requestInterval);
     const duration = steps
-      .reduce((accumulator, step) =>accumulator + (step.workingSeconds <= REQUEST_INTERVAL_IN_SECONDS ? 0 : step.workingSeconds) + step.pauseAfterStepSeconds, 0);
+      .reduce((accumulator, step) =>accumulator + (step.workingSeconds <= requestInterval ? 0 : step.workingSeconds) + step.pauseAfterStepSeconds, 0);
     setScenarioDurationLeft(duration);
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
         setRunningStep(step);
-        if (step.workingSeconds > REQUEST_INTERVAL_IN_SECONDS) {
+        if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          await executeStep(step, REQUEST_INTERVAL_IN_SECONDS);
+          await executeStep(step);
         }
         if (step.pauseAfterStepSeconds > 0) {
           setRunningStatus(RUNNER_STATUS.IDLE);

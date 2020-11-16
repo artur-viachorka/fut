@@ -47,3 +47,5 @@ export const roundNumber = (value, roundOn) => {
 };
 
 export const addZero = (num) => num < 10 ? `0${num}` : num;
+
+export const getRandomNumberInRange = (min, max) => (Math.random() * (max - min) + min).toFixed(3);
