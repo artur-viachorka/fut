@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { prop } from 'ramda';
 import { FaPlay, FaPause, FaStop } from 'react-icons/fa';
 
 import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
@@ -8,13 +7,14 @@ import ScenariosList from '../Scenarios/ScenariosList';
 import RunnerStepStatus from './RunnerStepStatus';
 
 import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
-import { isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
+import { isScenarioInputsInvalid, checkIsMaxDurationExceeded, getLoggerText } from '../../../services/scenario.service';
 import {
   executeStep,
   executeStepIdle,
   pauseStep,
   finishStepWork,
   finishStepIdle,
+  logRunnerSubject,
   stopStep,
   RUNNER_STATUS,
 } from '../../../services/runner.service';
@@ -102,7 +102,11 @@ const Runner = () => {
 
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [runningStep, setRunningStep] = useState(null);
-  const [logs, setLogs] = useState(null);
+  const runningStepRef = useRef(null);
+  runningStepRef.current = runningStep;
+  const [logs, setLogs] = useState({});
+  const logsRef = useRef({});
+  logsRef.current = logs;
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
 
@@ -125,15 +129,6 @@ const Runner = () => {
     setIsPaused(false);
   };
 
-  const addLog = (stepId, text) => {
-    setLogs([
-      ...(logs || []),
-      {
-        stepId, text,
-      }
-    ]);
-  };
-
   const getLeftoverSteps = (steps, runningStep, requestIntervalInSeconds) => {
     let stepIndexToStartFrom = steps.findIndex(step => step.id === runningStep?.id);
     stepIndexToStartFrom = stepIndexToStartFrom === -1 ? 0 : stepIndexToStartFrom;
@@ -143,19 +138,27 @@ const Runner = () => {
       .filter((step) => step.workingSeconds > requestIntervalInSeconds || (step.workingSeconds <= requestIntervalInSeconds && step.pauseAfterStepSeconds > 0));
   };
 
-  const start = async (runningStep) => {
-    const requestInterval = SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to;
-    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, requestInterval);
+  const updateRunningScenarioDuration = (steps, requestInterval) => {
     const duration = steps
       .reduce((accumulator, step) =>accumulator + (step.workingSeconds <= requestInterval ? 0 : step.workingSeconds) + step.pauseAfterStepSeconds, 0);
     setScenarioDurationLeft(duration);
+  };
+
+  const start = async (runningStep) => {
+    const requestInterval = SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to;
+    const steps = getLeftoverSteps(selectedScenario.steps, runningStep, requestInterval);
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
         setRunningStep(step);
+        updateRunningScenarioDuration(steps.slice(i), requestInterval);
+
         if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          await executeStep(step);
+          const executionResult = await executeStep(step);
+          if (executionResult?.skip) {
+            continue;
+          }
         }
         if (step.pauseAfterStepSeconds > 0) {
           setRunningStatus(RUNNER_STATUS.IDLE);
@@ -178,11 +181,23 @@ const Runner = () => {
       resetScenario(scenario);
     });
 
+    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, isPlayerBought, isPlayerFound }) => {
+      const text = getLoggerText({ isPlayerBought, isPlayerFound });
+      if (text) {
+        setLogs({
+          ...logsRef.current,
+          [stepId]: [...(logsRef.current[stepId] || []), text],
+        });
+      }
+    });
+
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
+      loggerSubjectSubscription.unsubscribe();
     };
   }, []);
+
   return (
     <Container>
       <Header>
@@ -254,8 +269,7 @@ const Runner = () => {
       </Header>
       <ScenarioBuilder
           renderStepStatusBar={(step) => {
-            const isStepRunning = step.id === runningStep?.id;
-            const stepLogs = (logs || []).filter(log => step.id === log.stepId).map(prop('text'));
+            const isStepRunning = step.id === runningStepRef?.current?.id;
             return (
               <RunnerStepStatus
                   isPaused={isPaused}
@@ -263,33 +277,33 @@ const Runner = () => {
                   isWorking={isStepRunning && runningStatus === RUNNER_STATUS.WORKING}
                   idleSeconds={isStepRunning ? runningStep?.pauseAfterStepSeconds : convertMinutesToSeconds(step.pauseAfterStep)}
                   workingSeconds={isStepRunning ? runningStep?.workingSeconds : convertMinutesToSeconds(step.workingMinutes)}
-                  isStepRunning={isStepRunning}
-                  logs={stepLogs}
+                  isStepRunning={isStepRunning && isRunning}
+                  logs={logs[step.id]}
                   onWorkingTimerExceeded={() => {
                     finishStepWork(step);
                     setRunningStep({
-                      ...runningStep,
+                      ...runningStepRef.current,
                       workingSeconds: 0,
                     });
                   }}
                   onIdleTimerExceeded={() => {
                     finishStepIdle(step);
                     setRunningStep({
-                      ...runningStep,
+                      ...runningStepRef.current,
                       pauseAfterStepSeconds: 0,
                     });
                   }}
                   onWorkingTimerPaused={(secondsLeft) => {
                     pauseStep(step);
                     setRunningStep({
-                      ...runningStep,
+                      ...runningStepRef.current,
                       workingSeconds: secondsLeft,
                     });
                   }}
                   onIdleTimerPaused={(secondsLeft) => {
                     pauseStep(step);
                     setRunningStep({
-                      ...runningStep,
+                      ...runningStepRef.current,
                       pauseAfterStepSeconds: secondsLeft,
                     });
                   }}

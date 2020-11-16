@@ -146,3 +146,12 @@ export const copyScenario = async (scenarioToCopy) => {
     return false;
   }
 };
+
+export const getLoggerText = ({ isPlayerBought, isPlayerFound }) => {
+  if (isPlayerBought) {
+    return 'Player bought';
+  }
+  if (isPlayerFound) {
+    return 'Player found';
+  }
+};

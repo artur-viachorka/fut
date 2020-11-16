@@ -1,11 +1,14 @@
-import { searchPlayersOnMarket, buyPlayer, getSearchRequestIntervalInMs } from './fut.service';
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
+import { searchPlayersOnMarket, buyPlayer, getSearchRequestIntervalInMs } from './fut.service';
+import { PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS } from '../constants';
+import { sleep } from './helper.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
+export const logRunnerSubject = new Subject();
 
 export const RUNNER_STATUS = {
   WORKING: 'working',
@@ -52,9 +55,23 @@ export const executeStep = async (step) => {
         } else {
           const players = await searchPlayersOnMarket(step.filter.requestParams);
           if (players?.length) {
-            // todo: add logs that players found
+            logRunnerSubject.next({
+              stepId: step.id,
+              isPlayerFound: true,
+            });
+            await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
             const buyResult = await buyPlayer(players[0]);
-            // todo: add logs that players bought or not according to result
+
+            if (buyResult) {
+              if (step.shouldSkipAfterPurchase) {
+                resolve({ skip: true });
+                return;
+              }
+              logRunnerSubject.next({
+                stepId: step.id,
+                isPlayerBought: true,
+              });
+            }
           }
           setTimeout(work, getSearchRequestIntervalInMs());
         }
