@@ -8,7 +8,8 @@ import {
   MAX_PAGES_TO_SEARCH_ON,
   BUY_INPUT_SETTINGS,
   PERCENT_AFTER_WHICH_RESET_MIN_BUY,
-  SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION
+  SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
+  SEARCH_ITEMS_PAGE_SIZE,
 } from '../constants';
 
 const getSearchRequestInterval = () => {
@@ -87,7 +88,7 @@ const searchPlayersOnMarketPaginated = async (params) => {
         }
         params = {
           ...params,
-          start: params.start + SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
+          start: params.start + SEARCH_ITEMS_PAGE_SIZE,
         };
         await sleep(getSearchRequestInterval());
         let items = await searchOnTransfermarketRequest(params);
