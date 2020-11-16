@@ -46,7 +46,14 @@ const Container = styled.label`
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin: 1.5px 0;
   font-size: 12px;
+
+  > span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
 `;
 
 const CheckboxField = ({ checked, label, onChange, isReadOnly, ...props }) => (

@@ -14,12 +14,13 @@ const Wrapper = styled.div`
   right: 0px;
   background: rgb(0 0 0 / 72%);
   z-index: 1000;
+  overflow: auto;
 `;
 
 const Container = styled.div`
   width: 95%;
   height: 95%;
-  min-width: 600px;
+  min-width: 700px;
   min-height: 600px;
   background-color: #0e0f1d;
   background-size: cover;

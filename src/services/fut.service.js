@@ -13,6 +13,7 @@ export const getSearchRequestIntervalInMs = () => {
 };
 
 const searchPlayersOnMarketPaginated = async (params) => {
+  // update min buy now on every step
   try {
     let isWorking = true;
     pauseRunnerSubject

@@ -54,9 +54,9 @@ const Main = styled.main`
 
 const Inputs = styled.div`
   display: flex;
-  max-width: 370px;
   flex-direction: column;
-  margin-left: 15px;
+  margin-left: 10px;
+  padding: 18px;
   justify-content: space-around;
 `;
 
@@ -66,7 +66,13 @@ const Row = styled.div`
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: space-between;
+
+  &:first-child {
+    flex-direction: column;
+    flex: 1;
+    justify-content: center;
+  }
 `;
 
 const NumberFieldContainer = styled.div`
@@ -89,6 +95,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
   const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
+  const [shouldSkipAfterPurchase, setShouldSkipAfterPurchase] = useState(step.shouldSkipAfterPurchase);
 
   const editWorkingMinutes = (value) => {
     setWorkingMinutes(value);
@@ -111,6 +118,14 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
     edit({
       ...step,
       shouldSellOnMarket: value,
+    });
+  };
+
+  const editShouldSkipAfterPurchase = (value) => {
+    setShouldSkipAfterPurchase(value);
+    edit({
+      ...step,
+      shouldSkipAfterPurchase: value,
     });
   };
 
@@ -152,6 +167,12 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
                 label="Automatically Sell on Market"
                 checked={!!shouldSellOnMarket}
                 onChange={editShouldSellOnMarket}
+                isReadOnly={isReadOnly}
+            />
+            <CheckboxField
+                label="Skip Step After Purchase"
+                checked={!!shouldSkipAfterPurchase}
+                onChange={editShouldSkipAfterPurchase}
                 isReadOnly={isReadOnly}
             />
           </Row>
