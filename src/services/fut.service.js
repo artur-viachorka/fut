@@ -1,8 +1,14 @@
 import { first } from 'rxjs/operators';
-import { bidPlayerRequest, searchOnTransfermarketRequest } from './fetch.service';
 import { convertSecondsToMs } from './helper.service';
 import { getRandomNumberInRange, sleep } from './helper.service';
 import { pauseRunnerSubject, stopRunnerSubject } from './runner.service';
+import {
+  bidPlayerRequest,
+  searchOnTransfermarketRequest,
+  sendItemToTransfermarketRequest,
+  sendItemToAuctionHouseRequest,
+  getPriceLimitsRequest,
+} from './fetch.service';
 import {
   SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS,
   MAX_PAGES_TO_SEARCH_ON,
@@ -122,9 +128,35 @@ export const buyPlayer = async (player) => {
     return false;
   }
   try {
-    return await bidPlayerRequest(player);
+    const bidResult = await bidPlayerRequest(player);
+    const auctionInfo = (bidResult?.auctionInfo || [])[0];
+    if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
+      return {
+        auctionInfo,
+        credits: bidResult.credits,
+      };
+    }
+    return false;
   } catch (e) {
-    console.error('purchase failed');
+    console.error('purchase failed', e);
     return false;
   }
+};
+
+export const sellPlayer = async (bidInfo) => {
+  console.log(bidInfo);
+  // if (!bidInfo?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
+  //   return false;
+  // }
+
+  // sendItemToTransfermarketRequest,
+  // sendItemToAuctionHouseRequest,
+  // getPriceLimitsRequest,
+
+  // try {
+  //   return await bidPlayerRequest(player);
+  // } catch (e) {
+  //   console.error('purchase failed');
+  //   return false;
+  // }
 };

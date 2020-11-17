@@ -147,11 +147,14 @@ export const copyScenario = async (scenarioToCopy) => {
   }
 };
 
-export const getLoggerText = ({ isPlayerBought, isPlayerFound }) => {
-  if (isPlayerBought) {
-    return 'Player bought';
+export const getLoggerText = ({ isPlayerBought, isPlayerFound, isNotEnoughCredits, meta }) => {
+  if (isPlayerBought != null) {
+    return `Player ${!isPlayerBought ? 'not' : ''} bought${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}` : ''}.`;
   }
-  if (isPlayerFound) {
-    return 'Player found';
+  if (isPlayerFound != null) {
+    return `Player found${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}.` : ''}.`;
+  }
+  if (isNotEnoughCredits != null) {
+    return `Not enough credits to buy player ${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}.` : ''}.`;
   }
 };

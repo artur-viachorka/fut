@@ -306,6 +306,11 @@ const saveSearchFilterToStorage = async () => {
   }
 };
 
+export const getCredits = async () => {
+  const credits = $('.view-navbar-currency > .view-navbar-currency-coins:first').text();
+  return parseStringToInt(credits || 0);
+};
+
 export const getSearchFilters = async () => {
   const { filters } = await getFromStorage('filters');
   return filters || [];

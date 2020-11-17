@@ -1,7 +1,29 @@
 export const HOST = 'https://utas.external.s2.fut.ea.com/ut/game/fifa21/';
 export const ROUTES = {
-  TRANSFERMARKET: 'transfermarket',
-  BID: 'trade/{tradeId}/bid',
+  TRANSFERMARKET: {
+    url: 'transfermarket',
+    method: 'GET',
+  },
+  BID: {
+    url: 'trade/{tradeId}/bid',
+    method: 'PUT',
+  },
+  ITEM: {
+    url: 'item',
+    method: 'PUT',
+  },
+  AUCTIONHOUSE: {
+    url: 'auctionhouse',
+    method: 'POST',
+  },
+  PRICELIMITS: {
+    url: 'pricelimits',
+    method: 'GET',
+  },
+  TRADEPILE: {
+    url: 'tradepile',
+    method: 'GET',
+  },
 };
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';

@@ -1,7 +1,15 @@
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { searchPlayersOnMarket, buyPlayer, getSearchRequestIntervalInMs, calculateMinBuyNow, calculateMaxBid } from './fut.service';
+import {
+  searchPlayersOnMarket,
+  buyPlayer,
+  sellPlayer,
+  getSearchRequestIntervalInMs,
+  calculateMinBuyNow,
+  calculateMaxBid,
+} from './fut.service';
 import { BUY_INPUT_SETTINGS, PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS } from '../constants';
+import { getCredits } from './marketSearchCriteria.service';
 import { sleep } from './helper.service';
 
 export const pauseRunnerSubject = new Subject();
@@ -9,6 +17,10 @@ export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
 export const logRunnerSubject = new Subject();
+
+let credits = null;
+
+export const setUserCredits = () => credits = getCredits();
 
 export const RUNNER_STATUS = {
   WORKING: 'working',
@@ -70,22 +82,43 @@ export const executeStep = async (step) => {
           const players = await searchPlayersOnMarket(params);
 
           if (players?.length) {
+            const playerToBuy = players[0];
             logRunnerSubject.next({
               stepId: step.id,
               isPlayerFound: true,
+              meta: {
+                buyNowPrice: playerToBuy.buyNowPrice,
+              }
             });
+            if (credits < playerToBuy.buyNowPrice) {
+              logRunnerSubject.next({
+                stepId: step.id,
+                isNotEnoughCredits: true,
+                meta: {
+                  buyNowPrice: playerToBuy.buyNowPrice,
+                }
+              });
+              resolve({ skip: true });
+              return;
+            }
             await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
-            const buyResult = await buyPlayer(players[0]);
-
-            if (buyResult) {
+            const bidResult = await buyPlayer(players[0]);
+            logRunnerSubject.next({
+              stepId: step.id,
+              isPlayerBought: !!bidResult,
+              meta: {
+                buyNowPrice: bidResult?.auctionInfo?.buyNowPrice,
+              }
+            });
+            if (bidResult) {
+              credits = bidResult.credits;
               if (step.shouldSkipAfterPurchase) {
                 resolve({ skip: true });
                 return;
               }
-              logRunnerSubject.next({
-                stepId: step.id,
-                isPlayerBought: true,
-              });
+              if (step.shouldSellOnMarket) {
+                await sellPlayer(bidResult);
+              }
             }
           }
           setTimeout(work, getSearchRequestIntervalInMs());

@@ -17,6 +17,7 @@ import {
   logRunnerSubject,
   stopStep,
   RUNNER_STATUS,
+  setUserCredits,
 } from '../../../services/runner.service';
 
 import CountdownTimer from '../CountdownTimer';
@@ -181,8 +182,8 @@ const Runner = () => {
       resetScenario(scenario);
     });
 
-    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, isPlayerBought, isPlayerFound }) => {
-      const text = getLoggerText({ isPlayerBought, isPlayerFound });
+    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, ...loggerData }) => {
+      const text = getLoggerText(loggerData);
       if (text) {
         setLogs({
           ...logsRef.current,
@@ -190,6 +191,8 @@ const Runner = () => {
         });
       }
     });
+
+    setUserCredits();
 
     return () => {
       selectScenarioSubscription.unsubscribe();
