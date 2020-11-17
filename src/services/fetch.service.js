@@ -16,7 +16,7 @@ const replaceUrlParams = (url, params) => {
   return url;
 };
 
-export const sendRequest = async ({ url, params, urlParams, body, method = 'GET' }, mockedResult) => {
+export const sendRequest = async ({ url, params, urlParams, body, method = 'GET' }) => {
   const userId = executeOnPageSpace('window.services.Authentication._sessionUtas.id');
   if (!userId) {
     return;
@@ -32,8 +32,7 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
   if (body) {
     body = JSON.stringify(body);
   }
-  console.log(url.href, body, method);
-  return mockedResult;
+
   const response = await fetch(url.href, {
     method,
     headers: {
@@ -46,67 +45,31 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
 };
 
 export const searchOnTransfermarketRequest = async (params) => {
-  const mockedSearchResult = {
-    auctionInfo: [
-      {
-        tradeState: 'active',
-        tradeId: 1,
-        buyNowPrice: 200,
-      },
-      {
-        tradeState: 'active',
-        tradeId: 2,
-        buyNowPrice: 300,
-      },
-      {
-        tradeState: 'active',
-        tradeId: 3,
-        buyNowPrice: 400,
-      }
-    ]
-  };
   return await sendRequest({
     url: ROUTES.TRANSFERMARKET.url,
     method: ROUTES.TRANSFERMARKET.method,
     params,
-  }, mockedSearchResult);
+  });
 };
 
 export const bidPlayerRequest = async (player) => {
-  const mockedResult = {
-    credits: 0,
-    auctionInfo: [{
-      tradeId: 1,
-      buyNowPrice: 200,
-      tradeState: 'closed',
-      itemData: {
-        id: 999,
-      }
-    }]
-  };
   return await sendRequest({
     url: ROUTES.BID.url,
     method: ROUTES.BID.method,
     body: { bid: player.buyNowPrice },
     urlParams: [{ name: 'tradeId', value: player.tradeId }],
-  }, mockedResult);
+  });
 };
 
-export const sendItemToTransfermarketRequest = async (itemId) => {
-  const mockedResult = {
-    itemData: [{id: itemId, pile: 'trade', success: true}],
-  };
+export const sendItemToTransferListRequest = async (itemId) => {
   return await sendRequest({
     url: ROUTES.ITEM.url,
     method: ROUTES.ITEM.method,
     body: { itemData: [{ id: itemId, pile: 'trade' }] },
-  }, mockedResult);
+  });
 };
 
 export const sendItemToAuctionHouseRequest = async (itemId, startingBid, buyNowPrice, duration) => {
-  const mockedResult = {
-    id: itemId,
-  };
   return await sendRequest({
     url: ROUTES.AUCTIONHOUSE.url,
     method: ROUTES.AUCTIONHOUSE.method,
@@ -118,21 +81,15 @@ export const sendItemToAuctionHouseRequest = async (itemId, startingBid, buyNowP
       },
       startingBid,
     },
-  }, mockedResult);
+  });
 };
 
 export const getPriceLimitsRequest = async (itemId) => {
-  const mockedResult = {
-    itemId,
-    maxPrice: 10000,
-    minPrice: 150,
-    source: 'ITEM_DEFINITION',
-  };
   return await sendRequest({
     url: ROUTES.PRICELIMITS.url,
     method: ROUTES.PRICELIMITS.method,
     params: {
       itemIdList: itemId,
     },
-  }, mockedResult);
+  });
 };

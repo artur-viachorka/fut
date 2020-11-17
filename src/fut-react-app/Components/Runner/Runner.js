@@ -160,6 +160,9 @@ const Runner = () => {
           if (executionResult?.skip) {
             continue;
           }
+          if (executionResult?.stop) {
+            break;
+          }
         }
         if (step.pauseAfterStepSeconds > 0) {
           setRunningStatus(RUNNER_STATUS.IDLE);

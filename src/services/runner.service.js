@@ -4,13 +4,14 @@ import {
   searchPlayersOnMarket,
   buyPlayer,
   sellPlayer,
+  sendItemToTransferList,
   getSearchRequestIntervalInMs,
   calculateMinBuyNow,
   calculateMaxBid,
 } from './fut.service';
-import { BUY_INPUT_SETTINGS, PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS } from '../constants';
+import { openUTNotification } from './notification.service';
+import { BUY_INPUT_SETTINGS } from '../constants';
 import { getCredits } from './marketSearchCriteria.service';
-import { sleep } from './helper.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -101,8 +102,9 @@ export const executeStep = async (step) => {
               resolve({ skip: true });
               return;
             }
-            await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
+
             const bidResult = await buyPlayer(players[0]);
+
             logRunnerSubject.next({
               stepId: step.id,
               isPlayerBought: !!bidResult,
@@ -116,8 +118,18 @@ export const executeStep = async (step) => {
                 resolve({ skip: true });
                 return;
               }
-              if (step.shouldSellOnMarket) {
-                await sellPlayer(bidResult);
+              const movingResult = await sendItemToTransferList(bidResult?.auctionInfo?.itemData);
+              logRunnerSubject.next({
+                stepId: step.id,
+                movedToTransferList: !!movingResult,
+              });
+              if (!movingResult) {
+                openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
+                resolve({ stop: true });
+                return;
+              }
+              if (step.shouldSellOnMarket && movingResult?.itemId) {
+                await sellPlayer(movingResult?.itemId);
               }
             }
           }

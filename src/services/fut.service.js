@@ -5,7 +5,7 @@ import { pauseRunnerSubject, stopRunnerSubject } from './runner.service';
 import {
   bidPlayerRequest,
   searchOnTransfermarketRequest,
-  sendItemToTransfermarketRequest,
+  sendItemToTransferListRequest,
   sendItemToAuctionHouseRequest,
   getPriceLimitsRequest,
 } from './fetch.service';
@@ -16,6 +16,8 @@ import {
   PERCENT_AFTER_WHICH_RESET_MIN_BUY,
   SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
   SEARCH_ITEMS_PAGE_SIZE,
+  PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS,
+  PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST,
 } from '../constants';
 
 const getSearchRequestInterval = () => {
@@ -125,9 +127,10 @@ export const searchPlayersOnMarket = async (params) => {
 
 export const buyPlayer = async (player) => {
   if (!player?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
-    return false;
+    return;
   }
   try {
+    await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
     const bidResult = await bidPlayerRequest(player);
     const auctionInfo = (bidResult?.auctionInfo || [])[0];
     if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
@@ -136,15 +139,30 @@ export const buyPlayer = async (player) => {
         credits: bidResult.credits,
       };
     }
-    return false;
   } catch (e) {
     console.error('purchase failed', e);
-    return false;
   }
 };
 
-export const sellPlayer = async (bidInfo) => {
-  console.log(bidInfo);
+export const sendItemToTransferList = async (itemData) => {
+  try {
+    if (!itemData?.id) {
+      return;
+    }
+    await sleep(PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST);
+    const result = await sendItemToTransferListRequest(itemData.id);
+    if (result?.itemData && result?.itemData[0]?.success) {
+      return {
+        itemId: result.itemData[0].id,
+      };
+    }
+  } catch (e) {
+    console.error('failed to move to transfer list', e);
+  }
+};
+
+export const sellPlayer = async (itemId) => {
+  console.log(itemId);
   // if (!bidInfo?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
   //   return false;
   // }
