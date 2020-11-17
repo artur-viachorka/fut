@@ -96,7 +96,7 @@ const searchPlayersOnMarketPaginated = async (params) => {
         }
         params = {
           ...params,
-          start: params.start + SEARCH_ITEMS_PAGE_SIZE,
+          start: (params.start || 0) + SEARCH_ITEMS_PAGE_SIZE,
         };
         await sleep(getSearchRequestInterval());
         let items = await searchOnTransfermarketRequest(params);
