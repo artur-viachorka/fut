@@ -12,6 +12,10 @@ export const ROUTES = {
     url: 'item',
     method: 'PUT',
   },
+  LITE: {
+    url: 'trade/status/lite',
+    method: 'GET',
+  },
   AUCTIONHOUSE: {
     url: 'auctionhouse',
     method: 'POST',
@@ -36,7 +40,7 @@ export const DND_TYPES = {
 };
 
 export const BUY_INPUT_SETTINGS = {
-  min: 200,
+  min: 400,
   max: 15000000,
   maxBid: 14999000,
   useMaxBidApproachBefore: 5000,
@@ -82,10 +86,25 @@ export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
   from: 2,
   to: 2.5,
 };
-export const PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS = 2;
+export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
+  from: 1,
+  to: 1.5,
+};
+
+export const DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
+  from: 0.7,
+  to: 1.3,
+};
+
+export const PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS = 1;
 export const PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST = 2;
 
-export const MAX_PAGES_TO_SEARCH_ON = 5;
+export const MAX_PAGES_TO_SEARCH_ON = 4;
 export const SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION = 21;
 export const SEARCH_ITEMS_PAGE_SIZE = 20;
+
 export const PERCENT_AFTER_WHICH_RESET_MIN_BUY = 40;
+export const MIN_BUY_AFTER_WHICH_RESET_MIN_BUY = {
+  min: 350,
+  max: 30000
+};

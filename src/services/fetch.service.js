@@ -69,6 +69,13 @@ export const sendItemToTransferListRequest = async (itemId) => {
   });
 };
 
+export const getLiteRequest = async (tradeIds = []) => {
+  return await sendRequest({
+    url: ROUTES.LITE.url + `?tradeIds=${tradeIds.join(',')}`,
+    method: ROUTES.LITE.method,
+  });
+};
+
 export const sendItemToAuctionHouseRequest = async (itemId, startingBid, buyNowPrice, duration) => {
   return await sendRequest({
     url: ROUTES.AUCTIONHOUSE.url,

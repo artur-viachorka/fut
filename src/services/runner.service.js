@@ -7,10 +7,8 @@ import {
   sendItemToTransferList,
   getSearchRequestIntervalInMs,
   calculateMinBuyNow,
-  calculateMaxBid,
 } from './fut.service';
 import { openUTNotification } from './notification.service';
-import { BUY_INPUT_SETTINGS } from '../constants';
 import { getCredits } from './marketSearchCriteria.service';
 
 export const pauseRunnerSubject = new Subject();
@@ -68,42 +66,36 @@ export const executeStep = async (step) => {
         if (!isWorking) {
           resolve();
         } else {
-          const params = { ...step.filter.requestParams };
-          if (params.maxb < BUY_INPUT_SETTINGS.useMaxBidApproachBefore) {
-            maxBid = calculateMaxBid(maxBid, params.maxb);
-          } else {
-            minBuyNow = calculateMinBuyNow(minBuyNow, params.maxb);
-          }
+          let params = { ...step.filter.requestParams };
+          minBuyNow = calculateMinBuyNow(minBuyNow, params.maxb);
           if (minBuyNow) {
             params.minb = minBuyNow;
           }
           if (maxBid) {
             params.macr = maxBid;
           }
-          const players = await searchPlayersOnMarket(params);
-
-          if (players?.length) {
-            const playerToBuy = players[0];
+          const player = await searchPlayersOnMarket(params);
+          if (player) {
             logRunnerSubject.next({
               stepId: step.id,
               isPlayerFound: true,
               meta: {
-                buyNowPrice: playerToBuy.buyNowPrice,
+                buyNowPrice: player.buyNowPrice,
               }
             });
-            if (credits < playerToBuy.buyNowPrice) {
+            if (credits < player.buyNowPrice) {
               logRunnerSubject.next({
                 stepId: step.id,
                 isNotEnoughCredits: true,
                 meta: {
-                  buyNowPrice: playerToBuy.buyNowPrice,
+                  buyNowPrice: player.buyNowPrice,
                 }
               });
               resolve({ skip: true });
               return;
             }
 
-            const bidResult = await buyPlayer(players[0]);
+            const bidResult = await buyPlayer(player);
 
             logRunnerSubject.next({
               stepId: step.id,

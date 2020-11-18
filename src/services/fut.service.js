@@ -8,20 +8,32 @@ import {
   sendItemToTransferListRequest,
   sendItemToAuctionHouseRequest,
   getPriceLimitsRequest,
+  getLiteRequest,
 } from './fetch.service';
 import {
   SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS,
+  SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS,
   MAX_PAGES_TO_SEARCH_ON,
   BUY_INPUT_SETTINGS,
   PERCENT_AFTER_WHICH_RESET_MIN_BUY,
   SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
   SEARCH_ITEMS_PAGE_SIZE,
   PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS,
+  MIN_BUY_AFTER_WHICH_RESET_MIN_BUY,
   PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST,
+  DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
 } from '../constants';
 
 const getSearchRequestInterval = () => {
   return getRandomNumberInRange(SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.from, SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to);
+};
+
+const getSearchRequestIntervalBetweenPages = () => {
+  return getRandomNumberInRange(SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.from, SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.to);
+};
+
+const getDelayBeforeDefaultRequest = () => {
+  return getRandomNumberInRange(DELAY_BEFORE_DEFAULT_REQUEST_RANGE.from, DELAY_BEFORE_DEFAULT_REQUEST_RANGE.to);
 };
 
 export const getSearchRequestIntervalInMs = () => {
@@ -59,22 +71,21 @@ export const calculateMinBuyNow = (currentValue, maxBuyNow) => {
     return 0;
   }
   let newMinBuyNow = (currentValue || 0) + getFutPriceStep(currentValue, true);
-  if (newMinBuyNow >= maxBuyNow || newMinBuyNow >= (maxBuyNow * PERCENT_AFTER_WHICH_RESET_MIN_BUY / 100)) {
+  const shouldResetMinBuy = newMinBuyNow >= maxBuyNow || newMinBuyNow >= (maxBuyNow * PERCENT_AFTER_WHICH_RESET_MIN_BUY / 100) || newMinBuyNow > MIN_BUY_AFTER_WHICH_RESET_MIN_BUY.max;
+  if (newMinBuyNow > MIN_BUY_AFTER_WHICH_RESET_MIN_BUY.min && shouldResetMinBuy) {
     newMinBuyNow = 0;
   }
   return newMinBuyNow;
 };
 
-export const calculateMaxBid = (currentValue, maxBuyNow) => {
-  if (currentValue == null) {
-    return 0;
-  }
-  let newMaxBid = (currentValue || BUY_INPUT_SETTINGS.maxBid) - getFutPriceStep(currentValue, false);
-  if (newMaxBid <= maxBuyNow) {
-    newMaxBid = BUY_INPUT_SETTINGS.maxBid;
-  }
-  return newMaxBid;
+const mapAuctionInfoItems = (result, pageNumber) => {
+  return (result?.auctionInfo || []).map(item => ({
+    ...item,
+    pageNumber,
+  }));
 };
+
+const isPageLast = (pageNumber, listLength) => pageNumber === Math.ceil((listLength / 20) - 1);
 
 const searchPlayersOnMarketPaginated = async (params) => {
   try {
@@ -88,9 +99,9 @@ const searchPlayersOnMarketPaginated = async (params) => {
       .subscribe(() => isWorking = false);
 
     let result = await searchOnTransfermarketRequest(params);
-    let auctionInfo = [...(result?.auctionInfo || [])];
+    let auctionInfo = mapAuctionInfoItems(result, 0);
     if (auctionInfo.length === SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
-      for (let i = 0; i < MAX_PAGES_TO_SEARCH_ON; i++) {
+      for (let i = 1; i < MAX_PAGES_TO_SEARCH_ON; i++) {
         if (!isWorking) {
           return null;
         }
@@ -98,12 +109,13 @@ const searchPlayersOnMarketPaginated = async (params) => {
           ...params,
           start: (params.start || 0) + SEARCH_ITEMS_PAGE_SIZE,
         };
-        await sleep(getSearchRequestInterval());
-        let items = await searchOnTransfermarketRequest(params);
-        auctionInfo = auctionInfo.concat(items?.auctionInfo || []);
-        if (items?.auctionInfo?.length !== SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
+        await sleep(getSearchRequestIntervalBetweenPages());
+        let searchResult = await searchOnTransfermarketRequest(params);
+        const mappedAuctionInfo = mapAuctionInfoItems(searchResult, i);
+        if (mappedAuctionInfo.length !== SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
           break;
         }
+        auctionInfo = auctionInfo.concat(mappedAuctionInfo);
       }
     }
     return auctionInfo;
@@ -114,15 +126,27 @@ const searchPlayersOnMarketPaginated = async (params) => {
 };
 
 export const searchPlayersOnMarket = async (params) => {
-  let results = await searchPlayersOnMarketPaginated(params);
-  if (!results) {
+  let auctionInfo = await searchPlayersOnMarketPaginated(params);
+  if (!auctionInfo?.length) {
     return null;
   }
-  results = results
-    .filter(item => item && item.buyNowPrice)
-    .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-
-  return results;
+  let sortedAuctionInfo = auctionInfo
+    .filter(item => item && item.buyNowPrice && item.expires > 20 && item.tradeState === 'active')
+    .sort((a, b) => a.buyNowPrice === b.buyNowPrice ? b.pageNumber - a.pageNumber : a.buyNowPrice - b.buyNowPrice);
+  let cheapestItem = sortedAuctionInfo[0];
+  if (isPageLast(cheapestItem.pageNumber, auctionInfo.length)) {
+    return cheapestItem;
+  }
+  await sleep(getSearchRequestIntervalBetweenPages());
+  await searchOnTransfermarketRequest({
+    ...params,
+    start: cheapestItem.pageNumber * SEARCH_ITEMS_PAGE_SIZE,
+    micr: 150,
+  });
+  await sleep(getDelayBeforeDefaultRequest());
+  const liteData = await getLiteRequest([cheapestItem.tradeId]);
+  const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === cheapestItem.tradeId && item.tradeState === 'active');
+  return activeTrade || null;
 };
 
 export const buyPlayer = async (player) => {
