@@ -113,8 +113,8 @@ export const MODALS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 2,
-  to: 2.5,
+  from: 2.3,
+  to: 3.2,
 };
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   from: 1,
