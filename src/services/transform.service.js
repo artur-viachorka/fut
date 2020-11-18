@@ -1,0 +1,64 @@
+import { reject, anyPass, isEmpty, isNil } from 'ramda';
+
+const removeEmptyItems = (obj) => reject(anyPass([isEmpty, isNil]))(obj);
+
+export const transformFutItemFromFUT = (result) => ({
+  id: result.id,
+  lastSalePrice: result.lastSalePrice,
+});
+
+export const transformAuctionInfoFromFUT = (result) => ({
+  bidState: result.bidState,
+  buyNowPrice: result.buyNowPrice,
+  confidenceValue: result.confidenceValue,
+  currentBid: result.currentBid,
+  expires: result.expires,
+  itemData: transformFutItemFromFUT(result.itemData),
+  offers: result.offers,
+  sellerEstablished: result.sellerEstablished,
+  sellerId: result.sellerId,
+  sellerName: result.sellerName,
+  startingBid: result.startingBid,
+  tradeId: result.tradeId,
+  tradeIdStr: result.tradeIdStr,
+  tradeOwner: result.tradeOwner,
+  tradeState: result.tradeState,
+  watched: result.watched,
+});
+
+export const transformSearchResultFromFUT = (result) => ({
+  auctionInfo: result.auctionInfo.map(transformAuctionInfoFromFUT)
+});
+
+export const transformSearchParamsToFUT = (params) => removeEmptyItems({
+  num: params.num,
+  start: params.start,
+  type: params.type,
+  maskedDefId: params.maskedDefId,
+  zone: params.zone,
+  pos: params.pos,
+  lev: params.lev,
+  rare: params.rare,
+  nat: params.nat,
+  leag: params.leag,
+  team: params.team,
+  rarityIds: params.rarityIds,
+  micr: params.micr,
+  macr: params.macr,
+  minb: params.minb,
+  maxb: params.maxb,
+});
+
+export const transformPlayerToBidPlayerBodyRequest = (player) => ({
+  bid: player.buyNowPrice,
+});
+
+export const transformPlayerToBidPlayerUrlParams = (player) => ({
+  name: 'tradeId',
+  value: player.tradeId,
+});
+
+export const transformBidPlayerResultFromFUT = (result) => ({
+  auctionInfo: result.auctionInfo.map(transformAuctionInfoFromFUT),
+  credits: result.credits,
+});

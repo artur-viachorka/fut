@@ -148,7 +148,7 @@ export const searchPlayersOnMarket = async (params) => {
     return activeTrade || null;
   } catch (e) {
     console.error('Search player on market failed!', e);
-    throw new Error();
+    throw e;
   }
 };
 
@@ -156,18 +156,14 @@ export const buyPlayer = async (player) => {
   if (!player?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
     return;
   }
-  try {
-    await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
-    const bidResult = await bidPlayerRequest(player);
-    const auctionInfo = (bidResult?.auctionInfo || [])[0];
-    if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
-      return {
-        auctionInfo,
-        credits: bidResult.credits,
-      };
-    }
-  } catch (e) {
-    console.error('purchase failed', e);
+  await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
+  const bidResult = await bidPlayerRequest(player);
+  const auctionInfo = (bidResult?.auctionInfo || [])[0];
+  if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
+    return {
+      auctionInfo,
+      credits: bidResult.credits,
+    };
   }
 };
 

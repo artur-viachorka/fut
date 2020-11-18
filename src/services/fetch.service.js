@@ -1,4 +1,13 @@
 import { HOST, ROUTES } from '../constants';
+import {
+  transformFutItemFromFUT,
+  transformAuctionInfoFromFUT,
+  transformSearchResultFromFUT,
+  transformSearchParamsToFUT,
+  transformPlayerToBidPlayerBodyRequest,
+  transformPlayerToBidPlayerUrlParams,
+  transformBidPlayerResultFromFUT,
+} from './transform.service';
 
 const executeOnPageSpace = (code) => {
   var script = document.createElement('script');
@@ -45,20 +54,27 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
 };
 
 export const searchOnTransfermarketRequest = async (params) => {
-  return await sendRequest({
+  const result = await sendRequest({
     url: ROUTES.TRANSFERMARKET.url,
     method: ROUTES.TRANSFERMARKET.method,
-    params,
+    params: transformSearchParamsToFUT(params),
   });
+  return transformSearchResultFromFUT(result);
 };
 
 export const bidPlayerRequest = async (player) => {
-  return await sendRequest({
-    url: ROUTES.BID.url,
-    method: ROUTES.BID.method,
-    body: { bid: player.buyNowPrice },
-    urlParams: [{ name: 'tradeId', value: player.tradeId }],
-  });
+  try {
+    const result = await sendRequest({
+      url: ROUTES.BID.url,
+      method: ROUTES.BID.method,
+      body: transformPlayerToBidPlayerBodyRequest(player),
+      urlParams: [transformPlayerToBidPlayerUrlParams(player)],
+    });
+    return transformBidPlayerResultFromFUT(result);
+  } catch (e) {
+    console.error('Bidding error', e);
+    return;
+  }
 };
 
 export const sendItemToTransferListRequest = async (itemId) => {
