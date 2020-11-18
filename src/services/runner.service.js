@@ -5,8 +5,8 @@ import {
   buyPlayer,
   sellPlayer,
   sendItemToTransferList,
-  getSearchRequestIntervalInMs,
-  calculateMinBuyNow,
+  getSearchRequestDelay,
+  calculateMinBuyNowAndMinBid,
 } from './fut.service';
 import { openUTNotification } from './notification.service';
 import { getCredits } from './marketSearchCriteria.service';
@@ -32,7 +32,7 @@ export const executeStep = async (step) => {
   return new Promise((resolve, reject) => {
     let isWorking = true;
     let minBuyNow = null;
-    let maxBid = null;
+    let minBid = null;
 
     pauseRunnerSubject
       .pipe(first())
@@ -66,71 +66,82 @@ export const executeStep = async (step) => {
         if (!isWorking) {
           resolve();
         } else {
-          let params = { ...step.filter.requestParams };
-          minBuyNow = calculateMinBuyNow(minBuyNow, params.maxb);
-          if (minBuyNow) {
-            params.minb = minBuyNow;
+          const result = await stepTickHandler(step, { minBuyNow, credits, minBid });
+          credits = result?.credits == null ? credits : result.credits;
+          minBuyNow = result?.minBuyNow == null ? minBuyNow : result.minBuyNow;
+          minBid = result?.minBid == null ? minBid : result.minBid;
+          if (result?.success) {
+            return setTimeout(work, getSearchRequestDelay(true));
           }
-          if (maxBid) {
-            params.macr = maxBid;
-          }
-          const player = await searchPlayersOnMarket(params);
-          if (player) {
-            logRunnerSubject.next({
-              stepId: step.id,
-              isPlayerFound: true,
-              meta: {
-                buyNowPrice: player.buyNowPrice,
-              }
-            });
-            if (credits < player.buyNowPrice) {
-              logRunnerSubject.next({
-                stepId: step.id,
-                isNotEnoughCredits: true,
-                meta: {
-                  buyNowPrice: player.buyNowPrice,
-                }
-              });
-              resolve({ skip: true });
-              return;
-            }
-
-            const bidResult = await buyPlayer(player);
-
-            logRunnerSubject.next({
-              stepId: step.id,
-              isPlayerBought: !!bidResult,
-              meta: {
-                buyNowPrice: bidResult?.auctionInfo?.buyNowPrice,
-              }
-            });
-            if (bidResult) {
-              credits = bidResult.credits;
-              if (step.shouldSkipAfterPurchase) {
-                resolve({ skip: true });
-                return;
-              }
-              const movingResult = await sendItemToTransferList(bidResult?.auctionInfo?.itemData);
-              logRunnerSubject.next({
-                stepId: step.id,
-                movedToTransferList: !!movingResult,
-              });
-              if (!movingResult) {
-                openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
-                resolve({ stop: true });
-                return;
-              }
-              if (step.shouldSellOnMarket && movingResult?.itemId) {
-                await sellPlayer(movingResult?.itemId);
-              }
-            }
-          }
-          setTimeout(work, getSearchRequestIntervalInMs());
+          resolve(result);
         }
       },
-      getSearchRequestIntervalInMs(),
+      getSearchRequestDelay(true),
     );
   });
+};
+
+const stepTickHandler = async (step, config) => {
+  try {
+    let params = { ...step.filter.requestParams };
+    [config.minBuyNow, config.minBid] = calculateMinBuyNowAndMinBid(config.minBuyNow, config.minBid, params.maxb);
+    if (config.minBuyNow) {
+      params.minb = config.minBuyNow;
+    }
+    if (config.minBid) {
+      params.micr = config.minBid;
+    }
+    const player = await searchPlayersOnMarket(params);
+    if (player) {
+      logRunnerSubject.next({
+        stepId: step.id,
+        isPlayerFound: true,
+        meta: {
+          buyNowPrice: player.buyNowPrice,
+        }
+      });
+      if (config.credits < player.buyNowPrice) {
+        logRunnerSubject.next({
+          stepId: step.id,
+          isNotEnoughCredits: true,
+          meta: {
+            buyNowPrice: player.buyNowPrice,
+          }
+        });
+        return { skip: true, ...config };
+      }
+      const bidResult = await buyPlayer(player);
+      logRunnerSubject.next({
+        stepId: step.id,
+        isPlayerBought: !!bidResult,
+        meta: {
+          buyNowPrice: bidResult?.auctionInfo?.buyNowPrice,
+        }
+      });
+      if (bidResult) {
+        config.credits = bidResult.credits;
+        if (step.shouldSkipAfterPurchase) {
+          return ({ skip: true, ...config });
+        }
+        const movingResult = await sendItemToTransferList(bidResult?.auctionInfo?.itemData);
+        logRunnerSubject.next({
+          stepId: step.id,
+          movedToTransferList: !!movingResult,
+        });
+        if (!movingResult) {
+          openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
+          return ({ stop: true, ...config });
+        }
+        if (step.shouldSellOnMarket && movingResult?.itemId) {
+          await sellPlayer(movingResult?.itemId);
+        }
+      }
+    }
+    return { success: true, ...config };
+  } catch (e) {
+    console.error('Error in runner', e);
+    return { stop: true, ...config };
+  }
 };
 
 export const executeStepIdle = (step) => {

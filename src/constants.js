@@ -40,10 +40,40 @@ export const DND_TYPES = {
 };
 
 export const BUY_INPUT_SETTINGS = {
-  min: 400,
+  min: 200,
   max: 15000000,
-  maxBid: 14999000,
-  useMaxBidApproachBefore: 5000,
+  minBid: 150,
+  priceInputRange: {
+    min: 400,
+    max: 1515000000,
+  },
+  bidSteps: [
+    {
+      min: 150,
+      max: 1000,
+      step: 50,
+    },
+    {
+      min: 1000,
+      max: 10000,
+      step: 100,
+    },
+    {
+      min: 10000,
+      max: 50000,
+      step: 250,
+    },
+    {
+      min: 50000,
+      max: 100000,
+      step: 500,
+    },
+    {
+      min: 100000,
+      max: 14999000,
+      step: 1000,
+    },
+  ],
   steps: [
     {
       min: 200,

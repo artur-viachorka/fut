@@ -110,7 +110,7 @@ export const NumberField = ({
     if (num >= max) {
       num = max;
     }
-    if (num <= min) {
+    if (num < min) {
       num = null;
     }
     onBlur(num);
