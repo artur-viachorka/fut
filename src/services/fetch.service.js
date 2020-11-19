@@ -1,4 +1,4 @@
-import { HOST, ROUTES } from '../constants';
+import { HOST, ROUTES, FUT } from '../constants';
 import {
   transformFutItemFromFUT,
   transformAuctionInfoFromFUT,
@@ -7,6 +7,8 @@ import {
   transformPlayerToBidPlayerBodyRequest,
   transformPlayerToBidPlayerUrlParams,
   transformBidPlayerResultFromFUT,
+  transformSendItemToBodyRequest,
+  transformToLiteQueryParams,
 } from './transform.service';
 
 const executeOnPageSpace = (code) => {
@@ -54,12 +56,17 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
 };
 
 export const searchOnTransfermarketRequest = async (params) => {
-  const result = await sendRequest({
-    url: ROUTES.TRANSFERMARKET.url,
-    method: ROUTES.TRANSFERMARKET.method,
-    params: transformSearchParamsToFUT(params),
-  });
-  return transformSearchResultFromFUT(result);
+  try {
+    const result = await sendRequest({
+      url: ROUTES.TRANSFERMARKET.url,
+      method: ROUTES.TRANSFERMARKET.method,
+      params: transformSearchParamsToFUT(params),
+    });
+    return transformSearchResultFromFUT(result);
+  } catch (e) {
+    console.error('Search on market failed', e);
+    throw e;
+  }
 };
 
 export const bidPlayerRequest = async (player) => {
@@ -73,23 +80,40 @@ export const bidPlayerRequest = async (player) => {
     return transformBidPlayerResultFromFUT(result);
   } catch (e) {
     console.error('Bidding error', e);
-    return;
+  }
+};
+
+export const sendItemTo = async (id, pile) => {
+  try {
+    return await sendRequest({
+      url: ROUTES.ITEM.url,
+      method: ROUTES.ITEM.method,
+      body: transformSendItemToBodyRequest(id, pile),
+    });
+  } catch (e) {
+    console.error('Error sending item to', e);
   }
 };
 
 export const sendItemToTransferListRequest = async (itemId) => {
-  return await sendRequest({
-    url: ROUTES.ITEM.url,
-    method: ROUTES.ITEM.method,
-    body: { itemData: [{ id: itemId, pile: 'trade' }] },
-  });
+  return await sendItemTo(itemId, FUT.PILE.trade);
+};
+
+export const sendItemToClub = async (itemId) => {
+  return await sendItemTo(itemId, FUT.PILE.club);
 };
 
 export const getLiteRequest = async (tradeIds = []) => {
-  return await sendRequest({
-    url: ROUTES.LITE.url + `?tradeIds=${tradeIds.join(',')}`,
-    method: ROUTES.LITE.method,
-  });
+  try {
+    const result = await sendRequest({
+      url: ROUTES.LITE.url + `?${transformToLiteQueryParams(tradeIds)}`,
+      method: ROUTES.LITE.method,
+    });
+    return transformSearchResultFromFUT(result);
+  } catch (e) {
+    console.error('Error when get lite', e);
+    throw e;
+  }
 };
 
 export const sendItemToAuctionHouseRequest = async (itemId, startingBid, buyNowPrice, duration) => {

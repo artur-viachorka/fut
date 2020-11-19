@@ -1,7 +1,7 @@
 import { reject, equals, isEmpty, dissoc } from 'ramda';
 
 import { addFilterSubject, openModalSubject } from '../contentScript';
-import { MODALS } from '../constants';
+import { MODALS, FUT } from '../constants';
 import { match, parseStringToInt } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
@@ -18,7 +18,7 @@ export const searchPlayers = (name) => {
 };
 
 const getPlayerInfo = () => {
-  const playerInput = $('.ut-player-search-control--input-container input.ut-text-input-control.fut-player-name');
+  const playerInput = $(FUT.PAGE_SELECTORS.customPlayerInfoBlock);
   const [playerName, playerRating] = playerInput.val().split(' / ');
   const id = playerInput.attr('data-id');
   return {
@@ -29,17 +29,11 @@ const getPlayerInfo = () => {
 };
 
 const getQuality = () => {
-  const QUALITIES = {
-    'special': { rare: 'SP' },
-    'gold': { lev: 'gold' },
-    'silver': { lev: 'silver' },
-    'bronze': { lev: 'bronze' },
-  };
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(0)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.qualityInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
-  const value = QUALITIES[title.toLowerCase()];
+  const value = FUT.QUALITIES[title.toLowerCase()];
 
   return isSelected && value ? {
     value,
@@ -49,8 +43,8 @@ const getQuality = () => {
 };
 
 const getRarity = () => {
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.rarityInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
 
@@ -62,34 +56,11 @@ const getRarity = () => {
 };
 
 const getPosition = () => {
-  const POSITIONS = {
-    'defenders': { zone: 'defense' },
-    'midfielders': { zone: 'midfield' },
-    'attackers': { zone: 'attacker' },
-    'gk': { pos: 'GK' },
-    'rwb': { pos: 'RWB' },
-    'lwb': { pos: 'LWB' },
-    'rb': { pos: 'RB' },
-    'lb': { pos: 'LB' },
-    'cb': { pos: 'CB' },
-    'cdm': { pos: 'CDM' },
-    'cm': { pos: 'CM' },
-    'cam': { pos: 'CAM' },
-    'rm': { pos: 'RM' },
-    'lm': { pos: 'LM' },
-    'rw': { pos: 'RW' },
-    'lw': { pos: 'LW' },
-    'cf': { pos: 'CF' },
-    'lf': { pos: 'LF' },
-    'rf': { pos: 'RF' },
-    'st': { pos: 'ST' },
-  };
-
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(2)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.positionInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const title = input.find('span.label').text();
 
-  const value = POSITIONS[title.toLowerCase()];
+  const value = FUT.POSITIONS[title.toLowerCase()];
   return isSelected && value ? {
     value,
     title,
@@ -97,8 +68,8 @@ const getPosition = () => {
 };
 
 const getNation = () => {
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(4)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.nationInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
 
@@ -110,8 +81,8 @@ const getNation = () => {
 };
 
 const getLeague = () => {
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.leagueInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
 
@@ -123,8 +94,8 @@ const getLeague = () => {
 };
 
 const getTeam = () => {
-  const input = $('.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6)');
-  const isSelected = input.hasClass('has-selection');
+  const input = $(FUT.PAGE_SELECTORS.teamInput);
+  const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
 
@@ -136,32 +107,32 @@ const getTeam = () => {
 };
 
 const getMaxBuyNow = () => {
-  const value = $('.search-prices > div:nth-child(6) input').val();
+  const value = $(FUT.PAGE_SELECTORS.maxBuyNowInput).val();
   return value ? parseStringToInt(value) : null;
 };
 
 export const copySearchInput = async () => {
-  let playerSearchContainer = $('.inline-list-select.ut-player-search-control').clone();
-  let searchInput = playerSearchContainer.find('.ut-text-input-control');
+  let playerSearchContainer = $(FUT.PAGE_SELECTORS.selectPlayerContainer).clone();
+  let searchInput = playerSearchContainer.find(FUT.PAGE_SELECTORS.selectPlayerInput);
   searchInput.addClass('fut-player-name');
-  playerSearchContainer.find('.flat.inline-list-btn.icon_close.fut_icon.exit-btn').on('click', () => {
-    if (playerSearchContainer.hasClass('has-selection')) {
+  playerSearchContainer.find(FUT.PAGE_SELECTORS.clearPlayerButton).on('click', () => {
+    if (playerSearchContainer.hasClass(FUT.CLASSES.inputHasSelection)) {
       searchInput.attr('data-id', null);
       searchInput.val('');
-      playerSearchContainer.removeClass('has-selection');
+      playerSearchContainer.removeClass(FUT.CLASSES.inputHasSelection);
     }
   });
   searchInput.attr('placeholder', 'Search player in FUT');
   const onSearchInputChanged = debounce((e) => {
     const searchText = $(e.target).val();
-    const playerResultsListContainer = playerSearchContainer.find('.inline-list');
-    const playerResultsList = playerSearchContainer.find('.playerResultsList');
+    const playerResultsListContainer = playerSearchContainer.find(FUT.PAGE_SELECTORS.playerResultsListContainer);
+    const playerResultsList = playerSearchContainer.find(FUT.PAGE_SELECTORS.playerResultsList);
 
     searchInput.attr('data-id', null);
 
     playerResultsListContainer.css('display', 'none');
     playerResultsList.empty();
-    playerSearchContainer.removeClass('has-selection');
+    playerSearchContainer.removeClass(FUT.CLASSES.inputHasSelection);
 
     if (!searchText) {
       return;
@@ -178,7 +149,7 @@ export const copySearchInput = async () => {
           .on('mouseleave', (e) => $(e.target).removeClass('hover'))
           .on('click', () => {
             playerResultsListContainer.css('display', 'none');
-            playerSearchContainer.addClass('has-selection');
+            playerSearchContainer.addClass(FUT.CLASSES.inputHasSelection);
             playerResultsList.empty();
             searchInput.val(`${playerTitle} / ${player.r}`);
             searchInput.attr('data-id', player.id);
@@ -188,36 +159,36 @@ export const copySearchInput = async () => {
     }
   }, 0.5);
   searchInput.on('input', onSearchInputChanged);
-  $('.ut-item-search-view').prepend(playerSearchContainer);
+  $(FUT.PAGE_SELECTORS.itemSearchView).prepend(playerSearchContainer);
 };
 
 export const addSaveFilterButton = () => {
-  const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
+  const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
   newButton.text('Save Filter');
   newButton.addClass('fut-add-filter-custom-button');
   newButton.css('background-color', '#257d67');
   newButton.on('click', async () => {
     await saveSearchFilterToStorage();
   });
-  $('.ut-market-search-filters-view .button-container').append(newButton);
+  $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
 export const addConfigureScenariosButton = () => {
-  const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
+  const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
   newButton.text('Configure Scenarios');
   newButton.addClass('fut-configure-scenarios-custom-button');
   newButton.css('background-color', '#6b2121');
   newButton.on('click', () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
-  $('.ut-market-search-filters-view .button-container').append(newButton);
+  $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
 export const addOpenRunnerButton = () => {
-  const newButton = $('.ut-market-search-filters-view .button-container .btn-standard:first').clone();
+  const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
   newButton.text('Open Runner');
   newButton.addClass('fut-open-runner-custom-button');
   newButton.css('background-color', '#0379bf');
   newButton.on('click', () => openModalSubject.next({ modal: MODALS.RUNNER }));
-  $('.ut-market-search-filters-view .button-container').append(newButton);
+  $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
 const getMarketSearchCriteria = () => {
@@ -307,7 +278,7 @@ const saveSearchFilterToStorage = async () => {
 };
 
 export const getCredits = async () => {
-  const credits = $('.view-navbar-currency > .view-navbar-currency-coins:first').text();
+  const credits = $(FUT.PAGE_SELECTORS.credits).text();
   return parseStringToInt(credits || 0);
 };
 
