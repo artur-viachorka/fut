@@ -216,6 +216,7 @@ const Runner = () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
       loggerSubjectSubscription.unsubscribe();
+      stopStep();
     };
   }, []);
 
