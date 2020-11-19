@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { FaPlay, FaPause, FaStop } from 'react-icons/fa';
+import { BiTransferAlt } from 'react-icons/bi';
 
 import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
 import ScenariosList from '../Scenarios/ScenariosList';
 import RunnerStepStatus from './RunnerStepStatus';
 
 import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+
 import { isScenarioInputsInvalid, checkIsMaxDurationExceeded, getLoggerText } from '../../../services/scenario.service';
 import {
   executeStep,
@@ -19,10 +21,14 @@ import {
   RUNNER_STATUS,
   setUserCredits,
 } from '../../../services/runner.service';
+import { convertMinutesToSeconds } from '../../../services/helper.service';
+import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT } from '../../../constants';
+import { getTransferListLimit, saveTransferListLimit } from '../../../services/fut.service';
+import { parseStringToInt } from '../../../services/string.serivce';
+import { openUTNotification } from '../../../services/notification.service';
 
 import CountdownTimer from '../CountdownTimer';
-import { convertMinutesToSeconds } from '../../../services/helper.service';
-import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS } from '../../../constants';
+import NumberField from '../Fields/NumberField';
 
 const Container = styled.div`
   display: flex;
@@ -32,7 +38,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  height: 100px;
+  height: 105px;
   display: flex;
   padding-right: 10px;
   flex-direction: row;
@@ -46,13 +52,21 @@ const ScenariosContainer = styled.div`
   overflow: hidden;
 `;
 
+const Right = styled.div`
+  min-width: 250px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
 const RunnerInfo = styled.div`
   min-width: 250px;
   border: 1px solid #414141;
-  margin: 10px 0;
-  padding: 10px 25px;
   border-radius: 5px;
   display: flex;
+  padding: 5px;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
@@ -110,6 +124,7 @@ const Runner = () => {
   logsRef.current = logs;
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
+  const [transferListLimit, setTransferListLimit] = useState(null);
 
   const resetScenario = (scenario) => {
     scenario = scenario ? {
@@ -178,6 +193,7 @@ const Runner = () => {
     }
   };
   useEffect(() => {
+    const loadTransferListLimit = async () => setTransferListLimit(await getTransferListLimit());
     const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
       resetScenario(scenario);
     });
@@ -194,9 +210,8 @@ const Runner = () => {
         });
       }
     });
-
+    loadTransferListLimit();
     setUserCredits();
-
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
@@ -210,69 +225,100 @@ const Runner = () => {
         <ScenariosContainer>
           <ScenariosList isReadOnly={isRunning}/>
         </ScenariosContainer>
-        <RunnerInfo>
-          <RunnerActions>
-            {!isPaused && !isRunning && (
+        <Right>
+          <NumberField
+              onChange={(e) => {
+                const value = parseStringToInt(e.target.value);
+                setTransferListLimit(value);
+              }}
+              onBlur={async (value) => {
+                setTransferListLimit(value);
+                await saveTransferListLimit(value);
+              }}
+              min={TRANSFER_LIST_LIMIT.min}
+              max={TRANSFER_LIST_LIMIT.max}
+              isReadOnly={isRunning}
+              value={transferListLimit}
+              isReduceDisabled={transferListLimit <= TRANSFER_LIST_LIMIT.min}
+              isIncreaseDisabled={transferListLimit >= TRANSFER_LIST_LIMIT.max}
+              onUpdateValueByStep={async (value) => {
+                if (value > 0 && value < TRANSFER_LIST_LIMIT.min) {
+                  value = TRANSFER_LIST_LIMIT.min;
+                }
+                setTransferListLimit(value);
+                await saveTransferListLimit(value);
+              }}
+              getStep={() => 5}
+              placeholder="Transfer list limit"
+              renderIcon={() => <BiTransferAlt/>}
+          />
+          <RunnerInfo>
+            <RunnerActions>
+              {!isPaused && !isRunning && (
+                <RunnerAction
+                    title="Run"
+                    disabled={!selectedScenario}
+                    onClick={() => {
+                      if (!transferListLimit) {
+                        return openUTNotification({ text: 'Provide transfer list limit to start runner.', error: true });
+                      }
+                      if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
+                        return;
+                      }
+                      setLogs({});
+                      setIsRunning(true);
+                      start();
+                    }}
+                >
+                  <FaPlay/>
+                </RunnerAction>
+              )}
+              {isRunning && !isPaused && (
+                <RunnerAction
+                    title="Pause"
+                    onClick={() => {
+                      setIsPaused(true);
+                    }}
+                >
+                  <FaPause/>
+                </RunnerAction>
+              )}
+              {isRunning && isPaused && (
+                <RunnerAction
+                    title="Continue"
+                    onClick={() => {
+                      setIsRunning(true);
+                      setIsPaused(false);
+                      start(runningStep);
+                    }}
+                >
+                  <FaPlay/>
+                </RunnerAction>
+              )}
               <RunnerAction
-                  title="Run"
-                  disabled={!selectedScenario}
+                  title="Stop"
+                  disabled={!isRunning}
                   onClick={() => {
-                    if (!selectedScenario || isScenarioInputsInvalid(selectedScenario, true) || checkIsMaxDurationExceeded(selectedScenario, true)) {
-                      return;
+                    if (isRunning || isPaused) {
+                      setIsRunning(false);
+                      setIsPaused(false);
+                      stopStep();
+                      stop();
                     }
-                    setLogs({});
-                    setIsRunning(true);
-                    start();
                   }}
               >
-                <FaPlay/>
+                <FaStop/>
               </RunnerAction>
+            </RunnerActions>
+            {selectedScenario && isRunning && scenarioDurationLeft && (
+              <CountdownTimer
+                  isPaused={isPaused}
+                  key={scenarioDurationLeft}
+                  timerSeconds={scenarioDurationLeft}
+              />
             )}
-            {isRunning && !isPaused && (
-              <RunnerAction
-                  title="Pause"
-                  onClick={() => {
-                    setIsPaused(true);
-                  }}
-              >
-                <FaPause/>
-              </RunnerAction>
-            )}
-            {isRunning && isPaused && (
-              <RunnerAction
-                  title="Continue"
-                  onClick={() => {
-                    setIsRunning(true);
-                    setIsPaused(false);
-                    start(runningStep);
-                  }}
-              >
-                <FaPlay/>
-              </RunnerAction>
-            )}
-            <RunnerAction
-                title="Stop"
-                disabled={!isRunning}
-                onClick={() => {
-                  if (isRunning || isPaused) {
-                    setIsRunning(false);
-                    setIsPaused(false);
-                    stopStep();
-                    stop();
-                  }
-                }}
-            >
-              <FaStop/>
-            </RunnerAction>
-          </RunnerActions>
-          {selectedScenario && isRunning && scenarioDurationLeft && (
-            <CountdownTimer
-                isPaused={isPaused}
-                key={scenarioDurationLeft}
-                timerSeconds={scenarioDurationLeft}
-            />
-          )}
-        </RunnerInfo>
+          </RunnerInfo>
+        </Right>
       </Header>
       <ScenarioBuilder
           renderStepStatusBar={(step) => {

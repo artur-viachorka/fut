@@ -24,6 +24,8 @@ import {
   DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
 } from '../constants';
 
+import { saveToStorage, getFromStorage } from './storage.service';
+
 export const getSearchRequestDelay = (inMs) => {
   const delay = getRandomNumberInRange(SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.from, SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to);
   return inMs ? convertSecondsToMs(delay) : delay;
@@ -173,6 +175,15 @@ export const sendItemToTransferList = async (itemData) => {
       itemId: result.itemData[0].id,
     };
   }
+};
+
+export const saveTransferListLimit = async (transferListLimit) => {
+  return await saveToStorage({ transferListLimit });
+};
+
+export const getTransferListLimit = async () => {
+  const { transferListLimit } = await getFromStorage('transferListLimit');
+  return transferListLimit;
 };
 
 export const sellPlayer = async (itemId) => {

@@ -103,6 +103,11 @@ export const BUY_INPUT_SETTINGS = {
   ]
 };
 
+export const TRANSFER_LIST_LIMIT = {
+  min: 25,
+  max: 100,
+};
+
 export const MAX_SCENARIO_DURATION_IN_HOURS = 20;
 
 export const MARK_COLORS = ['#60bd4e', '#f2d600', '#ff9e19', '#eb5b46', '#c278e0', '#0379bf', '#03c2df'];
