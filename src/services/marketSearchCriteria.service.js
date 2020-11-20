@@ -1,7 +1,7 @@
 import { reject, equals, isEmpty, dissoc } from 'ramda';
 
-import { addFilterSubject, openModalSubject } from '../contentScript';
-import { MODALS, FUT } from '../constants';
+import { addFilterSubject } from '../contentScript';
+import { FUT } from '../constants';
 import { match, parseStringToInt } from './string.serivce';
 import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
@@ -165,29 +165,11 @@ export const copySearchInput = async () => {
 export const addSaveFilterButton = () => {
   const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
   newButton.text('Save Filter');
-  newButton.addClass('fut-add-filter-custom-button');
+  newButton.addClass(FUT.CUSTOM_CLASSES.addFilterButton);
   newButton.css('background-color', '#257d67');
   newButton.on('click', async () => {
     await saveSearchFilterToStorage();
   });
-  $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
-};
-
-export const addConfigureScenariosButton = () => {
-  const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
-  newButton.text('Configure Scenarios');
-  newButton.addClass('fut-configure-scenarios-custom-button');
-  newButton.css('background-color', '#6b2121');
-  newButton.on('click', () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
-  $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
-};
-
-export const addOpenRunnerButton = () => {
-  const newButton = $(FUT.PAGE_SELECTORS.actionButton).clone();
-  newButton.text('Open Runner');
-  newButton.addClass('fut-open-runner-custom-button');
-  newButton.css('background-color', '#0379bf');
-  newButton.on('click', () => openModalSubject.next({ modal: MODALS.RUNNER }));
   $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
@@ -343,7 +325,5 @@ export const initSearchMarketPage = () => {
   if (!$('.fut-add-filter-custom-button').length) {
     copySearchInput();
     addSaveFilterButton();
-    addConfigureScenariosButton();
-    addOpenRunnerButton();
   }
 };

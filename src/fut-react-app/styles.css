@@ -32,3 +32,44 @@
 .landscape #NotificationLayer {
   top: 0 !important;
 }
+
+.header-custom-buttons-container {
+  display: flex;
+  width: 122px;
+  height: 100%;
+  border: 1px solid #2d2d2d;
+  border-top: 0;
+  background: #211f21;
+  border-bottom: 0;
+  margin-left: 100px;
+  padding: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-custom-buttons-container > .header-custom-button {
+  cursor: pointer;
+  font-size: 19px;
+  background-color: rgb(176 173 176);
+  color: white;
+  padding: 8px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid rgb(123, 121, 123);
+  transition: all 0.5s ease-out 0s;
+  font-size: 6px;
+  margin-right: 10px;
+}
+
+.header-custom-buttons-container > .header-custom-button:last-child {
+  margin-right: 0;
+}
+
+.header-custom-buttons-container > .header-custom-button:hover {
+  border-color: #7b797b;
+  background-color: transparent;
+}

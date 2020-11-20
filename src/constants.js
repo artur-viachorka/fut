@@ -168,9 +168,20 @@ export const FUT = {
     actionButtonsContainer: '.ut-market-search-filters-view .button-container',
     credits: '.view-navbar-currency > .view-navbar-currency-coins:first',
     notificationLayer: '#NotificationLayer',
+    rootView: '.ut-root-view',
+    openHomeButton: '.ut-tab-bar-item.icon-home',
+    appHeader: '.ut-fifa-header-view',
   },
   CLASSES: {
     inputHasSelection: 'has-selection',
+    marketSearchView: 'ut-market-search-filters-view',
+  },
+  CUSTOM_CLASSES: {
+    headerActionsContainer: 'header-custom-buttons-container',
+    syncTransfersButton: 'header-custom-button fut-sync-transfers',
+    openRunnerButton: 'header-custom-button fut-open-runner',
+    editScenariosButton: 'header-custom-button open-scenarios',
+    addFilterButton: 'custom-button-add-filter',
   },
   QUALITIES: {
     'special': { rare: 'SP' },

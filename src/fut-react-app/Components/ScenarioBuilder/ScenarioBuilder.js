@@ -54,6 +54,10 @@ const Hint = styled.span`
   font-size: 20px;
   justify-content: center;
   flex-direction: column;
+
+  > div {
+    text-align: center;
+  }
 `;
 
 const EditNameInput = styled.div`

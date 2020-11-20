@@ -1,4 +1,7 @@
 import { sleep } from './helper.service';
+import { openModalSubject } from '../contentScript';
+import { FUT, MODALS } from '../constants';
+import { updateTransferListItems } from './transferList.service';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -13,14 +16,16 @@ export const waitUntilElementExists = async (selector) => {
   return await waitUntilTrue(() => $(selector).length, $(selector));
 };
 
-export const setMutationObserver = (observeSelector, mutationType, condition, action) => {
+export const setMutationObserver = (observeSelector, mutationType, configs) => {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation[mutationType]) {
         [...mutation[mutationType]].forEach((node) => {
-          if (condition(node) && action) {
-            action();
-          }
+          configs.forEach(config => {
+            if (config.condition(node) && config.action) {
+              config.action();
+            }
+          });
         });
       }
     });
@@ -31,4 +36,31 @@ export const setMutationObserver = (observeSelector, mutationType, condition, ac
     attributes: false,
     characterData: false,
   });
+};
+
+const createActionButton = (className, text, handler) => {
+  const newButton = $('<button/>')
+    .text(text)
+    .attr('title', text)
+    .addClass(className)
+    .on('click', handler);
+  return newButton;
+};
+
+const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Scenarios', () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
+const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', () => openModalSubject.next({ modal: MODALS.RUNNER }));
+const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync transfers', updateTransferListItems);
+
+export const initFUTAdditionalActions = () => {
+  if ($(`.${FUT.CUSTOM_CLASSES.headerActionsContainer}`).length) {
+    return;
+  }
+  const container = $('<div/>')
+    .addClass(FUT.CUSTOM_CLASSES.headerActionsContainer)
+    .append(
+      getSyncTransferseButton(),
+      getOpenConfigureScenariosButton(),
+      getOpenRunnerButton(),
+    );
+  $(FUT.PAGE_SELECTORS.appHeader).append(container);
 };
