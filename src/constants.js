@@ -196,7 +196,7 @@ export const FUT = {
     headerActionsContainer: 'header-custom-buttons-container',
     syncTransfersButton: 'header-custom-button fut-sync-transfers',
     openRunnerButton: 'header-custom-button fut-open-runner',
-    editScenariosButton: 'header-custom-button open-scenarios',
+    editScenariosButton: 'header-custom-button fut-open-scenarios',
     addFilterButton: 'custom-button-add-filter',
   },
   QUALITIES: {

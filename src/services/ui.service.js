@@ -38,6 +38,16 @@ export const setMutationObserver = (observeSelector, mutationType, configs) => {
   });
 };
 
+const setLoaderVisibility = (show) => {
+  if (show) {
+    $('.ut-click-shield').addClass('showing');
+    $('.ut-click-shield > .loaderIcon').css('display', 'block');
+  } else {
+    $('.ut-click-shield').removeClass('showing');
+    $('.ut-click-shield > .loaderIcon').css('display', 'none');
+  }
+};
+
 const createActionButton = (className, text, handler) => {
   const newButton = $('<button/>')
     .text(text)
@@ -47,9 +57,13 @@ const createActionButton = (className, text, handler) => {
   return newButton;
 };
 
-const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'SC', () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
-const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'RN', () => openModalSubject.next({ modal: MODALS.RUNNER }));
-const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'SYNC', updateTransferListItems);
+const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Set Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
+const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
+const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync Transfers', async () => {
+  setLoaderVisibility(true);
+  await updateTransferListItems();
+  setLoaderVisibility(false);
+});
 
 export const initFUTAdditionalActions = () => {
   if ($(`.${FUT.CUSTOM_CLASSES.headerActionsContainer}`).length) {
