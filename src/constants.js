@@ -8,6 +8,10 @@ export const ROUTES = {
     url: 'trade/{tradeId}/bid',
     method: 'PUT',
   },
+  SOLD: {
+    url: 'trade/sold',
+    method: 'DELETE',
+  },
   ITEM: {
     url: 'item',
     method: 'PUT',
@@ -127,12 +131,19 @@ export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
 };
 
 export const DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
-  from: 0.7,
-  to: 1.3,
+  from: 1,
+  to: 1.5,
 };
 
-export const PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS = 1;
-export const PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST = 2;
+export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
+  from: 2,
+  to: 2.5,
+};
+
+export const DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE = {
+  from: 0.8,
+  to: 1.2,
+};
 
 export const MAX_PAGES_TO_SEARCH_ON = 4;
 export const SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION = 21;
@@ -148,6 +159,11 @@ export const FUT = {
   PILE: {
     club: 'club',
     trade: 'trade',
+  },
+  TRADE_STATE: {
+    active: 'active',
+    closed: 'closed',
+    expired: 'expired',
   },
   PAGE_SELECTORS: {
     customPlayerInfoBlock: '.ut-player-search-control--input-container input.ut-text-input-control.fut-player-name',

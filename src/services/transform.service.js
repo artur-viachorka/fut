@@ -61,7 +61,7 @@ export const transformPlayerToBidPlayerUrlParams = (player) => ({
 export const transformBidPlayerResultFromFUT = (result) => ({
   auctionInfo: result.auctionInfo.map(transformAuctionInfoFromFUT),
   credits: result.credits,
-  duplicateItemIdList: result.duplicateItemIdList,
+  duplicateItemIdList: result?.duplicateItemIdList ? result.duplicateItemIdList.map(item => ({ itemId: item.itemId, duplicateItemId: item.duplicateItemId })) : [],
 });
 
 export const transformSendItemToBodyRequest = (id, pile) => ({

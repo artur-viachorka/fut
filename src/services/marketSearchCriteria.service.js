@@ -322,7 +322,7 @@ export const editSearchFilterMaxBuy = async (filterId, newMaxBuy) => {
 };
 
 export const initSearchMarketPage = () => {
-  if (!$('.fut-add-filter-custom-button').length) {
+  if (!$(`.${FUT.CUSTOM_CLASSES.addFilterButton}`).length) {
     copySearchInput();
     addSaveFilterButton();
   }

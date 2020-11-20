@@ -52,7 +52,11 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
     },
     body,
   });
-  return await response.json();
+  try {
+    return await response.json();
+  } catch (e) {
+    return null;
+  }
 };
 
 export const searchOnTransfermarketRequest = async (params) => {
@@ -100,7 +104,23 @@ export const sendItemToTransferListRequest = async (itemId) => {
 };
 
 export const sendItemToClub = async (itemId) => {
-  return await sendItemTo(itemId, FUT.PILE.club);
+  const result = await sendItemTo(itemId, FUT.PILE.club);
+  if (!result) {
+    throw new Error();
+  }
+  return result;
+};
+
+export const clearSoldItems = async () => {
+  try {
+    return await sendRequest({
+      url: ROUTES.SOLD.url,
+      method: ROUTES.SOLD.method,
+    });
+  } catch (e) {
+    console.error('Error while clear sold items', e);
+    throw e;
+  }
 };
 
 export const getLiteRequest = async (tradeIds = []) => {
@@ -111,7 +131,20 @@ export const getLiteRequest = async (tradeIds = []) => {
     });
     return transformSearchResultFromFUT(result);
   } catch (e) {
-    console.error('Error when get lite', e);
+    console.error('Error while getting lite', e);
+    throw e;
+  }
+};
+
+export const getTradePile = async () => {
+  try {
+    const tradepile = await sendRequest({
+      url: ROUTES.TRADEPILE.url,
+      method: ROUTES.TRADEPILE.method,
+    });
+    return transformBidPlayerResultFromFUT(tradepile);
+  } catch (e) {
+    console.error('Error while getting tradepile', e);
     throw e;
   }
 };

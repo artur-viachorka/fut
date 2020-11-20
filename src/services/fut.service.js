@@ -18,10 +18,11 @@ import {
   PERCENT_AFTER_WHICH_RESET_MIN_BUY,
   SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
   SEARCH_ITEMS_PAGE_SIZE,
-  PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS,
+  DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE,
   MIN_BUY_AFTER_WHICH_RESET_MIN_BUY,
-  PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST,
   DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
+  DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE,
+  FUT,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -31,11 +32,19 @@ export const getSearchRequestDelay = (inMs) => {
   return inMs ? convertSecondsToMs(delay) : delay;
 };
 
+const getDelayBeforeMovingToTransferList = () => {
+  return getRandomNumberInRange(DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE.from, DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE.to);
+};
+
+const getDelayAfterFoundedResultAndBuyRequest = () => {
+  return getRandomNumberInRange(DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE.from, DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE.to);
+};
+
 const getSearchRequestDelayBetweenPages = () => {
   return getRandomNumberInRange(SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.from, SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.to);
 };
 
-const getDelayBeforeDefaultRequest = () => {
+export const getDelayBeforeDefaultRequest = () => {
   return getRandomNumberInRange(DELAY_BEFORE_DEFAULT_REQUEST_RANGE.from, DELAY_BEFORE_DEFAULT_REQUEST_RANGE.to);
 };
 
@@ -131,7 +140,7 @@ export const searchPlayersOnMarket = async (params) => {
     return null;
   }
   let sortedAuctionInfo = auctionInfo
-    .filter(item => item && item.buyNowPrice && item.expires > 20 && item.tradeState === 'active')
+    .filter(item => item && item.buyNowPrice && item.expires > 20 && item.tradeState === FUT.TRADE_STATE.active)
     .sort((a, b) => a.buyNowPrice === b.buyNowPrice ? b.pageNumber - a.pageNumber : a.buyNowPrice - b.buyNowPrice);
   let cheapestItem = sortedAuctionInfo[0];
   if (isPageLast(cheapestItem.pageNumber, auctionInfo.length)) {
@@ -145,7 +154,7 @@ export const searchPlayersOnMarket = async (params) => {
   });
   await sleep(getDelayBeforeDefaultRequest());
   const liteData = await getLiteRequest([cheapestItem.tradeId]);
-  const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === cheapestItem.tradeId && item.tradeState === 'active');
+  const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === cheapestItem.tradeId && item.tradeState === FUT.TRADE_STATE.active);
   return activeTrade || null;
 };
 
@@ -153,7 +162,7 @@ export const buyPlayer = async (player) => {
   if (!player?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
     return;
   }
-  await sleep(PAUSE_BETWEEN_FOUNDED_RESULT_AND_BUY_REQUEST_IN_SECONDS);
+  await sleep(getDelayAfterFoundedResultAndBuyRequest());
   const bidResult = await bidPlayerRequest(player);
   const auctionInfo = (bidResult?.auctionInfo || [])[0];
   if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
@@ -168,7 +177,7 @@ export const sendItemToTransferList = async (itemData) => {
   if (!itemData?.id) {
     return;
   }
-  await sleep(PAUSE_BEFORE_MOVING_TO_TRANSFER_LIST);
+  await sleep(getDelayBeforeMovingToTransferList());
   const result = await sendItemToTransferListRequest(itemData.id);
   if (result?.itemData && result?.itemData[0]?.success) {
     return {

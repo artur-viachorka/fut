@@ -19,7 +19,7 @@ export const logRunnerSubject = new Subject();
 
 let credits = null;
 
-export const setUserCredits = () => credits = getCredits();
+export const setUserCredits = (coins) => credits = coins || getCredits();
 
 export const RUNNER_STATUS = {
   WORKING: 'working',

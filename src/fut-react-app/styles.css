@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Lato');
 
-
 * {
   box-sizing: border-box;
 }
@@ -53,7 +52,7 @@
   background-color: rgb(176 173 176);
   color: white;
   padding: 8px;
-  border-radius: 50%;
+  border-radius: 5px;
   width: 30px;
   height: 30px;
   display: flex;
@@ -61,7 +60,7 @@
   align-items: center;
   border: 1px solid rgb(123, 121, 123);
   transition: all 0.5s ease-out 0s;
-  font-size: 6px;
+  font-size: 10px;
   margin-right: 10px;
 }
 
