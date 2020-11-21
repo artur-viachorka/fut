@@ -28,11 +28,11 @@ export const RUNNER_STATUS = {
   STOP: 'stop',
 };
 
-export const executeStep = async (step) => {
+export const executeStep = async (step, config) => {
   return new Promise((resolve, reject) => {
     let isWorking = true;
-    let minBuyNow = null;
-    let minBid = null;
+    let minBuyNow = config?.minBuyNow || null;
+    let minBid = config?.minBid || null;
 
     pauseRunnerSubject
       .pipe(first())
@@ -40,6 +40,7 @@ export const executeStep = async (step) => {
         isWorking = false;
         reject({
           status: RUNNER_STATUS.PAUSE,
+          config : { minBuyNow, minBid },
         });
       });
 

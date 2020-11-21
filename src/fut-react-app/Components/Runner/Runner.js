@@ -171,7 +171,7 @@ const Runner = () => {
 
         if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          const executionResult = await executeStep(step);
+          const executionResult = await executeStep(step, runningStep?.config);
           if (executionResult?.skip) {
             continue;
           }
@@ -188,6 +188,12 @@ const Runner = () => {
     } catch (e) {
       if (e?.status === RUNNER_STATUS.STOP) {
         stop();
+      }
+      if (e?.status === RUNNER_STATUS.PAUSE) {
+        setRunningStep({
+          ...runningStepRef.current,
+          config: e.config,
+        });
       }
       console.error(e);
     }
