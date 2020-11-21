@@ -2,21 +2,20 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDrag, useDrop } from 'react-dnd';
 import styled from 'styled-components';
-import { AiFillCloseCircle } from 'react-icons/ai';
-import { IoIosTimer, IoIosStarOutline } from 'react-icons/io';
+import { AiFillCloseCircle, AiFillEdit } from 'react-icons/ai';
+import { IoIosCheckmarkCircle, IoMdCloseCircle } from 'react-icons/io';
 
-import NumberField from '../Fields/NumberField';
-import CheckboxField from '../Fields/CheckboxField';
 import Filter from '../Filters/Filter';
-import { DND_TYPES, STEP_INFO } from '../../../constants';
-import { parseStringToInt } from '../../../services/string.serivce';
+import { DND_TYPES } from '../../../constants';
+import StepSettingsModal from './StepSettingsModal';
 
 const Container = styled.div`
   display: flex;
   position: relative;
   flex-direction: row;
   width: 100%;
-  height: 160px;
+  height: 130px;
+  min-width: 500px;
   margin-bottom: 10px;
   border-radius: 3px;
   border: 1px solid ${(props) => props.isActive ? 'rgb(126 67 245)' : 'rgb(45 45 45)'};
@@ -48,41 +47,13 @@ const StepNumber = styled.span`
 const Main = styled.main`
   display: flex;
   flex: 1;
-  padding: 0 10px;
-  justify-content: space-around;
-`;
-
-const Inputs = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
-  padding: 18px;
-  justify-content: space-around;
-`;
-
-const Row = styled.div`
-  width: 100%;
-  margin: 3px 0;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-
-  &:first-child {
-    flex-direction: column;
-    flex: 1;
-    justify-content: center;
-  }
-`;
-
-const NumberFieldContainer = styled.div`
-  width: 48%;
-  min-width: 150px;
-  margin: 3px 0;
+  justify-content: center;
+  padding: 10px;
 `;
 
 const FilterContainer = styled.div`
-  max-width: 400px;
+  width: 80%;
+  min-width: 230px;
   display: flex;
   align-items: center;
   > div {
@@ -91,51 +62,63 @@ const FilterContainer = styled.div`
   }
 `;
 
+const Settings = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: auto;
+  padding: 0 15px;
+  background: #191a1d;
+  position: relative;
+  min-width: 164px;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 10px;
+    
+    > span {
+      &:first-child {
+        margin-right: 10px;
+      }
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+`;
+
+const Setting = styled.div`
+  color: ${(props) => props.isValid ? '#29b29b' : '#b22929'};
+`;
+
+const EditAction = styled.span`
+  position: absolute;
+  left: calc(50% - 6px);
+  top: 3px;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.5s ease-out 0s;
+
+  &:hover {
+    color: grey;
+  }
+`;
+
+const Checkmark = styled.span`
+  color: ${(props) => props.isActive ? '#29b29b' : '#b22929'};
+`;
+
 const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar, isActive }) => {
-  const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
-  const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
-  const [rating, setRating] = useState(step.rating);
-  const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
-  const [shouldSkipAfterPurchase, setShouldSkipAfterPurchase] = useState(step.shouldSkipAfterPurchase);
-
-  const editWorkingMinutes = (value) => {
-    setWorkingMinutes(value);
+  const [isStepSettingsModalVisible, setIsStepSettingsModalVisible] = useState(false);
+  const saveStepSettings = (stepSettings) => {
     edit({
       ...step,
-      workingMinutes: value,
+      ...stepSettings,
     });
-  };
-
-  const editRating = (value) => {
-    setRating(value);
-    edit({
-      ...step,
-      rating: value,
-    });
-  };
-
-  const editPauseAfterStep = (value) => {
-    setPauseAfterStep(value);
-    edit({
-      ...step,
-      pauseAfterStep: value,
-    });
-  };
-
-  const editShouldSellOnMarket = (value) => {
-    setShouldSellOnMarket(value);
-    edit({
-      ...step,
-      shouldSellOnMarket: value,
-    });
-  };
-
-  const editShouldSkipAfterPurchase = (value) => {
-    setShouldSkipAfterPurchase(value);
-    edit({
-      ...step,
-      shouldSkipAfterPurchase: value,
-    });
+    setIsStepSettingsModalVisible(false);
   };
 
   const changeFilterMaxBuyDebounced = (price) => {
@@ -156,106 +139,56 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
   };
 
   return (
-    <Container
-        ref={(node) => {
-          if (drag && drop) {
-            drag(drop(node));
-          }
-        }}
-        isActive={isActive}
-        isDragging={isDragging}
-    >
-      <StepNumber isActive={isActive}>{index + 1}</StepNumber>
-      <Main>
-        <FilterContainer>
-          <Filter isReadOnly={isReadOnly} filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
-        </FilterContainer>
-        <Inputs>
-          <Row>
-            <CheckboxField
-                label="Automatically Sell on Market"
-                checked={!!shouldSellOnMarket}
-                onChange={editShouldSellOnMarket}
-                isReadOnly={isReadOnly}
-            />
-            <CheckboxField
-                label="Skip Step After Purchase"
-                checked={!!shouldSkipAfterPurchase}
-                onChange={editShouldSkipAfterPurchase}
-                isReadOnly={isReadOnly}
-            />
-          </Row>
-          <Row>
-            <NumberFieldContainer>
-              <NumberField
-                  onChange={(e) => {
-                    const value = parseStringToInt(e.target.value);
-                    setRating(value);
-                  }}
-                  onBlur={editRating}
-                  min={STEP_INFO.rating.min}
-                  max={STEP_INFO.rating.max}
-                  isReadOnly={isReadOnly}
-                  value={rating}
-                  isReduceDisabled={rating <= STEP_INFO.rating.min}
-                  isIncreaseDisabled={rating >= STEP_INFO.rating.max}
-                  onUpdateValueByStep={(value) => editRating(value < STEP_INFO.rating.min && value > 0 ? STEP_INFO.rating.min : value)}
-                  getStep={() => 1}
-                  label="Rating"
-                  placeholder="Rating"
-                  renderIcon={() => <IoIosStarOutline/>}
-              />
-            </NumberFieldContainer>
-            <NumberFieldContainer>
-              <NumberField
-                  onChange={(e) => {
-                    const value = parseStringToInt(e.target.value);
-                    setWorkingMinutes(value);
-                  }}
-                  onBlur={editWorkingMinutes}
-                  min={STEP_INFO.workingMinutes.min}
-                  max={STEP_INFO.workingMinutes.max}
-                  isReadOnly={isReadOnly}
-                  value={workingMinutes}
-                  isReduceDisabled={workingMinutes <= STEP_INFO.workingMinutes.min}
-                  isIncreaseDisabled={workingMinutes >= STEP_INFO.workingMinutes.max}
-                  onUpdateValueByStep={editWorkingMinutes}
-                  getStep={() => 1}
-                  label="Working Minutes *"
-                  placeholder="Minutes"
-                  renderIcon={() => <IoIosTimer/>}
-              />
-            </NumberFieldContainer>
-            <NumberFieldContainer>
-              <NumberField
-                  onChange={(e) => {
-                    const value = parseStringToInt(e.target.value || null);
-                    setPauseAfterStep(value);
-                  }}
-                  onBlur={editPauseAfterStep}
-                  min={STEP_INFO.pauseAfterStep.min}
-                  max={STEP_INFO.pauseAfterStep.max}
-                  isReadOnly={isReadOnly}
-                  value={pauseAfterStep}
-                  isReduceDisabled={!pauseAfterStep}
-                  isIncreaseDisabled={pauseAfterStep >= STEP_INFO.pauseAfterStep.max}
-                  onUpdateValueByStep={editPauseAfterStep}
-                  getStep={() => 1}
-                  label="Pause after step"
-                  placeholder="Minutes"
-                  renderIcon={() => <IoIosTimer/>}
-              />
-            </NumberFieldContainer>
-          </Row>
-        </Inputs>
-        {remove && (
-          <StepAction title="Remove step" onClick={() => remove(step.id)}>
-            <AiFillCloseCircle/>
-          </StepAction>
-        )}
-      </Main>
-      {renderStatusBar && renderStatusBar(step)}
-    </Container>
+    <>
+      <Container
+          ref={(node) => {
+            if (drag && drop) {
+              drag(drop(node));
+            }
+          }}
+          isActive={isActive}
+          isDragging={isDragging}
+      >
+        <StepNumber isActive={isActive}>{index + 1}</StepNumber>
+        <Settings>
+          <div>
+            <span>Sell on market</span>
+            <Checkmark isActive={step.shouldSellOnMarket}>{step.shouldSellOnMarket ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
+          </div>
+          <div>
+            <span>Skip after purchase</span>
+            <Checkmark isActive={step.shouldSkipAfterPurchase}>{step.shouldSkipAfterPurchase ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
+          </div>
+          <Setting isValid={!!step.workingMinutes}>
+            <span>Working time *</span>
+            <span>{step.workingMinutes ? `${step.workingMinutes} mins` : '-'}</span>
+          </Setting>
+          <div>
+            <span>Pause after step</span>
+            <span>{step.pauseAfterStep ? `${step.pauseAfterStep} mins` : '-'}</span>
+          </div>
+          <div>
+            <span>Rating</span>
+            <span>{step.rating || '-'}</span>
+          </div>
+          <EditAction onClick={() => setIsStepSettingsModalVisible(true)}>
+            <AiFillEdit/>
+          </EditAction>
+        </Settings>
+        <Main>
+          <FilterContainer>
+            <Filter isReadOnly={isReadOnly} filter={step.filter} onEditMaxBuy={(filterId, price) => changeFilterMaxBuyDebounced(price)}/>
+          </FilterContainer>
+          {remove && (
+            <StepAction title="Remove step" onClick={() => remove(step.id)}>
+              <AiFillCloseCircle/>
+            </StepAction>
+          )}
+        </Main>
+        {renderStatusBar && renderStatusBar(step)}
+      </Container>
+      {isStepSettingsModalVisible && <StepSettingsModal step={step} isReadOnly={isReadOnly} onSave={saveStepSettings} onClose={() => setIsStepSettingsModalVisible(false)}/>}
+    </>
   );
 };
 

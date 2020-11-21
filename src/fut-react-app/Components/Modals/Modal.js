@@ -18,10 +18,10 @@ const Wrapper = styled.div`
 `;
 
 const Container = styled.div`
-  width: 95%;
-  height: 95%;
-  min-width: 700px;
-  min-height: 600px;
+  width: ${props => props.width || '95%'};
+  height: ${props => props.height || '95%'};
+  min-width: ${props => props.minWidth || '600px'};
+  min-height: ${props => props.minHeight || '600px'};
   background-color: #0e0f1d;
   background-size: cover;
   display: flex;
@@ -46,10 +46,10 @@ const CloseIconWrapper = styled.span`
   cursor: pointer;
 `;
 
-const Modal = ({ children, onClose, title }) => {
+const Modal = ({ children, onClose, title, width, height, minWidth, minHeight }) => {
   return (
     <Wrapper onClick={onClose}>
-      <Container onClick={(e) => e.stopPropagation()}>
+      <Container width={width} height={height} minWidth={minWidth} minHeight={minHeight} onClick={(e) => e.stopPropagation()}>
         <Header>
           <span>{title}</span>
           <CloseIconWrapper>
@@ -66,6 +66,10 @@ Modal.propTypes = {
   title: PropTypes.string.isRequired,
   children: PropTypes.node,
   onClose: PropTypes.func.isRequired,
+  width: PropTypes.string,
+  height: PropTypes.string,
+  minWidth: PropTypes.string,
+  minHeight: PropTypes.string,
 };
 
 export default Modal;
