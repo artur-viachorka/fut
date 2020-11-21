@@ -31,7 +31,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  height: 80px;
+  height: 50px;
   padding: 10px 20px;
   display: flex;
   flex-direction: row;
