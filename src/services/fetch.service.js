@@ -9,6 +9,7 @@ import {
   transformBidPlayerResultFromFUT,
   transformSendItemToBodyRequest,
   transformToLiteQueryParams,
+  transformSendItemDataFromFUT,
 } from './transform.service';
 
 const executeOnPageSpace = (code) => {
@@ -66,7 +67,7 @@ export const searchOnTransfermarketRequest = async (params) => {
       method: ROUTES.TRANSFERMARKET.method,
       params: transformSearchParamsToFUT(params),
     });
-    return transformSearchResultFromFUT(result);
+    return result ? transformSearchResultFromFUT(result) : result;
   } catch (e) {
     console.error('Search on market failed', e);
     throw e;
@@ -81,7 +82,7 @@ export const bidPlayerRequest = async (player) => {
       body: transformPlayerToBidPlayerBodyRequest(player),
       urlParams: [transformPlayerToBidPlayerUrlParams(player)],
     });
-    return transformBidPlayerResultFromFUT(result);
+    return result ? transformBidPlayerResultFromFUT(result) : result;
   } catch (e) {
     console.error('Bidding error', e);
   }
@@ -89,11 +90,12 @@ export const bidPlayerRequest = async (player) => {
 
 export const sendItemTo = async (id, pile) => {
   try {
-    return await sendRequest({
+    const result = await sendRequest({
       url: ROUTES.ITEM.url,
       method: ROUTES.ITEM.method,
       body: transformSendItemToBodyRequest(id, pile),
     });
+    return result ? transformSendItemDataFromFUT(result) : result;
   } catch (e) {
     console.error('Error sending item to', e);
   }
@@ -129,7 +131,7 @@ export const getLiteRequest = async (tradeIds = []) => {
       url: ROUTES.LITE.url + `?${transformToLiteQueryParams(tradeIds)}`,
       method: ROUTES.LITE.method,
     });
-    return transformSearchResultFromFUT(result);
+    return result ? transformSearchResultFromFUT(result) : result;
   } catch (e) {
     console.error('Error while getting lite', e);
     throw e;
@@ -142,7 +144,7 @@ export const getTradePile = async () => {
       url: ROUTES.TRADEPILE.url,
       method: ROUTES.TRADEPILE.method,
     });
-    return transformBidPlayerResultFromFUT(tradepile);
+    return tradepile ? transformBidPlayerResultFromFUT(tradepile) : tradepile;
   } catch (e) {
     console.error('Error while getting tradepile', e);
     throw e;

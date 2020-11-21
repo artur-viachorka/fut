@@ -107,6 +107,21 @@ export const BUY_INPUT_SETTINGS = {
   ]
 };
 
+export const STEP_INFO = {
+  rating: {
+    min: 40,
+    max: 99
+  },
+  workingMinutes: {
+    min: 1,
+    max: 20,
+  },
+  pauseAfterStep: {
+    min: 0,
+    max: 50,
+  }
+};
+
 export const TRANSFER_LIST_LIMIT = {
   min: 25,
   max: 100,
@@ -154,6 +169,8 @@ export const MIN_BUY_AFTER_WHICH_RESET_MIN_BUY = {
   min: 350,
   max: 30000
 };
+
+export const MIN_EXPIRES_TO_BUY = 15;
 
 export const FUT = {
   PILE: {
@@ -228,3 +245,20 @@ export const FUT = {
     'st': { pos: 'ST' },
   },
 };
+
+export const SEARCH_ITEMS_ORDER_CONFIG = [
+  {
+    path: ['buyNowPrice'],
+    isAscending: true,
+  },
+  {
+    path: ['itemData', 'rating'],
+  },
+  {
+    path: ['itemData', 'owners'],
+    isAscending: true,
+  },
+  {
+    path: ['pageNumber'],
+  },
+];

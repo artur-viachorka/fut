@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import { useDrag, useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import { AiFillCloseCircle } from 'react-icons/ai';
-import { IoIosTimer } from 'react-icons/io';
+import { IoIosTimer, IoIosStarOutline } from 'react-icons/io';
 
 import NumberField from '../Fields/NumberField';
 import CheckboxField from '../Fields/CheckboxField';
 import Filter from '../Filters/Filter';
-import { DND_TYPES } from '../../../constants';
+import { DND_TYPES, STEP_INFO } from '../../../constants';
 import { parseStringToInt } from '../../../services/string.serivce';
 
 const Container = styled.div`
@@ -94,6 +94,7 @@ const FilterContainer = styled.div`
 const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar, isActive }) => {
   const [pauseAfterStep, setPauseAfterStep] = useState(step.pauseAfterStep);
   const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
+  const [rating, setRating] = useState(step.rating);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
   const [shouldSkipAfterPurchase, setShouldSkipAfterPurchase] = useState(step.shouldSkipAfterPurchase);
 
@@ -102,6 +103,14 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
     edit({
       ...step,
       workingMinutes: value,
+    });
+  };
+
+  const editRating = (value) => {
+    setRating(value);
+    edit({
+      ...step,
+      rating: value,
     });
   };
 
@@ -181,15 +190,35 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
               <NumberField
                   onChange={(e) => {
                     const value = parseStringToInt(e.target.value);
+                    setRating(value);
+                  }}
+                  onBlur={editRating}
+                  min={STEP_INFO.rating.min}
+                  max={STEP_INFO.rating.max}
+                  isReadOnly={isReadOnly}
+                  value={rating}
+                  isReduceDisabled={rating <= STEP_INFO.rating.min}
+                  isIncreaseDisabled={rating >= STEP_INFO.rating.max}
+                  onUpdateValueByStep={(value) => editRating(value < STEP_INFO.rating.min && value > 0 ? STEP_INFO.rating.min : value)}
+                  getStep={() => 1}
+                  label="Rating"
+                  placeholder="Rating"
+                  renderIcon={() => <IoIosStarOutline/>}
+              />
+            </NumberFieldContainer>
+            <NumberFieldContainer>
+              <NumberField
+                  onChange={(e) => {
+                    const value = parseStringToInt(e.target.value);
                     setWorkingMinutes(value);
                   }}
                   onBlur={editWorkingMinutes}
-                  min={0}
-                  max={15}
+                  min={STEP_INFO.workingMinutes.min}
+                  max={STEP_INFO.workingMinutes.max}
                   isReadOnly={isReadOnly}
                   value={workingMinutes}
-                  isReduceDisabled={!workingMinutes}
-                  isIncreaseDisabled={workingMinutes >= 15}
+                  isReduceDisabled={workingMinutes <= STEP_INFO.workingMinutes.min}
+                  isIncreaseDisabled={workingMinutes >= STEP_INFO.workingMinutes.max}
                   onUpdateValueByStep={editWorkingMinutes}
                   getStep={() => 1}
                   label="Working Minutes *"
@@ -204,12 +233,12 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
                     setPauseAfterStep(value);
                   }}
                   onBlur={editPauseAfterStep}
-                  min={0}
-                  max={50}
+                  min={STEP_INFO.pauseAfterStep.min}
+                  max={STEP_INFO.pauseAfterStep.max}
                   isReadOnly={isReadOnly}
                   value={pauseAfterStep}
                   isReduceDisabled={!pauseAfterStep}
-                  isIncreaseDisabled={pauseAfterStep >= 50}
+                  isIncreaseDisabled={pauseAfterStep >= STEP_INFO.pauseAfterStep.max}
                   onUpdateValueByStep={editPauseAfterStep}
                   getStep={() => 1}
                   label="Pause after step"

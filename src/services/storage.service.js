@@ -1,4 +1,5 @@
 import { callAsPromise } from './helper.service';
+import { openUTNotification } from './notification.service';
 
 const chrome = window.chrome;
 
@@ -7,7 +8,8 @@ export const saveToStorage = async (val) => {
     await callAsPromise(chrome.storage.local, chrome.storage.local.set, val);
     return true;
   } catch (e) {
-    console.error('Error on set to local storage');
+    console.error('Error on set to local storage', e);
+    openUTNotification({ text: 'Error while setting data to local storage. Please, reload app.', error: true });
     return new Error('Error on set to local storage');
   }
 };
@@ -16,7 +18,8 @@ export const getFromStorage = async (...keys) => {
   try {
     return await callAsPromise(chrome.storage.local, chrome.storage.local.get, keys);
   } catch (e) {
-    console.error('Error on get from local storage');
+    console.error('Error on get from local storage', e);
+    openUTNotification({ text: 'Error while getting data from local storage. Please, reload app.', error: true });
     return new Error('Error on get from local storage');
   }
 };

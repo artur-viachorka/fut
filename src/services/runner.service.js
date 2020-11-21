@@ -91,7 +91,7 @@ const stepTickHandler = async (step, config) => {
     if (config.minBid) {
       params.micr = config.minBid;
     }
-    const player = await searchPlayersOnMarket(params);
+    const player = await searchPlayersOnMarket(params, step);
     if (player) {
       logRunnerSubject.next({
         stepId: step.id,

@@ -1,6 +1,6 @@
 import { first } from 'rxjs/operators';
 import { convertSecondsToMs } from './helper.service';
-import { getRandomNumberInRange, sleep } from './helper.service';
+import { getRandomNumberInRange, sleep, getSortHandler } from './helper.service';
 import { pauseRunnerSubject, stopRunnerSubject } from './runner.service';
 import {
   bidPlayerRequest,
@@ -23,6 +23,8 @@ import {
   DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
   DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE,
   FUT,
+  MIN_EXPIRES_TO_BUY,
+  SEARCH_ITEMS_ORDER_CONFIG,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -134,14 +136,24 @@ const searchPlayersOnMarketPaginated = async (params) => {
   return auctionInfo;
 };
 
-export const searchPlayersOnMarket = async (params) => {
+export const searchPlayersOnMarket = async (params, step) => {
   let auctionInfo = await searchPlayersOnMarketPaginated(params);
   if (!auctionInfo?.length) {
     return null;
   }
   let sortedAuctionInfo = auctionInfo
-    .filter(item => item && item.buyNowPrice && item.expires > 20 && item.tradeState === FUT.TRADE_STATE.active)
-    .sort((a, b) => a.buyNowPrice === b.buyNowPrice ? b.pageNumber - a.pageNumber : a.buyNowPrice - b.buyNowPrice);
+    .filter(item =>
+      item
+      && item.buyNowPrice
+      && item.expires > MIN_EXPIRES_TO_BUY
+      && item.tradeState === FUT.TRADE_STATE.active
+      && (step.rating ? item.itemData.rating === step.rating : true)
+    )
+    .sort(getSortHandler(SEARCH_ITEMS_ORDER_CONFIG));
+  if (!sortedAuctionInfo?.length) {
+    return null;
+  }
+
   let cheapestItem = sortedAuctionInfo[0];
   if (isPageLast(cheapestItem.pageNumber, auctionInfo.length)) {
     return cheapestItem;

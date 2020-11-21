@@ -5,6 +5,8 @@ const removeEmptyItems = (obj) => reject(anyPass([isEmpty, isNil]))(obj);
 export const transformFutItemFromFUT = (result) => ({
   id: result.id,
   lastSalePrice: result.lastSalePrice,
+  owners: result.owners,
+  rating: result.rating,
 });
 
 export const transformAuctionInfoFromFUT = (result) => ({
@@ -69,3 +71,11 @@ export const transformSendItemToBodyRequest = (id, pile) => ({
 });
 
 export const transformToLiteQueryParams = (tradeIds) => `tradeIds=${tradeIds.join(',')}`;
+
+export const transformSendItemDataFromFUT = (result) => ({
+  itemData: (result.itemData || []).map(item => ({
+    id: item.id,
+    pile: item.pile,
+    success: item.success,
+  })),
+});

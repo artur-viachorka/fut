@@ -1,4 +1,5 @@
 import { parseStringToInt } from './string.serivce';
+import { path } from 'ramda';
 
 export const convertSecondsToMs = (s) => (s || 0) * 1000;
 export const convertMinutesToSeconds = (m) => (m || 0) * 60;
@@ -49,3 +50,32 @@ export const roundNumber = (value, roundOn) => {
 export const addZero = (num) => num < 10 ? `0${num}` : num;
 
 export const getRandomNumberInRange = (min, max) => (Math.random() * (max - min) + min).toFixed(3);
+
+export const getSortHandler = (config) => {
+  return (a, b) => {
+    let i = 0;
+    let result = 0;
+    let resultOrder = 0;
+
+    while (result === 0 && i < config.length) {
+      const isAscending = config[i].isAscending;
+      const fieldPath = config[i].path;
+      let aValue = path(fieldPath, a);
+      let bValue = path(fieldPath, b);
+
+      if (aValue < bValue) {
+        resultOrder = isAscending ? - 1 : 1;
+      } else if (aValue > bValue) {
+        resultOrder = isAscending ? 1 : -1;
+      } else {
+        resultOrder = 0;
+      }
+
+      if (resultOrder != 0) {
+        break;
+      }
+      i++;
+    }
+    return resultOrder;
+  };
+};
