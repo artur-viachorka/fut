@@ -141,6 +141,7 @@ const stepTickHandler = async (step, config) => {
     return { success: true, ...config };
   } catch (e) {
     console.error('Error in runner', e);
+    openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true  });
     return { stop: true, ...config };
   }
 };
