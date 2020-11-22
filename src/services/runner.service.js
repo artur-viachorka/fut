@@ -133,15 +133,19 @@ const stepTickHandler = async (step, config) => {
           openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
           return ({ stop: true, ...config });
         }
-        if (step.shouldSellOnMarket && movingResult?.itemId) {
-          await sellPlayer(movingResult?.itemId);
+        if (step.shouldSellOnMarket) {
+          const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData?.id, bidResult?.auctionInfo?.buyNowPrice);
+          logRunnerSubject.next({
+            stepId: step.id,
+            isSentToAuctionHouse: !!sellResult,
+          });
         }
       }
     }
     return { success: true, ...config };
   } catch (e) {
     console.error('Error in runner', e);
-    openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true  });
+    openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true });
     return { stop: true, ...config };
   }
 };

@@ -25,6 +25,7 @@ import {
   FUT,
   MIN_EXPIRES_TO_BUY,
   SEARCH_ITEMS_ORDER_CONFIG,
+  HOUR_IN_SECONDS,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -207,12 +208,26 @@ export const getTransferListLimit = async () => {
   return transferListLimit;
 };
 
-export const sellPlayer = async (itemId) => {
-  console.log(itemId);
-  // if (!bidInfo?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
-  //   return false;
-  // }
+const calculateSellPrice = (buyNowPrice, priceLimits) => {
+  return buyNowPrice;
+};
 
-  // sendItemToAuctionHouseRequest,
-  // getPriceLimitsRequest,
+export const sellPlayer = async (itemId, buyNowPrice) => {
+  if (!itemId || !buyNowPrice) {
+    return;
+  }
+  await sleep(getDelayBeforeMovingToTransferList());
+  const priceLimits = await getPriceLimitsRequest(itemId);
+  const priceLimitsForItem = (priceLimits || []).find(price => price.itemId === itemId);
+  if (priceLimitsForItem) {
+    const sellPrice = calculateSellPrice(buyNowPrice, priceLimitsForItem);
+    const minSellPrice = 150;
+    await sleep(getDelayBeforeMovingToTransferList());
+    const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
+    if (result?.id) {
+      return {
+        sellPrice,
+      };
+    }
+  }
 };

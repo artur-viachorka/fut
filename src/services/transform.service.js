@@ -79,3 +79,28 @@ export const transformSendItemDataFromFUT = (result) => ({
     success: item.success,
   })),
 });
+
+export const transformPriceLimitsFromFUT = (result) => (result || []).map(item => ({
+  defId: item.defId,
+  itemId: item.itemId,
+  maxPrice: item.maxPrice,
+  minPrice: item.minPrice,
+  source: item.source,
+}));
+
+export const transformToPriceLimitsParams = (itemId) => ({
+  itemIdList: itemId,
+});
+
+export const transformAuctionHouseBody = (itemId, startingBid, buyNowPrice, duration) => ({
+  buyNowPrice,
+  duration,
+  itemData: {
+    id: itemId
+  },
+  startingBid,
+});
+
+export const transformAuctionHouseFromFUT = (result) => ({
+  id: result.id
+});

@@ -1,7 +1,6 @@
 import { HOST, ROUTES, FUT } from '../constants';
 import {
-  transformFutItemFromFUT,
-  transformAuctionInfoFromFUT,
+  transformPriceLimitsFromFUT,
   transformSearchResultFromFUT,
   transformSearchParamsToFUT,
   transformPlayerToBidPlayerBodyRequest,
@@ -10,6 +9,9 @@ import {
   transformSendItemToBodyRequest,
   transformToLiteQueryParams,
   transformSendItemDataFromFUT,
+  transformToPriceLimitsParams,
+  transformAuctionHouseBody,
+  transformAuctionHouseFromFUT,
 } from './transform.service';
 
 const executeOnPageSpace = (code) => {
@@ -152,26 +154,29 @@ export const getTradePile = async () => {
 };
 
 export const sendItemToAuctionHouseRequest = async (itemId, startingBid, buyNowPrice, duration) => {
-  return await sendRequest({
-    url: ROUTES.AUCTIONHOUSE.url,
-    method: ROUTES.AUCTIONHOUSE.method,
-    body: {
-      buyNowPrice,
-      duration,
-      itemData: {
-        id: itemId
-      },
-      startingBid,
-    },
-  });
+  try {
+    const result = await sendRequest({
+      url: ROUTES.AUCTIONHOUSE.url,
+      method: ROUTES.AUCTIONHOUSE.method,
+      body: transformAuctionHouseBody(itemId, startingBid, buyNowPrice, duration),
+    });
+    return result ? transformAuctionHouseFromFUT(result) : result;
+  } catch (e) {
+    console.error('Error while sedning to auction house', e);
+    throw e;
+  }
 };
 
 export const getPriceLimitsRequest = async (itemId) => {
-  return await sendRequest({
-    url: ROUTES.PRICELIMITS.url,
-    method: ROUTES.PRICELIMITS.method,
-    params: {
-      itemIdList: itemId,
-    },
-  });
+  try {
+    const result = await sendRequest({
+      url: ROUTES.PRICELIMITS.url,
+      method: ROUTES.PRICELIMITS.method,
+      params: transformToPriceLimitsParams(itemId),
+    });
+    return result ? transformPriceLimitsFromFUT(result) : result;
+  } catch (e) {
+    console.error('Error while getting price limits', e);
+    throw e;
+  }
 };

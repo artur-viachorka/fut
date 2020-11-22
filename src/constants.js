@@ -25,7 +25,7 @@ export const ROUTES = {
     method: 'POST',
   },
   PRICELIMITS: {
-    url: 'pricelimits',
+    url: 'marketdata/item/pricelimits',
     method: 'GET',
   },
   TRADEPILE: {
@@ -35,6 +35,8 @@ export const ROUTES = {
 };
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
+
+export const HOUR_IN_SECONDS = 3600;
 
 export const REACT_CONTAINER_ID = 'react-app-container';
 
