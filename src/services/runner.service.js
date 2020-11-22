@@ -134,7 +134,7 @@ const stepTickHandler = async (step, config) => {
           return ({ stop: true, ...config });
         }
         if (step.shouldSellOnMarket) {
-          const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData?.id, bidResult?.auctionInfo?.buyNowPrice);
+          const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData, bidResult?.auctionInfo?.buyNowPrice);
           logRunnerSubject.next({
             stepId: step.id,
             isSentToAuctionHouse: !!sellResult,

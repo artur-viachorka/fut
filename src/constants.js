@@ -147,9 +147,14 @@ export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   to: 1.5,
 };
 
-export const DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
+export const SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
   from: 1,
   to: 1.5,
+};
+
+export const LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
+  from: 2.5,
+  to: 3.5,
 };
 
 export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {

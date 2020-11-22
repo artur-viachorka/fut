@@ -20,7 +20,8 @@ import {
   SEARCH_ITEMS_PAGE_SIZE,
   DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE,
   MIN_BUY_AFTER_WHICH_RESET_MIN_BUY,
-  DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
+  SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
+  LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
   DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE,
   FUT,
   MIN_EXPIRES_TO_BUY,
@@ -47,8 +48,11 @@ const getSearchRequestDelayBetweenPages = () => {
   return getRandomNumberInRange(SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.from, SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS.to);
 };
 
-export const getDelayBeforeDefaultRequest = () => {
-  return getRandomNumberInRange(DELAY_BEFORE_DEFAULT_REQUEST_RANGE.from, DELAY_BEFORE_DEFAULT_REQUEST_RANGE.to);
+export const getDelayBeforeDefaultRequest = (isLong) => {
+  return getRandomNumberInRange(
+    isLong? LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE.from : SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE.from,
+    isLong? LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE.to : SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE.to,
+  );
 };
 
 const getFutPriceStep = (value, increasing, customMin, customSteps) => {
@@ -209,21 +213,21 @@ export const getTransferListLimit = async () => {
 };
 
 const calculateSellPrice = (buyNowPrice, priceLimits) => {
-  return buyNowPrice;
+  return buyNowPrice; // calc buy now
 };
 
-export const sellPlayer = async (itemId, buyNowPrice) => {
-  if (!itemId || !buyNowPrice) {
+export const sellPlayer = async (itemData, buyNowPrice) => {
+  if (!itemData?.id || !buyNowPrice) {
     return;
   }
-  await sleep(getDelayBeforeMovingToTransferList());
-  const priceLimits = await getPriceLimitsRequest(itemId);
-  const priceLimitsForItem = (priceLimits || []).find(price => price.itemId === itemId);
+  await sleep(getDelayBeforeDefaultRequest());
+  const priceLimits = await getPriceLimitsRequest(itemData.id);
+  const priceLimitsForItem = (priceLimits || []).find(price => price.itemId === itemData.id);
   if (priceLimitsForItem) {
     const sellPrice = calculateSellPrice(buyNowPrice, priceLimitsForItem);
-    const minSellPrice = 150;
-    await sleep(getDelayBeforeMovingToTransferList());
-    const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
+    const minSellPrice = 300; // сalculate min sell price
+    await sleep(getDelayBeforeDefaultRequest(true));
+    const result = await sendItemToAuctionHouseRequest(itemData.id, minSellPrice, sellPrice, HOUR_IN_SECONDS);
     if (result?.id) {
       return {
         sellPrice,

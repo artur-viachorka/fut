@@ -7,6 +7,8 @@ export const transformFutItemFromFUT = (result) => ({
   lastSalePrice: result.lastSalePrice,
   owners: result.owners,
   rating: result.rating,
+  marketDataMaxPrice: result.marketDataMaxPrice,
+  marketDataMinPrice: result.marketDataMinPrice,
 });
 
 export const transformAuctionInfoFromFUT = (result) => ({
@@ -93,12 +95,12 @@ export const transformToPriceLimitsParams = (itemId) => ({
 });
 
 export const transformAuctionHouseBody = (itemId, startingBid, buyNowPrice, duration) => ({
-  buyNowPrice,
-  duration,
   itemData: {
     id: itemId
   },
   startingBid,
+  duration,
+  buyNowPrice,
 });
 
 export const transformAuctionHouseFromFUT = (result) => ({
