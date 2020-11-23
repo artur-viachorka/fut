@@ -8,6 +8,7 @@ import {
   getSearchRequestDelay,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
+import { CAPTCHA_ERROR_CODE } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
 
@@ -20,23 +21,29 @@ export const logRunnerSubject = new Subject();
 let runnerState = {
   credits: null,
   freeSlotsInTransferList: null,
+  transferListLimit: null,
+  skippedStep: null,
+  minBuyNow: null,
+  minBid: null,
 };
 
-const updateRunnerState = (newState) => {
-  runnerState.credits = newState?.credits == null ? runnerState.credits : newState.credits;
-  runnerState.freeSlotsInTransferList = newState?.freeSlotsInTransferList == null ? runnerState.freeSlotsInTransferList : newState.freeSlotsInTransferList;
-  runnerState.minBuyNow = newState?.minBuyNow;
-  runnerState.minBid = newState?.minBid;
+const resetRunningState = () => {
+  runnerState = {
+    credits: runnerState.credits,
+    freeSlotsInTransferList: runnerState.freeSlotsInTransferList,
+    transferListLimit: runnerState.transferListLimit,
+    skippedStep: null,
+    minBuyNow: null,
+    minBid: null,
+  };
 };
-
-export const setUserCredits = (coins) => runnerState.credits = coins;
 
 export const syncTradepile = async (transferListLimit) => {
   const tradepile = await syncTransferListItems();
   if (!tradepile) {
     runnerState.freeSlotsInTransferList = null;
   }
-  setUserCredits(tradepile.credits);
+  runnerState.credits = tradepile.credits;
   const itemsInTransferList = tradepile.auctionInfo?.length || transferListLimit;
   runnerState.freeSlotsInTransferList = transferListLimit - itemsInTransferList;
   return runnerState.freeSlotsInTransferList;
@@ -49,17 +56,19 @@ export const RUNNER_STATUS = {
   STOP: 'stop',
 };
 
-export const executeStep = async (step, storedRunnerState) => {
+export const executeStep = async (step, transferListLimit) => {
+  if (runnerState.transferListLimit !== transferListLimit) {
+    runnerState.transferListLimit = transferListLimit;
+    await syncTradepile(transferListLimit);
+  }
   return new Promise((resolve, reject) => {
     let isWorking = true;
-    updateRunnerState(storedRunnerState);
     pauseRunnerSubject
       .pipe(first())
       .subscribe(() => {
         isWorking = false;
         reject({
           status: RUNNER_STATUS.PAUSE,
-          runnerState: { ...runnerState },
         });
       });
 
@@ -67,6 +76,7 @@ export const executeStep = async (step, storedRunnerState) => {
       .pipe(first())
       .subscribe(() => {
         isWorking = false;
+        resetRunningState();
         reject({
           status: RUNNER_STATUS.STOP,
         });
@@ -77,37 +87,43 @@ export const executeStep = async (step, storedRunnerState) => {
       .subscribe(({ stepId }) => {
         if (stepId === step.id) {
           isWorking = false;
+          resetRunningState();
           resolve();
         }
       });
 
-    setTimeout(
-      async function work() {
-        if (!isWorking) {
-          resolve();
-        } else {
-          const result = await stepTickHandler(step, runnerState);
-          updateRunnerState(result.runnerState);
-          if (result?.success) {
-            return setTimeout(work, getSearchRequestDelay(true));
-          }
-          resolve(result);
-        }
-      },
-      getSearchRequestDelay(true),
-    );
+    const work = async () => {
+      if (!isWorking) {
+        resolve();
+        return;
+      }
+      if (runnerState.skippedStep === step.id) {
+        resolve({ skip: true });
+        return;
+      }
+      const result = await stepTickHandler(step);
+      if (result?.skip) {
+        resetRunningState();
+        runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
+      }
+      if (result?.success) {
+        return setTimeout(work, getSearchRequestDelay(true));
+      }
+      resolve(result);
+    };
+    work();
   });
 };
 
-const stepTickHandler = async (step, currentRunningState) => {
+const stepTickHandler = async (step) => {
   try {
     let params = { ...step.filter.requestParams };
-    [currentRunningState.minBuyNow, currentRunningState.minBid] = calculateMinBuyNowAndMinBid(currentRunningState.minBuyNow, currentRunningState.minBid, params.maxb);
-    if (currentRunningState.minBuyNow) {
-      params.minb = currentRunningState.minBuyNow;
+    [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
+    if (runnerState.minBuyNow) {
+      params.minb = runnerState.minBuyNow;
     }
-    if (currentRunningState.minBid) {
-      params.micr = currentRunningState.minBid;
+    if (runnerState.minBid) {
+      params.micr = runnerState.minBid;
     }
     const searchResult = await searchPlayersOnMarket(
       params,
@@ -124,7 +140,7 @@ const stepTickHandler = async (step, currentRunningState) => {
         searchResult,
         params,
         step.shouldSkipAfterPurchase,
-        currentRunningState.credits,
+        runnerState.credits,
         (bidResult) => logRunnerSubject.next({
           stepId: step.id,
           text: `Player ${!bidResult ? 'not' : ''} bought${bidResult?.auctionInfo?.buyNowPrice ? ` for ${bidResult?.auctionInfo?.buyNowPrice}` : ''}.`,
@@ -136,12 +152,12 @@ const stepTickHandler = async (step, currentRunningState) => {
           });
         }
       );
-      currentRunningState.credits = remainingCredits || currentRunningState.credits;
+      runnerState.credits = remainingCredits || runnerState.credits;
       if (tooLowCredits) {
-        return { skip: true, runnerState: currentRunningState };
+        return { skip: true };
       }
       if (boughtItems?.length) {
-        if (currentRunningState.freeSlotsInTransferList) {
+        if (runnerState.freeSlotsInTransferList) {
           const sentResult = await sendItemsToTransferList(
             boughtItems,
             (movingResult) => logRunnerSubject.next({
@@ -150,11 +166,11 @@ const stepTickHandler = async (step, currentRunningState) => {
             }),
           );
           if (sentResult.length) {
-            currentRunningState.freeSlotsInTransferList -= sentResult.filter(item => item.success).length;
+            runnerState.freeSlotsInTransferList -= sentResult.filter(item => item.success).length;
           }
         }
         if (step.shouldSkipAfterPurchase) {
-          return { skip: true, runnerState: currentRunningState };
+          return { skip: true };
         }
       }
     }
@@ -181,11 +197,15 @@ const stepTickHandler = async (step, currentRunningState) => {
     //     }
     //   }
     // }
-    return { success: true, runnerState: currentRunningState };
+    return { success: true };
   } catch (e) {
     console.error('Error in runner', e);
+    if (e.status === CAPTCHA_ERROR_CODE) {
+      openUTNotification({ text: 'Captcha needed. Reload page and enter captcha.', error: true });
+      return { stop: true };
+    }
     openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true });
-    return { stop: true, runnerState: currentRunningState };
+    return { stop: true };
   }
 };
 

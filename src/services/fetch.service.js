@@ -55,6 +55,9 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
     },
     body,
   });
+  if (!response?.ok) {
+    throw response;
+  }
   try {
     return await response.json();
   } catch (e) {

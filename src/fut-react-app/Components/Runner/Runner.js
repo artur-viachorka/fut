@@ -19,7 +19,6 @@ import {
   logRunnerSubject,
   stopStep,
   RUNNER_STATUS,
-  syncTradepile,
 } from '../../../services/runner.service';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
 import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT } from '../../../constants';
@@ -160,7 +159,7 @@ const Runner = () => {
     setScenarioDurationLeft(duration);
   };
 
-  const start = async (runningStep) => {
+  const start = async (runningStep, transferLimit) => {
     const requestInterval = SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to;
     const steps = getLeftoverSteps(selectedScenario.steps, runningStep, requestInterval);
     try {
@@ -171,7 +170,7 @@ const Runner = () => {
 
         if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          const executionResult = await executeStep(step, runningStep?.runnerState, transferListLimit);
+          const executionResult = await executeStep(step, transferLimit);
           if (executionResult?.skip) {
             continue;
           }
@@ -189,21 +188,9 @@ const Runner = () => {
       if (e?.status === RUNNER_STATUS.STOP) {
         stop();
       }
-      if (e?.status === RUNNER_STATUS.PAUSE) {
-        setRunningStep({
-          ...runningStepRef.current,
-          runnerState: e.runnerState,
-        });
-      }
       console.error(e);
     }
   };
-
-  useEffect(() => {
-    if (transferListLimit) {
-      syncTradepile(transferListLimit);
-    }
-  }, [transferListLimit]);
 
   useEffect(() => {
     const loadTransferListLimit = async () => setTransferListLimit(await getTransferListLimit());
@@ -279,7 +266,7 @@ const Runner = () => {
                       }
                       setLogs({});
                       setIsRunning(true);
-                      start();
+                      start(null, transferListLimit);
                     }}
                 >
                   <FaPlay/>
@@ -301,7 +288,7 @@ const Runner = () => {
                     onClick={() => {
                       setIsRunning(true);
                       setIsPaused(false);
-                      start(runningStep);
+                      start(runningStep, transferListLimit);
                     }}
                 >
                   <FaPlay/>

@@ -33,6 +33,7 @@ export const ROUTES = {
     method: 'GET',
   },
 };
+export const CAPTCHA_ERROR_CODE = 458;
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
 
@@ -139,8 +140,8 @@ export const MODALS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 2.3,
-  to: 3.2,
+  from: 3,
+  to: 3.5,
 };
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   from: 1,

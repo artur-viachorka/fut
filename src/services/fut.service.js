@@ -118,7 +118,7 @@ const searchPlayersOnMarketPaginated = async (params) => {
   stopRunnerSubject
     .pipe(first())
     .subscribe(() => isWorking = false);
-
+  await sleep(getDelayBeforeDefaultRequest());
   let result = await searchOnTransfermarketRequest(params);
   let auctionInfo = mapAuctionInfoItems(result, 0);
   if (auctionInfo.length === SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
