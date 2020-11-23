@@ -3,7 +3,7 @@ import { first } from 'rxjs/operators';
 import {
   searchPlayersOnMarket,
   buyPlayers,
-  sellPlayer,
+  sellPlayers,
   sendItemsToTransferList,
   getSearchRequestDelay,
   calculateMinBuyNowAndMinBid,
@@ -46,7 +46,10 @@ export const syncTradepile = async (transferListLimit) => {
   runnerState.credits = tradepile.credits;
   const itemsInTransferList = tradepile.auctionInfo?.length || transferListLimit;
   runnerState.freeSlotsInTransferList = transferListLimit - itemsInTransferList;
-  return runnerState.freeSlotsInTransferList;
+  return {
+    freeSlotsInTransferList: runnerState.freeSlotsInTransferList,
+    tradepile,
+  };
 };
 
 export const RUNNER_STATUS = {
@@ -172,31 +175,19 @@ const stepTickHandler = async (step) => {
         if (step.shouldSkipAfterPurchase) {
           return { skip: true };
         }
+        if (step.shouldSellOnMarket) {
+          await sellPlayers(
+            boughtItems,
+            (isSentToAuctionHouse) => {
+              logRunnerSubject.next({
+                stepId: step.id,
+                text: `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`,
+              });
+            }
+          );
+        }
       }
     }
-    // if (players?.length) {
-    //     let player = players[i];
-    //     if (bidResult) {
-    //       config.credits = bidResult.credits;
-    //       if (step.shouldSkipAfterPurchase) {
-    //         return ({ skip: true, ...config });
-    //       }
-    //       if (!movingResult) {
-    //         openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
-    //         return ({ stop: true, ...config });
-    //       }
-    //       if (step.shouldSellOnMarket) {
-    //         const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData, bidResult?.auctionInfo?.buyNowPrice);
-    // (isSentToAuctionHouse) => {
-    //   logRunnerSubject.next({
-    //     stepId: step.id,
-    //     text: `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`,
-    //   });
-    // }
-    //       }
-    //     }
-    //   }
-    // }
     return { success: true };
   } catch (e) {
     console.error('Error in runner', e);

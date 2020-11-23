@@ -1,13 +1,12 @@
 import { first } from 'rxjs/operators';
 import { convertSecondsToMs } from './helper.service';
 import { getRandomNumberInRange, sleep, getSortHandler } from './helper.service';
-import { pauseRunnerSubject, stopRunnerSubject } from './runner.service';
+import { pauseRunnerSubject, stopRunnerSubject, syncTradepile } from './runner.service';
 import {
   bidPlayerRequest,
   searchOnTransfermarketRequest,
   sendItemsToTransferListRequest,
   sendItemToAuctionHouseRequest,
-  getPriceLimitsRequest,
   getLiteRequest,
 } from './fetch.service';
 import {
@@ -247,26 +246,38 @@ export const getTransferListLimit = async () => {
   return transferListLimit;
 };
 
-const calculateSellPrice = (buyNowPrice, priceLimits) => {
+const calculateSellPrice = (buyNowPrice, minPrice, maxPrice) => {
   return buyNowPrice; // calc buy now
 };
 
-export const sellPlayer = async (itemData, buyNowPrice) => {
-  if (!itemData?.id || !buyNowPrice) {
+export const sellPlayer = async (itemId, buyNowPrice, minPrice, maxPrice) => {
+  await sleep(getDelayBeforeDefaultRequest());
+  const sellPrice = calculateSellPrice(buyNowPrice, minPrice, maxPrice);
+  const minSellPrice = 300; // сalculate min sell price
+  await sleep(getDelayBeforeDefaultRequest(true));
+  const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
+  if (result?.id) {
+    return {
+      itemId,
+      minSellPrice,
+      sellPrice,
+    };
+  }
+};
+
+export const sellPlayers = async (boughtItems, log) => {
+  await sleep(getDelayBeforeDefaultRequest());
+  const { tradepile, freeSlotsInTransferList } = await syncTradepile();
+  if (!freeSlotsInTransferList) {
     return;
   }
-  await sleep(getDelayBeforeDefaultRequest());
-  const priceLimits = await getPriceLimitsRequest(itemData.id);
-  const priceLimitsForItem = (priceLimits || []).find(price => price.itemId === itemData.id);
-  if (priceLimitsForItem) {
-    const sellPrice = calculateSellPrice(buyNowPrice, priceLimitsForItem);
-    const minSellPrice = 300; // сalculate min sell price
-    await sleep(getDelayBeforeDefaultRequest(true));
-    const result = await sendItemToAuctionHouseRequest(itemData.id, minSellPrice, sellPrice, HOUR_IN_SECONDS);
-    if (result?.id) {
-      return {
-        sellPrice,
-      };
+  for (let i = 0; i < boughtItems.length; i++) {
+    const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === boughtItems[i].itemData.id);
+    const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
+    const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
+    if (marketDataMinPrice && marketDataMaxPrice) {
+      const sellResult = await sellPlayer(boughtItems[i].itemData.id, boughtItems[i].buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
+      log(sellResult);
     }
   }
 };
