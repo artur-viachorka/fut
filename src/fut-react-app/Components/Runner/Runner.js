@@ -9,7 +9,7 @@ import RunnerStepStatus from './RunnerStepStatus';
 
 import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
 
-import { isScenarioInputsInvalid, checkIsMaxDurationExceeded, getLoggerText } from '../../../services/scenario.service';
+import { isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
 import {
   executeStep,
   executeStepIdle,
@@ -207,8 +207,7 @@ const Runner = () => {
       resetScenario(scenario);
     });
 
-    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, ...loggerData }) => {
-      const text = getLoggerText(loggerData);
+    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, text }) => {
       if (text) {
         setLogs({
           ...logsRef.current,

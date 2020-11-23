@@ -5,7 +5,7 @@ import { pauseRunnerSubject, stopRunnerSubject } from './runner.service';
 import {
   bidPlayerRequest,
   searchOnTransfermarketRequest,
-  sendItemToTransferListRequest,
+  sendItemsToTransferListRequest,
   sendItemToAuctionHouseRequest,
   getPriceLimitsRequest,
   getLiteRequest,
@@ -27,6 +27,7 @@ import {
   MIN_EXPIRES_TO_BUY,
   SEARCH_ITEMS_ORDER_CONFIG,
   HOUR_IN_SECONDS,
+  MAX_PLAYERS_TO_BUY_IN_ONE_STEP,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -141,12 +142,12 @@ const searchPlayersOnMarketPaginated = async (params) => {
   return auctionInfo;
 };
 
-export const searchPlayersOnMarket = async (params, step) => {
+export const searchPlayersOnMarket = async (params, step, log) => {
   let auctionInfo = await searchPlayersOnMarketPaginated(params);
   if (!auctionInfo?.length) {
     return null;
   }
-  let sortedAuctionInfo = auctionInfo
+  const sortedAuctionInfo = auctionInfo
     .filter(item =>
       item
       && item.buyNowPrice
@@ -158,24 +159,15 @@ export const searchPlayersOnMarket = async (params, step) => {
   if (!sortedAuctionInfo?.length) {
     return null;
   }
-
-  let cheapestItem = sortedAuctionInfo[0];
-  if (isPageLast(cheapestItem.pageNumber, auctionInfo.length)) {
-    return cheapestItem;
-  }
-  await sleep(getSearchRequestDelayBetweenPages());
-  await searchOnTransfermarketRequest({
-    ...params,
-    start: cheapestItem.pageNumber * SEARCH_ITEMS_PAGE_SIZE,
-    micr: 150,
-  });
-  await sleep(getDelayBeforeDefaultRequest());
-  const liteData = await getLiteRequest([cheapestItem.tradeId]);
-  const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === cheapestItem.tradeId && item.tradeState === FUT.TRADE_STATE.active);
-  return activeTrade || null;
+  const cheapestPlayers = sortedAuctionInfo.slice(0, MAX_PLAYERS_TO_BUY_IN_ONE_STEP);
+  cheapestPlayers.forEach(log);
+  return {
+    cheapestPlayers,
+    auctionInfo
+  };
 };
 
-export const buyPlayer = async (player) => {
+const buyPlayer = async (player) => {
   if (!player?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
     return;
   }
@@ -185,21 +177,64 @@ export const buyPlayer = async (player) => {
   if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
     return {
       auctionInfo,
-      credits: bidResult.credits,
+      credits: bidResult?.credits,
     };
   }
 };
 
-export const sendItemToTransferList = async (itemData) => {
-  if (!itemData?.id) {
-    return;
+export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shouldSkipAfterPurchase, credits, boughtLog, notEnoughCreditsLog) => {
+  let boughtItems = [];
+  let cantBuyInReasonOfCredits = 0;
+  for (let i = 0; i < cheapestPlayers.length; i++) {
+    const player = cheapestPlayers[i];
+
+    if (player.buyNowPrice > credits ) {
+      notEnoughCreditsLog(player);
+      cantBuyInReasonOfCredits++;
+      continue;
+    }
+
+    if (!isPageLast(player.pageNumber, auctionInfo.length)) {
+      await sleep(getSearchRequestDelayBetweenPages());
+      await searchOnTransfermarketRequest({
+        ...params,
+        start: player.pageNumber * SEARCH_ITEMS_PAGE_SIZE,
+        micr: 150,
+      });
+      await sleep(getDelayBeforeDefaultRequest());
+      const liteData = await getLiteRequest([player.tradeId]);
+      const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === player.tradeId && item.tradeState === FUT.TRADE_STATE.active);
+      if (!activeTrade) {
+        continue;
+      }
+    }
+    await sleep(getDelayBeforeDefaultRequest());
+    const boughtResult = await buyPlayer(player);
+    boughtLog(boughtResult);
+    if (boughtResult) {
+      credits = boughtResult.credits;
+      boughtItems.push(boughtResult.auctionInfo);
+      if (shouldSkipAfterPurchase) {
+        break;
+      }
+    }
   }
-  await sleep(getDelayBeforeMovingToTransferList());
-  const result = await sendItemToTransferListRequest(itemData.id);
-  if (result?.itemData && result?.itemData[0]?.success) {
-    return {
-      itemId: result.itemData[0].id,
-    };
+  return {
+    boughtItems,
+    credits,
+    tooLowCredits: cantBuyInReasonOfCredits === cheapestPlayers.length,
+  };
+};
+
+export const sendItemsToTransferList = async (boughtItems, log) => {
+  const itemDataIds = boughtItems.map(item => item?.itemData?.id).filter(Boolean);
+  if (itemDataIds?.length) {
+    await sleep(getDelayBeforeMovingToTransferList());
+    const result = await sendItemsToTransferListRequest(itemDataIds);
+    itemDataIds.forEach(itemId => {
+      log((result?.itemData || []).find(resItem => resItem.id === itemId && resItem.success));
+    });
+    return result?.itemData;
   }
 };
 

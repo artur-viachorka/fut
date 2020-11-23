@@ -6,7 +6,7 @@ import {
   transformPlayerToBidPlayerBodyRequest,
   transformPlayerToBidPlayerUrlParams,
   transformBidPlayerResultFromFUT,
-  transformSendItemToBodyRequest,
+  transformSendItemsToBodyRequest,
   transformToLiteQueryParams,
   transformSendItemDataFromFUT,
   transformToPriceLimitsParams,
@@ -90,12 +90,12 @@ export const bidPlayerRequest = async (player) => {
   }
 };
 
-export const sendItemTo = async (id, pile) => {
+export const sendItemsTo = async (itemIds, pile) => {
   try {
     const result = await sendRequest({
       url: ROUTES.ITEM.url,
       method: ROUTES.ITEM.method,
-      body: transformSendItemToBodyRequest(id, pile),
+      body: transformSendItemsToBodyRequest(itemIds, pile),
     });
     return result ? transformSendItemDataFromFUT(result) : result;
   } catch (e) {
@@ -103,12 +103,12 @@ export const sendItemTo = async (id, pile) => {
   }
 };
 
-export const sendItemToTransferListRequest = async (itemId) => {
-  return await sendItemTo(itemId, FUT.PILE.trade);
+export const sendItemsToTransferListRequest = async (itemIds) => {
+  return await sendItemsTo(itemIds, FUT.PILE.trade);
 };
 
 export const sendItemToClub = async (itemId) => {
-  const result = await sendItemTo(itemId, FUT.PILE.club);
+  const result = await sendItemsTo([itemId], FUT.PILE.club);
   if (!result) {
     throw new Error();
   }

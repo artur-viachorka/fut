@@ -2,14 +2,15 @@ import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
 import {
   searchPlayersOnMarket,
-  buyPlayer,
+  buyPlayers,
   sellPlayer,
-  sendItemToTransferList,
+  sendItemsToTransferList,
   getSearchRequestDelay,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
 import { openUTNotification } from './notification.service';
 import { getCredits } from './marketSearchCriteria.service';
+import { move } from 'ramda';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -92,56 +93,78 @@ const stepTickHandler = async (step, config) => {
     if (config.minBid) {
       params.micr = config.minBid;
     }
-    const player = await searchPlayersOnMarket(params, step);
-    if (player) {
-      logRunnerSubject.next({
-        stepId: step.id,
-        isPlayerFound: true,
-        meta: {
-          buyNowPrice: player.buyNowPrice,
-        }
-      });
-      if (config.credits < player.buyNowPrice) {
+    const searchResult = await searchPlayersOnMarket(
+      params,
+      step,
+      (player) => {
         logRunnerSubject.next({
           stepId: step.id,
-          isNotEnoughCredits: true,
-          meta: {
-            buyNowPrice: player.buyNowPrice,
-          }
+          text: `Player found${player?.buyNowPrice ? ` for ${player.buyNowPrice}` : ''}.`,
         });
-        return { skip: true, ...config };
-      }
-      const bidResult = await buyPlayer(player);
-      logRunnerSubject.next({
-        stepId: step.id,
-        isPlayerBought: !!bidResult,
-        meta: {
-          buyNowPrice: bidResult?.auctionInfo?.buyNowPrice,
-        }
-      });
-      if (bidResult) {
-        config.credits = bidResult.credits;
-        if (step.shouldSkipAfterPurchase) {
-          return ({ skip: true, ...config });
-        }
-        const movingResult = await sendItemToTransferList(bidResult?.auctionInfo?.itemData);
-        logRunnerSubject.next({
+      },
+    );
+    if (searchResult) {
+      const { credits: remainingCredits, tooLowCredits, boughtItems } = await buyPlayers(
+        searchResult,
+        params,
+        step.shouldSkipAfterPurchase,
+        credits,
+        (bidResult) => logRunnerSubject.next({
           stepId: step.id,
-          movedToTransferList: !!movingResult,
-        });
-        if (!movingResult) {
-          openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
-          return ({ stop: true, ...config });
-        }
-        if (step.shouldSellOnMarket) {
-          const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData, bidResult?.auctionInfo?.buyNowPrice);
+          text: `Player ${!bidResult ? 'not' : ''} bought${bidResult?.auctionInfo?.buyNowPrice ? ` for ${bidResult?.auctionInfo?.buyNowPrice}` : ''}.`,
+        }),
+        (player) => {
           logRunnerSubject.next({
             stepId: step.id,
-            isSentToAuctionHouse: !!sellResult,
+            text: `Not enough credits to buy player ${player.buyNowPrice ? ` for ${player.buyNowPrice}` : ''}.`,
           });
+        }
+      );
+      config.credits = remainingCredits || config.credits;
+      if (tooLowCredits) {
+        return { skip: true, ...config };
+      }
+      if (boughtItems?.length) {
+        const movedItems = await sendItemsToTransferList(
+          boughtItems,
+          (movingResult) => logRunnerSubject.next({
+            stepId: step.id,
+            text: movingResult ? 'Player was moved to transfer list.' : 'Cant move player to transfer list.'
+          }),
+        );
+
+        if (movedItems?.length) {
+
         }
       }
     }
+
+
+    // if (players?.length) {
+    //     let player = players[i];
+    //     if (bidResult) {
+    //       config.credits = bidResult.credits;
+    //       if (step.shouldSkipAfterPurchase) {
+    //         return ({ skip: true, ...config });
+    //       }
+    //       
+    //       if (!movingResult) {
+    //         openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
+    //         return ({ stop: true, ...config });
+    //       }
+    //       if (step.shouldSellOnMarket) {
+    //         const sellResult = await sellPlayer(bidResult?.auctionInfo?.itemData, bidResult?.auctionInfo?.buyNowPrice);
+    // (isSentToAuctionHouse) => {
+    //   logRunnerSubject.next({
+    //     stepId: step.id,
+    //     text: `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`,
+    //   });
+    // }
+           
+    //       }
+    //     }
+    //   }
+    // }
     return { success: true, ...config };
   } catch (e) {
     console.error('Error in runner', e);

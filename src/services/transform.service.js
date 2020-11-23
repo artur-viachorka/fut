@@ -68,8 +68,8 @@ export const transformBidPlayerResultFromFUT = (result) => ({
   duplicateItemIdList: result?.duplicateItemIdList ? result.duplicateItemIdList.map(item => ({ itemId: item.itemId, duplicateItemId: item.duplicateItemId })) : [],
 });
 
-export const transformSendItemToBodyRequest = (id, pile) => ({
-  itemData: [{ id, pile }],
+export const transformSendItemsToBodyRequest = (ids, pile) => ({
+  itemData: ids.map(id => ({ id, pile })),
 });
 
 export const transformToLiteQueryParams = (tradeIds) => `tradeIds=${tradeIds.join(',')}`;

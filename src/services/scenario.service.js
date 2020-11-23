@@ -146,27 +146,3 @@ export const copyScenario = async (scenarioToCopy) => {
     return false;
   }
 };
-
-export const getLoggerText = ({ isPlayerBought, isPlayerFound, isNotEnoughCredits, movedToTransferList, isSentToAuctionHouse, meta }) => {
-  if (isPlayerBought != null) {
-    return `Player ${!isPlayerBought ? 'not' : ''} bought${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}` : ''}.`;
-  }
-  if (isPlayerFound != null) {
-    return `Player found${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}` : ''}.`;
-  }
-  if (isNotEnoughCredits != null) {
-    return `Not enough credits to buy player ${meta?.buyNowPrice ? ` for ${meta.buyNowPrice}` : ''}.`;
-  }
-
-  if (movedToTransferList === false) {
-    return 'Cant move player to transfer list.';
-  }
-
-  if (movedToTransferList === true) {
-    return 'Player was moved to transfer list.';
-  }
-
-  if (isSentToAuctionHouse != null) {
-    return `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`;
-  }
-};
