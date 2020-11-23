@@ -259,11 +259,6 @@ const saveSearchFilterToStorage = async () => {
   }
 };
 
-export const getCredits = async () => {
-  const credits = $(FUT.PAGE_SELECTORS.credits).text();
-  return parseStringToInt(credits || 0);
-};
-
 export const getSearchFilters = async () => {
   const { filters } = await getFromStorage('filters');
   return filters || [];

@@ -234,7 +234,7 @@ export const sendItemsToTransferList = async (boughtItems, log) => {
     itemDataIds.forEach(itemId => {
       log((result?.itemData || []).find(resItem => resItem.id === itemId && resItem.success));
     });
-    return result?.itemData;
+    return result?.itemData || [];
   }
 };
 

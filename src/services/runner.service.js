@@ -9,8 +9,7 @@ import {
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
 import { openUTNotification } from './notification.service';
-import { getCredits } from './marketSearchCriteria.service';
-import { move } from 'ramda';
+import { syncTransferListItems } from './transferList.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -18,9 +17,30 @@ export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
 export const logRunnerSubject = new Subject();
 
-let credits = null;
+let runnerState = {
+  credits: null,
+  freeSlotsInTransferList: null,
+};
 
-export const setUserCredits = (coins) => credits = coins || getCredits();
+const updateRunnerState = (newState) => {
+  runnerState.credits = newState?.credits == null ? runnerState.credits : newState.credits;
+  runnerState.freeSlotsInTransferList = newState?.freeSlotsInTransferList == null ? runnerState.freeSlotsInTransferList : newState.freeSlotsInTransferList;
+  runnerState.minBuyNow = newState?.minBuyNow;
+  runnerState.minBid = newState?.minBid;
+};
+
+export const setUserCredits = (coins) => runnerState.credits = coins;
+
+export const syncTradepile = async (transferListLimit) => {
+  const tradepile = await syncTransferListItems();
+  if (!tradepile) {
+    runnerState.freeSlotsInTransferList = null;
+  }
+  setUserCredits(tradepile.credits);
+  const itemsInTransferList = tradepile.auctionInfo?.length || transferListLimit;
+  runnerState.freeSlotsInTransferList = transferListLimit - itemsInTransferList;
+  return runnerState.freeSlotsInTransferList;
+};
 
 export const RUNNER_STATUS = {
   WORKING: 'working',
@@ -29,19 +49,17 @@ export const RUNNER_STATUS = {
   STOP: 'stop',
 };
 
-export const executeStep = async (step, config) => {
+export const executeStep = async (step, storedRunnerState) => {
   return new Promise((resolve, reject) => {
     let isWorking = true;
-    let minBuyNow = config?.minBuyNow || null;
-    let minBid = config?.minBid || null;
-
+    updateRunnerState(storedRunnerState);
     pauseRunnerSubject
       .pipe(first())
       .subscribe(() => {
         isWorking = false;
         reject({
           status: RUNNER_STATUS.PAUSE,
-          config : { minBuyNow, minBid },
+          runnerState: { ...runnerState },
         });
       });
 
@@ -68,10 +86,8 @@ export const executeStep = async (step, config) => {
         if (!isWorking) {
           resolve();
         } else {
-          const result = await stepTickHandler(step, { minBuyNow, credits, minBid });
-          credits = result?.credits == null ? credits : result.credits;
-          minBuyNow = result?.minBuyNow == null ? minBuyNow : result.minBuyNow;
-          minBid = result?.minBid == null ? minBid : result.minBid;
+          const result = await stepTickHandler(step, runnerState);
+          updateRunnerState(result.runnerState);
           if (result?.success) {
             return setTimeout(work, getSearchRequestDelay(true));
           }
@@ -83,15 +99,15 @@ export const executeStep = async (step, config) => {
   });
 };
 
-const stepTickHandler = async (step, config) => {
+const stepTickHandler = async (step, currentRunningState) => {
   try {
     let params = { ...step.filter.requestParams };
-    [config.minBuyNow, config.minBid] = calculateMinBuyNowAndMinBid(config.minBuyNow, config.minBid, params.maxb);
-    if (config.minBuyNow) {
-      params.minb = config.minBuyNow;
+    [currentRunningState.minBuyNow, currentRunningState.minBid] = calculateMinBuyNowAndMinBid(currentRunningState.minBuyNow, currentRunningState.minBid, params.maxb);
+    if (currentRunningState.minBuyNow) {
+      params.minb = currentRunningState.minBuyNow;
     }
-    if (config.minBid) {
-      params.micr = config.minBid;
+    if (currentRunningState.minBid) {
+      params.micr = currentRunningState.minBid;
     }
     const searchResult = await searchPlayersOnMarket(
       params,
@@ -108,7 +124,7 @@ const stepTickHandler = async (step, config) => {
         searchResult,
         params,
         step.shouldSkipAfterPurchase,
-        credits,
+        currentRunningState.credits,
         (bidResult) => logRunnerSubject.next({
           stepId: step.id,
           text: `Player ${!bidResult ? 'not' : ''} bought${bidResult?.auctionInfo?.buyNowPrice ? ` for ${bidResult?.auctionInfo?.buyNowPrice}` : ''}.`,
@@ -120,26 +136,28 @@ const stepTickHandler = async (step, config) => {
           });
         }
       );
-      config.credits = remainingCredits || config.credits;
+      currentRunningState.credits = remainingCredits || currentRunningState.credits;
       if (tooLowCredits) {
-        return { skip: true, ...config };
+        return { skip: true, runnerState: currentRunningState };
       }
       if (boughtItems?.length) {
-        const movedItems = await sendItemsToTransferList(
-          boughtItems,
-          (movingResult) => logRunnerSubject.next({
-            stepId: step.id,
-            text: movingResult ? 'Player was moved to transfer list.' : 'Cant move player to transfer list.'
-          }),
-        );
-
-        if (movedItems?.length) {
-
+        if (currentRunningState.freeSlotsInTransferList) {
+          const sentResult = await sendItemsToTransferList(
+            boughtItems,
+            (movingResult) => logRunnerSubject.next({
+              stepId: step.id,
+              text: movingResult ? 'Player was moved to transfer list.' : 'Cant move player to transfer list.'
+            }),
+          );
+          if (sentResult.length) {
+            currentRunningState.freeSlotsInTransferList -= sentResult.filter(item => item.success).length;
+          }
+        }
+        if (step.shouldSkipAfterPurchase) {
+          return { skip: true, runnerState: currentRunningState };
         }
       }
     }
-
-
     // if (players?.length) {
     //     let player = players[i];
     //     if (bidResult) {
@@ -147,7 +165,6 @@ const stepTickHandler = async (step, config) => {
     //       if (step.shouldSkipAfterPurchase) {
     //         return ({ skip: true, ...config });
     //       }
-    //       
     //       if (!movingResult) {
     //         openUTNotification({ text: 'Can`t move to market list. List is full or there was an error. Try loter.', error: true });
     //         return ({ stop: true, ...config });
@@ -160,16 +177,15 @@ const stepTickHandler = async (step, config) => {
     //     text: `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`,
     //   });
     // }
-           
     //       }
     //     }
     //   }
     // }
-    return { success: true, ...config };
+    return { success: true, runnerState: currentRunningState };
   } catch (e) {
     console.error('Error in runner', e);
     openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true });
-    return { stop: true, ...config };
+    return { stop: true, runnerState: currentRunningState };
   }
 };
 

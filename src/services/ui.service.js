@@ -1,7 +1,7 @@
 import { sleep } from './helper.service';
 import { openModalSubject } from '../contentScript';
 import { FUT, MODALS } from '../constants';
-import { updateTransferListItems } from './transferList.service';
+import { syncTransferListItems } from './transferList.service';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -61,7 +61,7 @@ const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLAS
 const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
 const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync Transfers', async () => {
   setLoaderVisibility(true);
-  await updateTransferListItems();
+  await syncTransferListItems(true);
   setLoaderVisibility(false);
 });
 

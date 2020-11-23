@@ -19,7 +19,7 @@ import {
   logRunnerSubject,
   stopStep,
   RUNNER_STATUS,
-  setUserCredits,
+  syncTradepile,
 } from '../../../services/runner.service';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
 import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT } from '../../../constants';
@@ -171,7 +171,7 @@ const Runner = () => {
 
         if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          const executionResult = await executeStep(step, runningStep?.config);
+          const executionResult = await executeStep(step, runningStep?.runnerState, transferListLimit);
           if (executionResult?.skip) {
             continue;
           }
@@ -192,12 +192,19 @@ const Runner = () => {
       if (e?.status === RUNNER_STATUS.PAUSE) {
         setRunningStep({
           ...runningStepRef.current,
-          config: e.config,
+          runnerState: e.runnerState,
         });
       }
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    if (transferListLimit) {
+      syncTradepile(transferListLimit);
+    }
+  }, [transferListLimit]);
+
   useEffect(() => {
     const loadTransferListLimit = async () => setTransferListLimit(await getTransferListLimit());
     const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
@@ -216,7 +223,6 @@ const Runner = () => {
       }
     });
     loadTransferListLimit();
-    setUserCredits();
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
