@@ -11,6 +11,7 @@ export const isUniq = (item, duplicates) => {
 
 export const syncTransferListItems = async (shouldNotify) => {
   try {
+    await sleep(getDelayBeforeDefaultRequest());
     let tradepile = await getTradePile();
     if (!tradepile?.auctionInfo?.length) {
       return;

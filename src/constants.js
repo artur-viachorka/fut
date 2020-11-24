@@ -34,6 +34,11 @@ export const ROUTES = {
   },
 };
 export const CAPTCHA_ERROR_CODE = 458;
+export const TRANSFERLIST_FULL = {
+  errorCode: 473,
+  reason: 'Destination Full',
+};
+
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
 
@@ -171,7 +176,7 @@ export const DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE = {
 export const MAX_PAGES_TO_SEARCH_ON = 4;
 export const SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION = 21;
 export const SEARCH_ITEMS_PAGE_SIZE = 20;
-export const MAX_PLAYERS_TO_BUY_IN_ONE_STEP = 1;
+export const MAX_PLAYERS_TO_BUY_IN_ONE_STEP = 2;
 
 export const PERCENT_AFTER_WHICH_RESET_MIN_BUY = 40;
 export const MIN_BUY_AFTER_WHICH_RESET_MIN_BUY = {

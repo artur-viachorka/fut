@@ -141,7 +141,7 @@ const searchPlayersOnMarketPaginated = async (params) => {
   return auctionInfo;
 };
 
-export const searchPlayersOnMarket = async (params, step, log) => {
+export const searchPlayersOnMarket = async (params, step) => {
   let auctionInfo = await searchPlayersOnMarketPaginated(params);
   if (!auctionInfo?.length) {
     return null;
@@ -159,7 +159,6 @@ export const searchPlayersOnMarket = async (params, step, log) => {
     return null;
   }
   const cheapestPlayers = sortedAuctionInfo.slice(0, MAX_PLAYERS_TO_BUY_IN_ONE_STEP);
-  cheapestPlayers.forEach(log);
   return {
     cheapestPlayers,
     auctionInfo
@@ -181,14 +180,13 @@ const buyPlayer = async (player) => {
   }
 };
 
-export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shouldSkipAfterPurchase, credits, boughtLog, notEnoughCreditsLog) => {
+export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shouldSkipAfterPurchase, credits) => {
   let boughtItems = [];
   let cantBuyInReasonOfCredits = 0;
   for (let i = 0; i < cheapestPlayers.length; i++) {
     const player = cheapestPlayers[i];
 
     if (player.buyNowPrice > credits ) {
-      notEnoughCreditsLog(player);
       cantBuyInReasonOfCredits++;
       continue;
     }
@@ -209,7 +207,6 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
     }
     await sleep(getDelayBeforeDefaultRequest());
     const boughtResult = await buyPlayer(player);
-    boughtLog(boughtResult);
     if (boughtResult) {
       credits = boughtResult.credits;
       boughtItems.push(boughtResult.auctionInfo);
@@ -225,14 +222,11 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
   };
 };
 
-export const sendItemsToTransferList = async (boughtItems, log) => {
+export const sendItemsToTransferList = async (boughtItems) => {
   const itemDataIds = boughtItems.map(item => item?.itemData?.id).filter(Boolean);
   if (itemDataIds?.length) {
     await sleep(getDelayBeforeMovingToTransferList());
-    const result = await sendItemsToTransferListRequest(itemDataIds);
-    itemDataIds.forEach(itemId => {
-      log((result?.itemData || []).find(resItem => resItem.id === itemId && resItem.success));
-    });
+    let result = await sendItemsToTransferListRequest(itemDataIds);
     return result?.itemData || [];
   }
 };
@@ -251,9 +245,8 @@ const calculateSellPrice = (buyNowPrice, minPrice, maxPrice) => {
 };
 
 export const sellPlayer = async (itemId, buyNowPrice, minPrice, maxPrice) => {
-  await sleep(getDelayBeforeDefaultRequest());
   const sellPrice = calculateSellPrice(buyNowPrice, minPrice, maxPrice);
-  const minSellPrice = 300; // сalculate min sell price
+  const minSellPrice = minPrice; // сalculate min sell price
   await sleep(getDelayBeforeDefaultRequest(true));
   const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
   if (result?.id) {
@@ -265,19 +258,22 @@ export const sellPlayer = async (itemId, buyNowPrice, minPrice, maxPrice) => {
   }
 };
 
-export const sellPlayers = async (boughtItems, log) => {
-  await sleep(getDelayBeforeDefaultRequest());
-  const { tradepile, freeSlotsInTransferList } = await syncTradepile();
-  if (!freeSlotsInTransferList) {
-    return;
-  }
-  for (let i = 0; i < boughtItems.length; i++) {
-    const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === boughtItems[i].itemData.id);
+export const sellPlayers = async (boughtItems, movedItems) => {
+  let boughtAndMovedToTransferListItems = boughtItems.filter(boughtItem => movedItems.find(movedItem => movedItem.id === boughtItem.itemData.id));
+  const sellResult = [];
+  const { tradepile } = await syncTradepile();
+  for (let i = 0; i < boughtAndMovedToTransferListItems.length; i++) {
+    const item = boughtAndMovedToTransferListItems[i];
+    const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);
     const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
     const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
+    console.log(item.itemData.id, itemInTradepile, marketDataMaxPrice, marketDataMinPrice);
     if (marketDataMinPrice && marketDataMaxPrice) {
-      const sellResult = await sellPlayer(boughtItems[i].itemData.id, boughtItems[i].buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
-      log(sellResult);
+      const sentToAucitonHouseItem = await sellPlayer(item.itemData.id, item.buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
+      if (sentToAucitonHouseItem) {
+        sellResult.push(sentToAucitonHouseItem);
+      }
     }
   }
+  return sellResult;
 };

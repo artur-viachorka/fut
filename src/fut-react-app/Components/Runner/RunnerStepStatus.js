@@ -71,7 +71,6 @@ const Logs = styled.ul`
     margin-bottom: 2px;
     display: flex;
     align-items: center;
-    text-transform: capitalize;
 
     > span {
       max-width: 90%;

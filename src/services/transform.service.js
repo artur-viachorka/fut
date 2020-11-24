@@ -79,6 +79,8 @@ export const transformSendItemDataFromFUT = (result) => ({
     id: item.id,
     pile: item.pile,
     success: item.success,
+    errorCode: item.errorCode,
+    reason: item.reason,
   })),
 });
 

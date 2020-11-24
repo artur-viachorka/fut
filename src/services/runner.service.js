@@ -11,12 +11,14 @@ import {
 import { CAPTCHA_ERROR_CODE } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
+import {
+  getLoggerForStep,
+} from './logger.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
-export const logRunnerSubject = new Subject();
 
 let runnerState = {
   credits: null,
@@ -104,7 +106,7 @@ export const executeStep = async (step, transferListLimit) => {
         resolve({ skip: true });
         return;
       }
-      const result = await stepTickHandler(step);
+      const result = await stepTickHandler(step, getLoggerForStep(step.id));
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
@@ -118,7 +120,7 @@ export const executeStep = async (step, transferListLimit) => {
   });
 };
 
-const stepTickHandler = async (step) => {
+const stepTickHandler = async (step, logger) => {
   try {
     let params = { ...step.filter.requestParams };
     [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
@@ -128,63 +130,45 @@ const stepTickHandler = async (step) => {
     if (runnerState.minBid) {
       params.micr = runnerState.minBid;
     }
+
     const searchResult = await searchPlayersOnMarket(
       params,
       step,
-      (player) => {
-        logRunnerSubject.next({
-          stepId: step.id,
-          text: `Player found${player?.buyNowPrice ? ` for ${player.buyNowPrice}` : ''}.`,
-        });
-      },
     );
     if (searchResult) {
+      logger.logSearchResult(searchResult.cheapestPlayers);
       const { credits: remainingCredits, tooLowCredits, boughtItems } = await buyPlayers(
         searchResult,
         params,
         step.shouldSkipAfterPurchase,
         runnerState.credits,
-        (bidResult) => logRunnerSubject.next({
-          stepId: step.id,
-          text: `Player ${!bidResult ? 'not' : ''} bought${bidResult?.auctionInfo?.buyNowPrice ? ` for ${bidResult?.auctionInfo?.buyNowPrice}` : ''}.`,
-        }),
-        (player) => {
-          logRunnerSubject.next({
-            stepId: step.id,
-            text: `Not enough credits to buy player ${player.buyNowPrice ? ` for ${player.buyNowPrice}` : ''}.`,
-          });
-        }
       );
-      runnerState.credits = remainingCredits || runnerState.credits;
+      logger.logBoughtResult(boughtItems);
+      runnerState.credits = remainingCredits != null ? remainingCredits : runnerState.credits;
       if (tooLowCredits) {
+        logger.logNotEnoughCreditsResult();
         return { skip: true };
       }
       if (boughtItems?.length) {
+        if (!runnerState.freeSlotsInTransferList) {
+          await syncTradepile();
+        }
         if (runnerState.freeSlotsInTransferList) {
-          const sentResult = await sendItemsToTransferList(
+          const moveToTransferListResult = await sendItemsToTransferList(
             boughtItems,
-            (movingResult) => logRunnerSubject.next({
-              stepId: step.id,
-              text: movingResult ? 'Player was moved to transfer list.' : 'Cant move player to transfer list.'
-            }),
           );
-          if (sentResult.length) {
-            runnerState.freeSlotsInTransferList -= sentResult.filter(item => item.success).length;
+          logger.logMoveToTransferListResult(moveToTransferListResult);
+          const movedItems = moveToTransferListResult.filter(item => item.success);
+          if (movedItems.length) {
+            runnerState.freeSlotsInTransferList -= movedItems.length;
+            if (step.shouldSellOnMarket) {
+              const sellResult = await sellPlayers(boughtItems, movedItems);
+              logger.logSentToAuctionHouseResult(sellResult);
+            }
           }
         }
         if (step.shouldSkipAfterPurchase) {
           return { skip: true };
-        }
-        if (step.shouldSellOnMarket) {
-          await sellPlayers(
-            boughtItems,
-            (isSentToAuctionHouse) => {
-              logRunnerSubject.next({
-                stepId: step.id,
-                text: `Player ${!isSentToAuctionHouse ? 'wasnt' : 'was'} moved to auction house.`,
-              });
-            }
-          );
         }
       }
     }
