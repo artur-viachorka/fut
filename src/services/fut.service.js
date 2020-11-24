@@ -1,5 +1,4 @@
 import { first } from 'rxjs/operators';
-import { convertSecondsToMs } from './helper.service';
 import { getRandomNumberInRange, sleep, getSortHandler } from './helper.service';
 import { pauseRunnerSubject, stopRunnerSubject, syncTradepile } from './runner.service';
 import {
@@ -31,9 +30,8 @@ import {
 
 import { saveToStorage, getFromStorage } from './storage.service';
 
-export const getSearchRequestDelay = (inMs) => {
-  const delay = getRandomNumberInRange(SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.from, SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to);
-  return inMs ? convertSecondsToMs(delay) : delay;
+export const getSearchRequestDelay = () => {
+  return getRandomNumberInRange(SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.from, SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to);
 };
 
 const getDelayBeforeMovingToTransferList = () => {
@@ -193,15 +191,19 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
 
     if (!isPageLast(player.pageNumber, auctionInfo.length)) {
       await sleep(getSearchRequestDelayBetweenPages());
-      await searchOnTransfermarketRequest({
+      const playersOnPage = await searchOnTransfermarketRequest({
         ...params,
         start: player.pageNumber * SEARCH_ITEMS_PAGE_SIZE,
         micr: 150,
       });
-      await sleep(getDelayBeforeDefaultRequest());
-      const liteData = await getLiteRequest([player.tradeId]);
-      const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === player.tradeId && item.tradeState === FUT.TRADE_STATE.active);
-      if (!activeTrade) {
+      if ((playersOnPage?.auctionInfo || []).find(auctionItem => auctionItem.tradeId === player.tradeId)) {
+        await sleep(getDelayBeforeDefaultRequest());
+        const liteData = await getLiteRequest([player.tradeId]);
+        const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === player.tradeId && item.tradeState === FUT.TRADE_STATE.active);
+        if (!activeTrade) {
+          continue;
+        }
+      } else {
         continue;
       }
     }
@@ -267,7 +269,6 @@ export const sellPlayers = async (boughtItems, movedItems) => {
     const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);
     const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
     const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
-    console.log(item.itemData.id, itemInTradepile, marketDataMaxPrice, marketDataMinPrice);
     if (marketDataMinPrice && marketDataMaxPrice) {
       const sentToAucitonHouseItem = await sellPlayer(item.itemData.id, item.buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
       if (sentToAucitonHouseItem) {

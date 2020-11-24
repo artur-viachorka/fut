@@ -14,7 +14,7 @@ const Container = styled.div`
   position: relative;
   flex-direction: row;
   width: 100%;
-  height: 130px;
+  height: 160px;
   min-width: 500px;
   margin-bottom: 10px;
   border-radius: 3px;
@@ -76,7 +76,7 @@ const Settings = styled.div`
     display: flex;
     justify-content: space-between;
     margin-bottom: 5px;
-    font-size: 10px;
+    font-size: 12px;
     
     > span {
       &:first-child {

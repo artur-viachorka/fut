@@ -25,6 +25,7 @@ import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT } from '.
 import { getTransferListLimit, saveTransferListLimit } from '../../../services/fut.service';
 import { parseStringToInt } from '../../../services/string.serivce';
 import { openUTNotification } from '../../../services/notification.service';
+import { getLoggerForStep } from '../../../services/logger.service';
 
 import CountdownTimer from '../CountdownTimer';
 import NumberField from '../Fields/NumberField';
@@ -165,12 +166,13 @@ const Runner = () => {
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
+        const logger = getLoggerForStep(step.id);
         setRunningStep(step);
         updateRunningScenarioDuration(steps.slice(i), requestInterval);
 
         if (step.workingSeconds > requestInterval) {
           setRunningStatus(RUNNER_STATUS.WORKING);
-          const executionResult = await executeStep(step, transferLimit);
+          const executionResult = await executeStep(step, transferLimit, logger);
           if (executionResult?.skip) {
             continue;
           }
@@ -182,6 +184,7 @@ const Runner = () => {
           setRunningStatus(RUNNER_STATUS.IDLE);
           await executeStepIdle(step);
         }
+        logger.logFinishedStep();
       }
       stop();
     } catch (e) {

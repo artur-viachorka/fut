@@ -78,6 +78,13 @@ const logSentToAuctionHouseResult = (stepId) => (movedToAuctionHouse) => {
   }
 };
 
+const logFinishedStep = (stepId) => () => {
+  logRunnerSubject.next({
+    stepId,
+    text: 'Step work finished.',
+  });
+};
+
 export const getLoggerForStep = (stepId) => {
   return {
     logSearchResult: logFoundResult(stepId),
@@ -85,5 +92,6 @@ export const getLoggerForStep = (stepId) => {
     logNotEnoughCreditsResult: logNotEnoughCreditsResult(stepId),
     logMoveToTransferListResult: logMoveToTransferListResult(stepId),
     logSentToAuctionHouseResult: logSentToAuctionHouseResult(stepId),
+    logFinishedStep: logFinishedStep(stepId),
   };
 };

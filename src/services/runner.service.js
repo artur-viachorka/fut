@@ -11,9 +11,7 @@ import {
 import { CAPTCHA_ERROR_CODE } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
-import {
-  getLoggerForStep,
-} from './logger.service';
+import { sleep } from './helper.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -61,7 +59,7 @@ export const RUNNER_STATUS = {
   STOP: 'stop',
 };
 
-export const executeStep = async (step, transferListLimit) => {
+export const executeStep = async (step, transferListLimit, logger) => {
   if (runnerState.transferListLimit !== transferListLimit) {
     runnerState.transferListLimit = transferListLimit;
     await syncTradepile(transferListLimit);
@@ -106,13 +104,15 @@ export const executeStep = async (step, transferListLimit) => {
         resolve({ skip: true });
         return;
       }
-      const result = await stepTickHandler(step, getLoggerForStep(step.id));
+      const result = await stepTickHandler(step, logger);
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
       }
       if (result?.success) {
-        return setTimeout(work, getSearchRequestDelay(true));
+        await sleep(getSearchRequestDelay());
+        work();
+        return;
       }
       resolve(result);
     };
