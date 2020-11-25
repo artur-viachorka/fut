@@ -21,6 +21,7 @@ export const addNewStepToScenario = (scenario, filter) => {
   const newStep = {
     id: uuid(),
     filter,
+    workingMinutes: DEFAULT_WORKING_MINUTES,
   };
   return {
     ...scenario,
