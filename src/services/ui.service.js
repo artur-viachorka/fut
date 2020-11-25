@@ -2,6 +2,7 @@ import { sleep } from './helper.service';
 import { openModalSubject } from '../contentScript';
 import { FUT, MODALS } from '../constants';
 import { syncTransferListItems } from './transferList.service';
+import { getAllPlayers } from './players.service';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -59,6 +60,11 @@ const createActionButton = (className, text, handler) => {
 
 const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Manage Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
 const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
+const getSyncPlayersButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Sync Players', async () => {
+  setLoaderVisibility(true);
+  await getAllPlayers(true);
+  setLoaderVisibility(false);
+});
 const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync Transfers', async () => {
   setLoaderVisibility(true);
   await syncTransferListItems(true);
@@ -75,6 +81,7 @@ export const initFUTAdditionalActions = () => {
       getSyncTransferseButton(),
       getOpenConfigureScenariosButton(),
       getOpenRunnerButton(),
+      getSyncPlayersButton(),
     );
   $(FUT.PAGE_SELECTORS.appHeader).append(container);
 };

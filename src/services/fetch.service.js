@@ -12,6 +12,7 @@ import {
   transformToPriceLimitsParams,
   transformAuctionHouseBody,
   transformAuctionHouseFromFUT,
+  transformPlayersFromFUT,
 } from './transform.service';
 
 const executeOnPageSpace = (code) => {
@@ -30,7 +31,7 @@ const replaceUrlParams = (url, params) => {
   return url;
 };
 
-export const sendRequest = async ({ url, params, urlParams, body, method = 'GET' }) => {
+export const sendRequest = async ({ host, url, params, urlParams, body, method = 'GET', credentials, skipXUtSid }) => {
   const userId = executeOnPageSpace('window.services.Authentication._sessionUtas.id');
   if (!userId) {
     return;
@@ -38,8 +39,7 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
   if (urlParams) {
     url = replaceUrlParams(url, urlParams);
   }
-  url = new URL(HOST + url);
-
+  url = new URL((host || HOST) + url);
   if (params) {
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
   }
@@ -47,14 +47,23 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
     body = JSON.stringify(body);
   }
 
-  const response = await fetch(url.href, {
+  const requestConfig = {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'X-UT-SID': userId,
     },
     body,
-  });
+  };
+
+  if (credentials) {
+    requestConfig.credentials = credentials;
+  }
+
+  if (!skipXUtSid) {
+    requestConfig.headers['X-UT-SID'] = userId;
+  }
+
+  const response = await fetch(url.href, requestConfig);
   if (!response?.ok) {
     throw response;
   }
@@ -180,6 +189,30 @@ export const getPriceLimitsRequest = async (itemId) => {
     return result ? transformPriceLimitsFromFUT(result) : result;
   } catch (e) {
     console.error('Error while getting price limits', e);
+    throw e;
+  }
+};
+
+export const getPlayers = async () => {
+  try {
+    const appGuid = executeOnPageSpace('window.APP_GUID');
+    if (!appGuid) {
+      return null;
+    }
+    const result = await sendRequest({
+      url: ROUTES.PLAYERS.url,
+      host: ROUTES.PLAYERS.host,
+      method: ROUTES.PLAYERS.method,
+      credentials: 'same-origin',
+      skipXUtSid: true,
+      urlParams: [{ name: 'appGuid', value: appGuid }],
+      params: {
+        _: 21046,
+      },
+    });
+    return result ? transformPlayersFromFUT(result) : result;
+  } catch (e) {
+    console.error('Error while getting players', e);
     throw e;
   }
 };

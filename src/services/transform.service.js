@@ -108,3 +108,8 @@ export const transformAuctionHouseBody = (itemId, startingBid, buyNowPrice, dura
 export const transformAuctionHouseFromFUT = (result) => ({
   id: result.id
 });
+
+export const transformPlayersFromFUT = (result) => ({
+  legendsPlayers: result.LegendsPlayers,
+  players: result.Players,
+});

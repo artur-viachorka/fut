@@ -3,12 +3,13 @@ import { openUTNotification } from './notification.service';
 import { convertMinutesToSeconds } from './helper.service';
 import { editScenarioSubject } from '../contentScript';
 import { saveToStorage, getFromStorage } from './storage.service';
-import { MAX_SCENARIO_DURATION_IN_HOURS } from '../constants';
+import { MAX_SCENARIO_DURATION_IN_HOURS, DEFAULT_WORKING_MINUTES } from '../constants';
 
 export const createNewScenario = (filter) => {
   const newStep = {
     id: uuid(),
     filter,
+    workingMinutes: DEFAULT_WORKING_MINUTES,
   };
   return {
     name: 'New Scenario',

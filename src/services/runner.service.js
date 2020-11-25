@@ -176,7 +176,7 @@ const stepTickHandler = async (step, logger) => {
   } catch (e) {
     console.error('Error in runner', e);
     if (e.status === CAPTCHA_ERROR_CODE) {
-      openUTNotification({ text: 'Captcha needed. Reload page and enter captcha.', error: true });
+      openUTNotification({ text: 'Captcha needed. Reload page and enter captcha.', error: true, infinite: true });
       return { stop: true };
     }
     openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true });

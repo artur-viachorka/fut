@@ -33,7 +33,6 @@ export const sendRequest = async ({ url, params, urlParams, body, method = 'GET'
   if (body) {
     body = JSON.stringify(body);
   }
-  console.log(url.href, body, method);
   return mockedResult;
   const response = await fetch(url.href, {
     method,

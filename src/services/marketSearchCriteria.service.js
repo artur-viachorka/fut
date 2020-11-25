@@ -3,24 +3,16 @@ import { reject, equals, isEmpty, dissoc } from 'ramda';
 import { addFilterSubject } from '../contentScript';
 import { FUT } from '../constants';
 import { match, parseStringToInt } from './string.serivce';
-import { debounce, uuid } from './helper.service';
 import { openUTNotification } from './notification.service';
+import { uuid } from './helper.service';
 import { saveToStorage, getFromStorage } from './storage.service';
-import PLAYERS from '../data/players.json';
+import { waitUntilElementExists } from './ui.service';
+import { getPlayerId } from './players.service';
 
-export const searchPlayers = (name) => {
-  name = name.toLowerCase();
-  const foundPlayers = PLAYERS.Players.filter(player => (player.l || '').toLowerCase().includes(name) || (player.f || '').toLowerCase().includes(name) || (player.c || '').toLowerCase().includes(name));
-  const foundLegends = PLAYERS.LegendsPlayers.filter(player => (player.l || '').toLowerCase().includes(name) || (player.f || '').toLowerCase().includes(name) || (player.c || '').toLowerCase().includes(name));
-  return [...foundLegends, ...foundPlayers]
-    .sort((a, b) => b.r - a.r)
-    .slice(0, 50);
-};
-
-const getPlayerInfo = () => {
-  const playerInput = $(FUT.PAGE_SELECTORS.customPlayerInfoBlock);
-  const [playerName, playerRating] = playerInput.val().split(' / ');
-  const id = playerInput.attr('data-id');
+const getPlayerInfo = async () => {
+  const playerInput = $(FUT.PAGE_SELECTORS.selectPlayerContainer);
+  const [playerName, playerRating] = playerInput.attr(FUT.CUSTOM_ATTRS.selectedPlayer).split('/');
+  const id = await getPlayerId(playerName, playerRating);
   return {
     value: id || null,
     title: playerName,
@@ -111,55 +103,27 @@ const getMaxBuyNow = () => {
   return value ? parseStringToInt(value) : null;
 };
 
-export const copySearchInput = async () => {
-  let playerSearchContainer = $(FUT.PAGE_SELECTORS.selectPlayerContainer).clone();
-  let searchInput = playerSearchContainer.find(FUT.PAGE_SELECTORS.selectPlayerInput);
-  searchInput.addClass('fut-player-name');
-  playerSearchContainer.find(FUT.PAGE_SELECTORS.clearPlayerButton).on('click', () => {
-    if (playerSearchContainer.hasClass(FUT.CLASSES.inputHasSelection)) {
-      searchInput.attr('data-id', null);
-      searchInput.val('');
-      playerSearchContainer.removeClass(FUT.CLASSES.inputHasSelection);
-    }
-  });
-  searchInput.attr('placeholder', 'Search player in FUT');
-  const onSearchInputChanged = debounce((e) => {
-    const searchText = $(e.target).val();
-    const playerResultsListContainer = playerSearchContainer.find(FUT.PAGE_SELECTORS.playerResultsListContainer);
-    const playerResultsList = playerSearchContainer.find(FUT.PAGE_SELECTORS.playerResultsList);
-
-    searchInput.attr('data-id', null);
-
-    playerResultsListContainer.css('display', 'none');
-    playerResultsList.empty();
-    playerSearchContainer.removeClass(FUT.CLASSES.inputHasSelection);
-
-    if (!searchText) {
-      return;
-    }
-
-    const players = searchPlayers(searchText);
-
-    if (players.length) {
-      playerResultsListContainer.css('display', 'block').css('z-index', '999');
-      players.forEach(player => {
-        const playerTitle = player.c || `${player.f} ${player.l}`;
-        const playerButton = $(`<button><span class="btn-text">${playerTitle}</span><span class="btn-subtext">${player.r}</span></button>`)
-          .on('mouseenter', (e) => $(e.target).addClass('hover'))
-          .on('mouseleave', (e) => $(e.target).removeClass('hover'))
-          .on('click', () => {
-            playerResultsListContainer.css('display', 'none');
-            playerSearchContainer.addClass(FUT.CLASSES.inputHasSelection);
-            playerResultsList.empty();
-            searchInput.val(`${playerTitle} / ${player.r}`);
-            searchInput.attr('data-id', player.id);
-          });
-        playerResultsList.append(playerButton);
-      });
-    }
-  }, 0.5);
-  searchInput.on('input', onSearchInputChanged);
-  $(FUT.PAGE_SELECTORS.itemSearchView).prepend(playerSearchContainer);
+export const overridePlayerSearch = async () => {
+  waitUntilElementExists(FUT.PAGE_SELECTORS.playerResultsList)
+    .then(() => {
+      $(FUT.PAGE_SELECTORS.selectPlayerContainer)
+        .find(FUT.PAGE_SELECTORS.clearPlayerButton)
+        .on('click', () => $(FUT.PAGE_SELECTORS.selectPlayerContainer).removeAttr(FUT.CUSTOM_ATTRS.selectedPlayer));
+      $(FUT.PAGE_SELECTORS.selectPlayerInput)
+        .on('input', function (e) {
+          if ($(e.target).val() == '') {
+            $(FUT.PAGE_SELECTORS.selectPlayerContainer).removeAttr(FUT.CUSTOM_ATTRS.selectedPlayer);
+          }
+        });
+      $(FUT.PAGE_SELECTORS.playerResultsList)
+        .on('click', function(e) {
+          const target = $(e.target);
+          const button = target.is('span') ? target.parent() : target;
+          const name = button.find('.btn-text').text();
+          const rating = button.find('.btn-subtext').text();
+          $(FUT.PAGE_SELECTORS.selectPlayerContainer).attr(FUT.CUSTOM_ATTRS.selectedPlayer, `${name}/${rating}`);
+        });
+    });
 };
 
 export const addSaveFilterButton = () => {
@@ -173,8 +137,8 @@ export const addSaveFilterButton = () => {
   $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
-const getMarketSearchCriteria = () => {
-  const playerInfo = getPlayerInfo();
+const getMarketSearchCriteria = async () => {
+  const playerInfo = await getPlayerInfo();
   const quality = getQuality();
   const position = getPosition();
   const rarity = getRarity();
@@ -242,7 +206,7 @@ const getMarketSearchCriteria = () => {
 
 const saveSearchFilterToStorage = async () => {
   try {
-    const newFilter = getMarketSearchCriteria();
+    const newFilter = await getMarketSearchCriteria();
     if (newFilter.noChanges) {
       openUTNotification({ text: 'Nothing to add. Select something.', error: true });
       return;
@@ -318,7 +282,7 @@ export const editSearchFilterMaxBuy = async (filterId, newMaxBuy) => {
 
 export const initSearchMarketPage = () => {
   if (!$(`.${FUT.CUSTOM_CLASSES.addFilterButton}`).length) {
-    copySearchInput();
+    overridePlayerSearch();
     addSaveFilterButton();
   }
 };

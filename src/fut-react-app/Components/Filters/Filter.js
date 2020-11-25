@@ -61,6 +61,7 @@ const Main = styled.div`
   flex: 1;
   padding: 5px;
   height: 100%;
+  position: relative;
 `;
 
 const FilterActions = styled.div`
@@ -105,6 +106,19 @@ const InputContainer = styled.div`
   margin-top: 5px;
 `;
 
+const Expired = styled.div`
+  position: absolute;
+  inset: 0px;
+  display: flex;
+  font-size: 11px;
+  z-index: 3;
+  font-weight: bold;
+  color: #892a2a;
+  background: rgb(0 0 0 / 89%);
+  justify-content: center;
+  align-items: center;
+`;
+
 const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy, isReadOnly }) => {
   const handleInputChange = (value) => {
     if (onEditMaxBuy) {
@@ -122,6 +136,7 @@ const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy
         style={{ opacity: isDragging ? 0 : 1 }}
     >
       <Main>
+        {filter.isExpired && <Expired>Filter is expired. Please remove it.</Expired>}
         {(filter.meta.position || filter.meta.player) && (
           <FilterHeader>
             {filter.meta.player && <span>{`${filter.meta.player.name || ''} ${filter.meta.player.rating || ''}`}</span>}
