@@ -20,6 +20,10 @@ const Container = styled.div`
   text-transform: uppercase;
   margin-bottom: 10px;
   background: rgb(20, 20, 22);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 const FilterHeader = styled.header`
