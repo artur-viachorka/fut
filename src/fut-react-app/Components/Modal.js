@@ -39,6 +39,7 @@ const Header = styled.header`
   color: white;
   font-size: 17px;
   background: rgb(34 39 66 / 72%);
+  border-bottom: 1px solid #7e43f5;
 `;
 
 const Tabs = styled.div`
@@ -58,12 +59,27 @@ const TabItem = styled.span`
   border-top-right-radius: 5px;
   margin-right: 10px;
   transition: all 0.5s ease-out 0s;
-  background: ${props => props.isActive ? '#7e43f5' : '#0e101e'};
+  border: 1px solid ${props => props.isActive ? '#7e43f5' : 'transparent'};
+  border-bottom: 0;
+  background: #0f1220;
+  position: relative;
 
-  &:hover {
-    color: ${props => props.isActive ? 'white' : '#7e43f5'};
-    cursor: pointer;
-  }
+  ${props => props.isActive ? `
+    &::after {
+      content: '';
+      position: absolute;
+      height: 1px;
+      background: #0f1220;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+    }
+  ` : `
+    &:hover {
+      color: '#7e43f5';
+      cursor: 'pointer';
+    }
+  `}
 `;
 
 const CloseIconWrapper = styled.span`
