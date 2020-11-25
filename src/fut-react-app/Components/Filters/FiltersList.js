@@ -29,6 +29,7 @@ const Container = styled.div`
   height: 100%;
   padding: 10px;
   min-width: 320px;
+  overflow: auto;
 `;
 
 const FiltersList = () => {

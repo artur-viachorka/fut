@@ -57,7 +57,7 @@ const createActionButton = (className, text, handler) => {
   return newButton;
 };
 
-const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Set Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
+const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Manage Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
 const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
 const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync Transfers', async () => {
   setLoaderVisibility(true);

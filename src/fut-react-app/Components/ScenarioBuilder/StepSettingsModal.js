@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { IoIosTimer, IoIosStarOutline } from 'react-icons/io';
 
-import Modal from '../Modals/Modal';
+import Modal from '../Modal';
 import NumberField from '../Fields/NumberField';
 import CheckboxField from '../Fields/CheckboxField';
 import { STEP_INFO } from '../../../constants';

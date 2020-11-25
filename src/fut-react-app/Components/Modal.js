@@ -22,7 +22,6 @@ const Container = styled.div`
   height: ${props => props.height || '95%'};
   min-width: ${props => props.minWidth || '600px'};
   min-height: ${props => props.minHeight || '600px'};
-  background-color: #0e0f1d;
   background-size: cover;
   display: flex;
   flex-direction: column;
@@ -32,38 +31,86 @@ const Container = styled.div`
 
 const Header = styled.header`
   height: 50px;
-  padding: 10px 20px;
+  padding: 0 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   color: white;
   font-size: 17px;
-  border-bottom: 1px solid #414141;
+  background: rgb(34 39 66 / 72%);
+`;
+
+const Tabs = styled.div`
+  height: 80%;
+  display: flex;
+  flex-direction: row;
+  align-self: flex-end;
+`;
+
+const TabItem = styled.span`
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  padding: 10px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  margin-right: 10px;
+  transition: all 0.5s ease-out 0s;
+  background: ${props => props.isActive ? '#7e43f5' : '#0e101e'};
+
+  &:hover {
+    color: ${props => props.isActive ? 'white' : '#7e43f5'};
+    cursor: pointer;
+  }
 `;
 
 const CloseIconWrapper = styled.span`
   cursor: pointer;
 `;
 
-const Modal = ({ children, onClose, title, width, height, minWidth, minHeight }) => {
+const Main = styled.div`
+  background: #0e111f;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+`;
+
+const AppModal = ({ children, onClose, width, height, minWidth, minHeight, tabs, activeTabId, title }) => {
   return (
     <Wrapper onClick={onClose}>
       <Container width={width} height={height} minWidth={minWidth} minHeight={minHeight} onClick={(e) => e.stopPropagation()}>
         <Header>
-          <span>{title}</span>
+          {tabs && (
+            <Tabs>
+              {(tabs || []).map(tab => (
+                <TabItem isActive={tab.id === activeTabId} key={tab.id} onClick={tab.onSelect}>{tab.title}</TabItem>
+              ))}
+            </Tabs>
+          )}
+          {title && <span>{title}</span>}
           <CloseIconWrapper>
             <AiFillCloseCircle onClick={onClose}/>
           </CloseIconWrapper>
         </Header>
-        {children}
+        <Main>
+          {children}
+        </Main>
       </Container>
     </Wrapper>
   );
 };
 
-Modal.propTypes = {
-  title: PropTypes.string.isRequired,
+AppModal.propTypes = {
+  activeTabId: PropTypes.string,
+  tabs: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    title: PropTypes.string.isRequired,
+  })),
+  title: PropTypes.string,
   children: PropTypes.node,
   onClose: PropTypes.func.isRequired,
   width: PropTypes.string,
@@ -72,4 +119,4 @@ Modal.propTypes = {
   minHeight: PropTypes.string,
 };
 
-export default Modal;
+export default AppModal;

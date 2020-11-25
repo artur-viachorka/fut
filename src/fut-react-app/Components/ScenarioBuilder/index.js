@@ -1,11 +1,9 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
 import FiltersList from '../Filters/FiltersList';
 import ScenariosList from '../Scenarios/ScenariosList';
-import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
-import Modal from './Modal';
+import ScenarioBuilder from './ScenarioBuilder';
 
 const Container = styled.div`
   display: flex;
@@ -18,7 +16,7 @@ const Left = styled.div`
   height: 100%;
   min-width: 330px;
   border-right: 1px solid #414141;
-  overflow-y: auto;
+  overflow: hidden;
 `;
 
 const Right = styled.div`
@@ -36,26 +34,20 @@ const RightHeader = styled.div`
   border-bottom: 1px solid #414141;
 `;
 
-const ConstructorModal = ({ onClose }) => {
+const ScenarioBuilderContainer = () => {
   return (
-    <Modal onClose={onClose} title="Manage Scenarios">
-      <Container>
-        <Left>
-          <FiltersList/>
-        </Left>
-        <Right>
-          <RightHeader>
-            <ScenariosList/>
-          </RightHeader>
-          <ScenarioBuilder/>
-        </Right>
-      </Container>
-    </Modal>
+    <Container>
+      <Left>
+        <FiltersList/>
+      </Left>
+      <Right>
+        <RightHeader>
+          <ScenariosList/>
+        </RightHeader>
+        <ScenarioBuilder/>
+      </Right>
+    </Container>
   );
 };
 
-ConstructorModal.propTypes = {
-  onClose: PropTypes.func.isRequired,
-};
-
-export default ConstructorModal;
+export default ScenarioBuilderContainer;
