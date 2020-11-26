@@ -53,6 +53,7 @@ const StepSettingsModal = ({ step, isReadOnly, onClose, onSave }) => {
   const [workingMinutes, setWorkingMinutes] = useState(step.workingMinutes);
   const [rating, setRating] = useState(step.rating);
   const [shouldSellOnMarket, setShouldSellOnMarket] = useState(step.shouldSellOnMarket);
+  const [leftInUnassign, setLeftInUnassign] = useState(step.leftInUnassign);
   const [shouldSkipAfterPurchase, setShouldSkipAfterPurchase] = useState(step.shouldSkipAfterPurchase);
 
   const save = () => {
@@ -61,6 +62,7 @@ const StepSettingsModal = ({ step, isReadOnly, onClose, onSave }) => {
       workingMinutes,
       rating,
       shouldSellOnMarket,
+      leftInUnassign,
       shouldSkipAfterPurchase,
     });
   };
@@ -71,7 +73,23 @@ const StepSettingsModal = ({ step, isReadOnly, onClose, onSave }) => {
         <CheckboxField
             label="Automatically Sell on Market"
             checked={!!shouldSellOnMarket}
-            onChange={setShouldSellOnMarket}
+            onChange={(value) => {
+              setShouldSellOnMarket(value);
+              if (value) {
+                setLeftInUnassign(false);
+              }
+            }}
+            isReadOnly={isReadOnly}
+        />
+        <CheckboxField
+            label="Left in unassign"
+            checked={!!leftInUnassign}
+            onChange={(value) => {
+              setLeftInUnassign(value);
+              if (value) {
+                setShouldSellOnMarket(false);
+              }
+            }}
             isReadOnly={isReadOnly}
         />
         <CheckboxField

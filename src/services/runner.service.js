@@ -8,7 +8,7 @@ import {
   getSearchRequestDelay,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
-import { CAPTCHA_ERROR_CODE } from '../constants';
+import { CAPTCHA_ERROR_CODE, RUNNER_STATUS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
 import { sleep } from './helper.service';
@@ -43,21 +43,16 @@ export const syncTradepile = async (skipItems) => {
   const tradepile = await syncTransferListItems(false, skipItems);
   if (!tradepile) {
     runnerState.freeSlotsInTransferList = null;
+    runnerState.credits = null;
+  } else {
+    runnerState.credits = tradepile.credits;
+    const itemsInTransferList = tradepile.auctionInfo?.length || runnerState.transferListLimit;
+    runnerState.freeSlotsInTransferList = runnerState.transferListLimit - itemsInTransferList;
   }
-  runnerState.credits = tradepile.credits;
-  const itemsInTransferList = tradepile.auctionInfo?.length || runnerState.transferListLimit;
-  runnerState.freeSlotsInTransferList = runnerState.transferListLimit - itemsInTransferList;
   return {
     freeSlotsInTransferList: runnerState.freeSlotsInTransferList,
     tradepile,
   };
-};
-
-export const RUNNER_STATUS = {
-  WORKING: 'working',
-  IDLE: 'idle',
-  PAUSE: 'pause',
-  STOP: 'stop',
 };
 
 export const executeStep = async (step, transferListLimit, logger) => {
@@ -151,21 +146,24 @@ const stepTickHandler = async (step, logger) => {
         return { skip: true };
       }
       if (boughtItems?.length) {
+        if (step.leftInUnassign) {
+          logger.logLeftInUnassign(boughtItems);
+          return { success: true };
+        }
         if (!runnerState.freeSlotsInTransferList) {
           await syncTradepile(boughtItems);
+          return { success: true };
         }
-        if (runnerState.freeSlotsInTransferList) {
-          const moveToTransferListResult = await sendItemsToTransferList(
-            boughtItems,
-          );
-          logger.logMoveToTransferListResult(moveToTransferListResult);
-          const movedItems = moveToTransferListResult.filter(item => item.success);
-          if (movedItems.length) {
-            runnerState.freeSlotsInTransferList -= movedItems.length;
-            if (step.shouldSellOnMarket) {
-              const sellResult = await sellPlayers(boughtItems, movedItems);
-              logger.logSentToAuctionHouseResult(sellResult);
-            }
+        const moveToTransferListResult = await sendItemsToTransferList(
+          boughtItems,
+        );
+        logger.logMoveToTransferListResult(moveToTransferListResult);
+        const movedItems = moveToTransferListResult.filter(item => item.success);
+        if (movedItems.length) {
+          runnerState.freeSlotsInTransferList -= movedItems.length;
+          if (step.shouldSellOnMarket) {
+            const sellResult = await sellPlayers(boughtItems, movedItems);
+            logger.logSentToAuctionHouseResult(sellResult);
           }
         }
         if (step.shouldSkipAfterPurchase) {

@@ -156,6 +156,10 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             <Checkmark isActive={step.shouldSellOnMarket}>{step.shouldSellOnMarket ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
           </div>
           <div>
+            <span>Left in unassign</span>
+            <Checkmark isActive={step.leftInUnassign}>{step.leftInUnassign ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
+          </div>
+          <div>
             <span>Skip after purchase</span>
             <Checkmark isActive={step.shouldSkipAfterPurchase}>{step.shouldSkipAfterPurchase ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
           </div>

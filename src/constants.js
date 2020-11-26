@@ -150,6 +150,13 @@ export const MODALS = {
   RUNNER: 'runner',
 };
 
+export const RUNNER_STATUS = {
+  WORKING: 'working',
+  IDLE: 'idle',
+  PAUSE: 'pause',
+  STOP: 'stop',
+};
+
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
   from: 3.4,
   to: 5,

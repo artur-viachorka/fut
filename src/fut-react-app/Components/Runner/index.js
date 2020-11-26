@@ -17,11 +17,10 @@ import {
   finishStepWork,
   finishStepIdle,
   stopStep,
-  RUNNER_STATUS,
 } from '../../../services/runner.service';
 import { logRunnerSubject } from '../../../services/logger.service';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
-import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT } from '../../../constants';
+import { SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS, TRANSFER_LIST_LIMIT, RUNNER_STATUS } from '../../../constants';
 import { getTransferListLimit, saveTransferListLimit } from '../../../services/fut.service';
 import { parseStringToInt } from '../../../services/string.serivce';
 import { openUTNotification } from '../../../services/notification.service';

@@ -78,6 +78,14 @@ const logSentToAuctionHouseResult = (stepId) => (movedToAuctionHouse) => {
   }
 };
 
+const logLeftInUnassign = (stepId) => (movedToUnassign) => {
+  let text = `Moved ${movedToUnassign.length} player(s) in unassign list.`;
+  logRunnerSubject.next({
+    stepId,
+    text,
+  });
+};
+
 const logFinishedStep = (stepId) => () => {
   logRunnerSubject.next({
     stepId,
@@ -93,5 +101,6 @@ export const getLoggerForStep = (stepId) => {
     logMoveToTransferListResult: logMoveToTransferListResult(stepId),
     logSentToAuctionHouseResult: logSentToAuctionHouseResult(stepId),
     logFinishedStep: logFinishedStep(stepId),
+    logLeftInUnassign: logLeftInUnassign(stepId),
   };
 };
