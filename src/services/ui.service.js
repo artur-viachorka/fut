@@ -1,8 +1,5 @@
 import { sleep } from './helper.service';
-import { openModalSubject } from '../contentScript';
-import { FUT, MODALS } from '../constants';
-import { syncTransferListItems } from './transferList.service';
-import { getAllPlayers } from './players.service';
+import { FUT, REACT_CONTAINER_ID } from '../constants';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -39,7 +36,7 @@ export const setMutationObserver = (observeSelector, mutationType, configs) => {
   });
 };
 
-const setLoaderVisibility = (show) => {
+export const setLoaderVisibility = (show) => {
   if (show) {
     $('.ut-click-shield').addClass('showing');
     $('.ut-click-shield > .loaderIcon').css('display', 'block');
@@ -49,41 +46,8 @@ const setLoaderVisibility = (show) => {
   }
 };
 
-const createActionButton = (className, text, handler) => {
-  const newButton = $('<button/>')
-    .text(text)
-    .attr('title', text)
-    .addClass(className)
-    .on('click', handler);
-  return newButton;
-};
-
 export const getCreditsFromUi = () => $(FUT.PAGE_SELECTORS.credits).text();
 
-const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Manage Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
-const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
-const getSyncPlayersButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Sync Players', async () => {
-  setLoaderVisibility(true);
-  await getAllPlayers(true);
-  setLoaderVisibility(false);
-});
-const getSyncTransferseButton = () => createActionButton(FUT.CUSTOM_CLASSES.syncTransfersButton, 'Sync Transfers', async () => {
-  setLoaderVisibility(true);
-  await syncTransferListItems(true);
-  setLoaderVisibility(false);
-});
-
-export const initFUTAdditionalActions = () => {
-  if ($(`.${FUT.CUSTOM_CLASSES.headerActionsContainer}`).length) {
-    return;
-  }
-  const container = $('<div/>')
-    .addClass(FUT.CUSTOM_CLASSES.headerActionsContainer)
-    .append(
-      getSyncTransferseButton(),
-      getOpenConfigureScenariosButton(),
-      getOpenRunnerButton(),
-      getSyncPlayersButton(),
-    );
-  $(FUT.PAGE_SELECTORS.appHeader).append(container);
+export const initFUTApp = () => {
+  $(`#${REACT_CONTAINER_ID}`).css('display', 'block');
 };

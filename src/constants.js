@@ -237,11 +237,7 @@ export const FUT = {
   },
   CUSTOM_CLASSES: {
     headerActionsContainer: 'header-custom-buttons-container',
-    syncTransfersButton: 'header-custom-button fut-sync-transfers',
-    openRunnerButton: 'header-custom-button fut-open-runner',
-    editScenariosButton: 'header-custom-button fut-open-scenarios',
     addFilterButton: 'custom-button-add-filter',
-    syncPlayersButton: 'header-custom-button fut-sync-players',
   },
   CUSTOM_ATTRS: {
     selectedPlayer: 'data-selected-player',

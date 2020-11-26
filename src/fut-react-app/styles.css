@@ -6,6 +6,7 @@
 
 #react-app-container {
   font-family: 'Lato', sans-serif;
+  display: none;
 }
 
 #react-app-container ::-webkit-scrollbar {

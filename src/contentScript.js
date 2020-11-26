@@ -1,13 +1,12 @@
 import { Subject } from 'rxjs';
 import { initSearchMarketPage } from './services/marketSearchCriteria.service';
-import { waitUntilElementExists, setMutationObserver, initFUTAdditionalActions } from './services/ui.service';
+import { waitUntilElementExists, setMutationObserver, initFUTApp } from './services/ui.service';
 import { FUT } from './constants';
 import { initReactApp } from './fut-react-app';
 
 export const addFilterSubject = new Subject();
 export const editScenarioSubject = new Subject();
 export const selectScenarioSubject = new Subject();
-export const openModalSubject = new Subject();
 export const editStepWithoutSavingSubject = new Subject();
 
 $(() => {
@@ -24,7 +23,7 @@ $(() => {
           },
           {
             condition: (node) => $(node).is(FUT.PAGE_SELECTORS.openHomeButton),
-            action: initFUTAdditionalActions,
+            action: initFUTApp,
           }
         ]
       );
