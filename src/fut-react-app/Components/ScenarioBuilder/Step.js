@@ -67,7 +67,7 @@ const Settings = styled.div`
   justify-content: center;
   flex-direction: column;
   width: auto;
-  padding: 0 15px;
+  padding: 10px 15px 0 15px;
   background: #191a1d;
   position: relative;
   min-width: 164px;

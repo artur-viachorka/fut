@@ -93,6 +93,13 @@ const logFinishedStep = (stepId) => () => {
   });
 };
 
+const logTransferListFull = (stepId) => () => {
+  logRunnerSubject.next({
+    stepId,
+    text: 'Transfer list is full for now.',
+  });
+};
+
 export const getLoggerForStep = (stepId) => {
   return {
     logSearchResult: logFoundResult(stepId),
@@ -102,5 +109,6 @@ export const getLoggerForStep = (stepId) => {
     logSentToAuctionHouseResult: logSentToAuctionHouseResult(stepId),
     logFinishedStep: logFinishedStep(stepId),
     logLeftInUnassign: logLeftInUnassign(stepId),
+    logTransferListFull: logTransferListFull(stepId),
   };
 };

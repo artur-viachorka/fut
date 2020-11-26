@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { FaAngleDoubleRight, FaAngleDoubleLeft } from 'react-icons/fa';
@@ -120,9 +120,15 @@ const ActionsPopup = ({ actions }) => {
     const checkIsExpanded = async () => {
       const { isActionsPopupExpanded } = await getFromStorage('isActionsPopupExpanded');
       setIsExpanded(isActionsPopupExpanded);
-    }
+    };
     checkIsExpanded();
   }, []);
+
+  const expand = useCallback(async () => {
+    await saveToStorage({ isActionsPopupExpanded: !isExpanded });
+    setIsExpanded(!isExpanded);
+  }, [isExpanded]);
+
   return (
     <Container>
       <Name>EXTENDED FUT</Name>
@@ -134,11 +140,8 @@ const ActionsPopup = ({ actions }) => {
           ) : <ActionButton isExpanded={isExpanded} key={action.name} action={action}/>)
         }
       </Content>
-      <ExpandButton onClick={async () => {
-        await saveToStorage({ isActionsPopupExpanded: !isExpanded });
-        setIsExpanded(!isExpanded);
-      }}>
-        {isExpanded ?  <FaAngleDoubleLeft/> : <FaAngleDoubleRight/>}
+      <ExpandButton onClick={expand}>
+        {isExpanded ? <FaAngleDoubleLeft/> : <FaAngleDoubleRight/>}
       </ExpandButton>
     </Container>
   );

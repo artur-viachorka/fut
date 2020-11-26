@@ -153,19 +153,22 @@ const stepTickHandler = async (step, logger) => {
         }
         if (!runnerState.freeSlotsInTransferList) {
           await syncTradepile(boughtItems);
-          return { success: true };
         }
-        const moveToTransferListResult = await sendItemsToTransferList(
-          boughtItems,
-        );
-        logger.logMoveToTransferListResult(moveToTransferListResult);
-        const movedItems = moveToTransferListResult.filter(item => item.success);
-        if (movedItems.length) {
-          runnerState.freeSlotsInTransferList -= movedItems.length;
-          if (step.shouldSellOnMarket) {
-            const sellResult = await sellPlayers(boughtItems, movedItems);
-            logger.logSentToAuctionHouseResult(sellResult);
+        if (runnerState.freeSlotsInTransferList) {
+          const moveToTransferListResult = await sendItemsToTransferList(
+            boughtItems,
+          );
+          logger.logMoveToTransferListResult(moveToTransferListResult);
+          const movedItems = moveToTransferListResult.filter(item => item.success);
+          if (movedItems.length) {
+            runnerState.freeSlotsInTransferList -= movedItems.length;
+            if (step.shouldSellOnMarket) {
+              const sellResult = await sellPlayers(boughtItems, movedItems);
+              logger.logSentToAuctionHouseResult(sellResult);
+            }
           }
+        } else {
+          logger.logTransferListFull();
         }
         if (step.shouldSkipAfterPurchase) {
           return { skip: true };
