@@ -58,6 +58,8 @@ const createActionButton = (className, text, handler) => {
   return newButton;
 };
 
+export const getCreditsFromUi = () => $(FUT.PAGE_SELECTORS.credits).text();
+
 const getOpenConfigureScenariosButton = () => createActionButton(FUT.CUSTOM_CLASSES.editScenariosButton, 'Manage Scenarios', async () => openModalSubject.next({ modal: MODALS.SCENARIO_CONSTRUCTOR }));
 const getOpenRunnerButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Runner', async () => openModalSubject.next({ modal: MODALS.RUNNER }));
 const getSyncPlayersButton = () => createActionButton(FUT.CUSTOM_CLASSES.openRunnerButton, 'Sync Players', async () => {

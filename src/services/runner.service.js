@@ -17,6 +17,7 @@ export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
+export const setCreditsSubject = new Subject();
 
 let runnerState = {
   credits: null,
@@ -27,15 +28,15 @@ let runnerState = {
   minBid: null,
 };
 
+const setCredits = (credits) => {
+  runnerState.credits = credits;
+  setCreditsSubject.next({ credits });
+};
+
 const resetRunningState = () => {
-  runnerState = {
-    credits: runnerState.credits,
-    freeSlotsInTransferList: runnerState.freeSlotsInTransferList,
-    transferListLimit: runnerState.transferListLimit,
-    skippedStep: null,
-    minBuyNow: null,
-    minBid: null,
-  };
+  runnerState.skippedStep = null;
+  runnerState.minBuyNow = null;
+  runnerState.minBid = null;
 };
 
 export const syncTradepile = async (skipItems) => {
@@ -43,9 +44,9 @@ export const syncTradepile = async (skipItems) => {
   const tradepile = await syncTransferListItems(false, skipItems);
   if (!tradepile) {
     runnerState.freeSlotsInTransferList = null;
-    runnerState.credits = null;
+    setCredits(null);
   } else {
-    runnerState.credits = tradepile.credits;
+    setCredits(tradepile.credits);
     const itemsInTransferList = tradepile.auctionInfo?.length || runnerState.transferListLimit;
     runnerState.freeSlotsInTransferList = runnerState.transferListLimit - itemsInTransferList;
   }
@@ -140,7 +141,7 @@ const stepTickHandler = async (step, logger) => {
         runnerState.credits,
       );
       logger.logBoughtResult(boughtItems);
-      runnerState.credits = remainingCredits != null ? remainingCredits : runnerState.credits;
+      setCredits(remainingCredits != null ? remainingCredits : runnerState.credits);
       if (tooLowCredits) {
         logger.logNotEnoughCreditsResult();
         return { skip: true };

@@ -17,6 +17,7 @@ import {
   finishStepWork,
   finishStepIdle,
   stopStep,
+  setCreditsSubject,
 } from '../../../services/runner.service';
 import { logRunnerSubject } from '../../../services/logger.service';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
@@ -27,6 +28,7 @@ import { openUTNotification } from '../../../services/notification.service';
 import { getLoggerForStep } from '../../../services/logger.service';
 
 import CountdownTimer from '../CountdownTimer';
+import Coins from '../Coins';
 import NumberField from '../Fields/NumberField';
 
 const Container = styled.div`
@@ -62,6 +64,7 @@ const Right = styled.div`
 
 const RunnerInfo = styled.div`
   min-width: 250px;
+  width: 100%;
   border: 1px solid #414141;
   border-radius: 5px;
   display: flex;
@@ -110,6 +113,19 @@ const RunnerActions = styled.div`
   flex-direction: row;
 `;
 
+const AccountInfo = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+
+  > div:first-child {
+    width: 132px;
+    margin-right: 5px;
+  }
+`;
+
 const Runner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -124,6 +140,7 @@ const Runner = () => {
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
   const [transferListLimit, setTransferListLimit] = useState(null);
+  const [currentCredits, setCurrentCredits] = useState(null);
 
   const resetScenario = (scenario) => {
     scenario = scenario ? {
@@ -211,11 +228,14 @@ const Runner = () => {
         });
       }
     });
+
+    const setCreditsSubjectSubscription = setCreditsSubject.subscribe(({ credits }) => setCurrentCredits(credits));
     loadTransferListLimit();
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
       loggerSubjectSubscription.unsubscribe();
+      setCreditsSubjectSubscription.unsubscribe();
       stopStep();
     };
   }, []);
@@ -227,32 +247,35 @@ const Runner = () => {
           <ScenariosList isReadOnly={isRunning}/>
         </ScenariosContainer>
         <Right>
-          <NumberField
-              onChange={(e) => {
-                const value = parseStringToInt(e.target.value);
-                setTransferListLimit(value);
-              }}
-              onBlur={async (value) => {
-                setTransferListLimit(value);
-                await saveTransferListLimit(value);
-              }}
-              min={TRANSFER_LIST_LIMIT.min}
-              max={TRANSFER_LIST_LIMIT.max}
-              isReadOnly={isRunning}
-              value={transferListLimit}
-              isReduceDisabled={transferListLimit <= TRANSFER_LIST_LIMIT.min}
-              isIncreaseDisabled={transferListLimit >= TRANSFER_LIST_LIMIT.max}
-              onUpdateValueByStep={async (value) => {
-                if (value > 0 && value < TRANSFER_LIST_LIMIT.min) {
-                  value = TRANSFER_LIST_LIMIT.min;
-                }
-                setTransferListLimit(value);
-                await saveTransferListLimit(value);
-              }}
-              getStep={() => 5}
-              placeholder="Transfer list limit"
-              renderIcon={() => <BiTransferAlt/>}
-          />
+          <AccountInfo>
+            <NumberField
+                onChange={(e) => {
+                  const value = parseStringToInt(e.target.value);
+                  setTransferListLimit(value);
+                }}
+                onBlur={async (value) => {
+                  setTransferListLimit(value);
+                  await saveTransferListLimit(value);
+                }}
+                min={TRANSFER_LIST_LIMIT.min}
+                max={TRANSFER_LIST_LIMIT.max}
+                isReadOnly={isRunning}
+                value={transferListLimit}
+                isReduceDisabled={transferListLimit <= TRANSFER_LIST_LIMIT.min}
+                isIncreaseDisabled={transferListLimit >= TRANSFER_LIST_LIMIT.max}
+                onUpdateValueByStep={async (value) => {
+                  if (value > 0 && value < TRANSFER_LIST_LIMIT.min) {
+                    value = TRANSFER_LIST_LIMIT.min;
+                  }
+                  setTransferListLimit(value);
+                  await saveTransferListLimit(value);
+                }}
+                getStep={() => 5}
+                placeholder="Transfer list limit"
+                renderIcon={() => <BiTransferAlt/>}
+            />
+            <Coins credits={currentCredits}/>
+          </AccountInfo>
           <RunnerInfo>
             <RunnerActions>
               {!isPaused && !isRunning && (

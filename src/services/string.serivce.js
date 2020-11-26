@@ -24,3 +24,5 @@ export const parseStringToInt = (value) => {
   const parsedValue = parseInt(value.replace(/\,/g, ''));
   return isNaN(parsedValue) ? null : parsedValue;
 };
+
+export const numberWithCommas = (x) => x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
