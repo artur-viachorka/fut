@@ -10,9 +10,14 @@ import { waitUntilElementExists } from './ui.service';
 import { getPlayerId } from './players.service';
 
 const getPlayerInfo = async () => {
-  const playerInput = $(FUT.PAGE_SELECTORS.selectPlayerContainer);
-  const [playerName, playerRating] = playerInput.attr(FUT.CUSTOM_ATTRS.selectedPlayer).split('/');
-  const id = await getPlayerId(playerName, playerRating);
+  const playerAttr = $(FUT.PAGE_SELECTORS.selectPlayerContainer).attr(FUT.CUSTOM_ATTRS.selectedPlayer);
+  let id = null;
+  let playerName = null;
+  let playerRating = null;
+  if (playerAttr) {
+    [playerName, playerRating] = playerAttr.split('/');
+    id = await getPlayerId(playerName, playerRating);
+  }
   return {
     value: id || null,
     title: playerName,
