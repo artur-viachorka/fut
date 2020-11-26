@@ -263,7 +263,7 @@ export const sellPlayer = async (itemId, buyNowPrice, minPrice, maxPrice) => {
 export const sellPlayers = async (boughtItems, movedItems) => {
   let boughtAndMovedToTransferListItems = boughtItems.filter(boughtItem => movedItems.find(movedItem => movedItem.id === boughtItem.itemData.id));
   const sellResult = [];
-  const { tradepile } = await syncTradepile();
+  const { tradepile } = await syncTradepile(boughtAndMovedToTransferListItems);
   for (let i = 0; i < boughtAndMovedToTransferListItems.length; i++) {
     const item = boughtAndMovedToTransferListItems[i];
     const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);

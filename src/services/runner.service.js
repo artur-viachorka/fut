@@ -38,14 +38,15 @@ const resetRunningState = () => {
   };
 };
 
-export const syncTradepile = async (transferListLimit) => {
-  const tradepile = await syncTransferListItems();
+export const syncTradepile = async (skipItems) => {
+  skipItems = (skipItems || []).map(item => item.itemData.id);
+  const tradepile = await syncTransferListItems(false, skipItems);
   if (!tradepile) {
     runnerState.freeSlotsInTransferList = null;
   }
   runnerState.credits = tradepile.credits;
-  const itemsInTransferList = tradepile.auctionInfo?.length || transferListLimit;
-  runnerState.freeSlotsInTransferList = transferListLimit - itemsInTransferList;
+  const itemsInTransferList = tradepile.auctionInfo?.length || runnerState.transferListLimit;
+  runnerState.freeSlotsInTransferList = runnerState.transferListLimit - itemsInTransferList;
   return {
     freeSlotsInTransferList: runnerState.freeSlotsInTransferList,
     tradepile,
@@ -62,7 +63,7 @@ export const RUNNER_STATUS = {
 export const executeStep = async (step, transferListLimit, logger) => {
   if (runnerState.transferListLimit !== transferListLimit) {
     runnerState.transferListLimit = transferListLimit;
-    await syncTradepile(transferListLimit);
+    await syncTradepile();
   }
   return new Promise((resolve, reject) => {
     let isWorking = true;
@@ -151,7 +152,7 @@ const stepTickHandler = async (step, logger) => {
       }
       if (boughtItems?.length) {
         if (!runnerState.freeSlotsInTransferList) {
-          await syncTradepile();
+          await syncTradepile(boughtItems);
         }
         if (runnerState.freeSlotsInTransferList) {
           const moveToTransferListResult = await sendItemsToTransferList(

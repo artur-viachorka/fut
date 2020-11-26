@@ -9,7 +9,7 @@ export const isUniq = (item, duplicates) => {
   return !duplicates.find(duplicateItem => duplicateItem?.itemId === item?.itemData?.id);
 };
 
-export const syncTransferListItems = async (shouldNotify) => {
+export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
   try {
     await sleep(getDelayBeforeDefaultRequest());
     let tradepile = await getTradePile();
@@ -21,6 +21,9 @@ export const syncTransferListItems = async (shouldNotify) => {
 
     for (let i = 0; i < tradepile.auctionInfo.length; i++) {
       const tradeItem = tradepile.auctionInfo[i];
+      if (skipItemIds.includes(tradeItem.itemData.id)) {
+        continue;
+      }
       if ((tradeItem.tradeState == FUT.TRADE_STATE.expired || tradeItem.tradeState === null) && isUniq(tradeItem, tradepile.duplicateItemIdList)) {
         await sleep(getDelayBeforeDefaultRequest());
         await sendItemToClub(tradeItem.itemData.id);
