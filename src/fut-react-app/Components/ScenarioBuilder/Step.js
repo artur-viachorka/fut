@@ -101,10 +101,13 @@ const EditAction = styled.span`
   font-size: 17px;
   cursor: pointer;
   transition: all 0.5s ease-out 0s;
-  ${props => props.isDisabled && 'color: grey;'}
   &:hover {
     color: grey;
   }
+  ${props => props.isDisabled && `
+    color: grey;
+    cursor: default;
+`}
 `;
 
 const Checkmark = styled.span`
