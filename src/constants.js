@@ -182,8 +182,8 @@ export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
 };
 
 export const DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE = {
-  from: 0.8,
-  to: 1.2,
+  from: 0.6,
+  to: 1,
 };
 
 export const MAX_PAGES_TO_SEARCH_ON = 4;

@@ -101,7 +101,7 @@ const EditAction = styled.span`
   font-size: 17px;
   cursor: pointer;
   transition: all 0.5s ease-out 0s;
-
+  ${props => props.isDisabled && 'color: grey;'}
   &:hover {
     color: grey;
   }
@@ -175,7 +175,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             <span>Rating</span>
             <span>{step.rating || '-'}</span>
           </div>
-          <EditAction onClick={() => setIsStepSettingsModalVisible(true)}>
+          <EditAction disabled={isReadOnly} onClick={() => !isReadOnly && setIsStepSettingsModalVisible(true)}>
             <AiFillEdit/>
           </EditAction>
         </Settings>
