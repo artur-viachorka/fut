@@ -175,7 +175,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             <span>Rating</span>
             <span>{step.rating || '-'}</span>
           </div>
-          <EditAction disabled={isReadOnly} onClick={() => !isReadOnly && setIsStepSettingsModalVisible(true)}>
+          <EditAction isDisabled={isReadOnly} onClick={() => !isReadOnly && setIsStepSettingsModalVisible(true)}>
             <AiFillEdit/>
           </EditAction>
         </Settings>
