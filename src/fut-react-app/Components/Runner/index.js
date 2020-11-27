@@ -7,7 +7,7 @@ import ScenarioBuilder from '../ScenarioBuilder/ScenarioBuilder';
 import ScenariosList from '../Scenarios/ScenariosList';
 import RunnerStepStatus from './RunnerStepStatus';
 
-import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+import { selectScenarioSubject, editScenarioWithoutSavingSubject } from '../../../contentScript';
 
 import { isScenarioInputsInvalid, checkIsMaxDurationExceeded } from '../../../services/scenario.service';
 import {
@@ -216,7 +216,7 @@ const Runner = () => {
     const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
       resetScenario(scenario);
     });
-    const editStepWithoutSavingSubscription = editStepWithoutSavingSubject.subscribe(({ scenario }) => {
+    const editStepWithoutSavingSubscription = editScenarioWithoutSavingSubject.subscribe(({ scenario }) => {
       resetScenario(scenario);
     });
 

@@ -7,7 +7,7 @@ import { initReactApp } from './fut-react-app';
 export const addFilterSubject = new Subject();
 export const editScenarioSubject = new Subject();
 export const selectScenarioSubject = new Subject();
-export const editStepWithoutSavingSubject = new Subject();
+export const editScenarioWithoutSavingSubject = new Subject();
 
 $(() => {
   initReactApp();

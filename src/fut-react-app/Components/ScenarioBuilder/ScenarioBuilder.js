@@ -12,7 +12,7 @@ import { DND_TYPES } from '../../../constants';
 import { getSearchFilter } from '../../../services/marketSearchCriteria.service';
 import { createNewScenario, addNewStepToScenario, removeStepFromScenario, saveScenario, copyScenario, deleteScenario } from '../../../services/scenario.service';
 import { FaRegCopy, FaTrash } from 'react-icons/fa';
-import { selectScenarioSubject, editStepWithoutSavingSubject } from '../../../contentScript';
+import { selectScenarioSubject, editScenarioWithoutSavingSubject } from '../../../contentScript';
 
 const Container = styled.div`
   display: flex;
@@ -135,7 +135,9 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
   }, []);
 
   const removeStep = (id) => {
-    setScenario(removeStepFromScenario(scenario, id));
+    const newScenario = removeStepFromScenario(scenario, id);
+    setScenario(newScenario);
+    editScenarioWithoutSavingSubject.next({ scenario: newScenario });
   };
 
   const moveStep = (id, atIndex) => {
@@ -146,10 +148,12 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
         [atIndex, 0, step],
       ],
     });
-    setScenario({
+    const newScenario = {
       ...scenario,
       steps,
-    });
+    };
+    setScenario(newScenario);
+    editScenarioWithoutSavingSubject.next({ scenario: newScenario });
   };
 
   const findStep = (id) => {
@@ -166,7 +170,7 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
       ...scenario,
       steps,
     };
-    editStepWithoutSavingSubject.next({ scenario: newScenario });
+    editScenarioWithoutSavingSubject.next({ scenario: newScenario });
     setScenario(newScenario);
   };
 

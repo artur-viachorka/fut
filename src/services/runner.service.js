@@ -160,6 +160,10 @@ const stepTickHandler = async (step, logger) => {
           );
           logger.logMoveToTransferListResult(moveToTransferListResult);
           const movedItems = moveToTransferListResult.filter(item => item.success);
+          const notMovedItems = moveToTransferListResult.filter(item => !item.success);
+          if (notMovedItems.length) {
+            logger.logLeftInUnassign(notMovedItems);
+          }
           if (movedItems.length) {
             runnerState.freeSlotsInTransferList -= movedItems.length;
             if (step.shouldSellOnMarket) {
