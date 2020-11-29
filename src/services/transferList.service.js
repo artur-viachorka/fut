@@ -25,7 +25,6 @@ export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
         continue;
       }
       if ((tradeItem.tradeState == FUT.TRADE_STATE.expired || tradeItem.tradeState === null) && isUniq(tradeItem, tradepile.duplicateItemIdList)) {
-        await sleep(getDelayBeforeDefaultRequest());
         sendToClub.push(tradeItem.itemData.id);
         updatedAuctionInfo = updatedAuctionInfo.filter(info => info.itemData.id !== tradeItem.itemData.id);
       }
@@ -35,6 +34,7 @@ export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
       }
     }
     if (sendToClub.length) {
+      await sleep(getDelayBeforeDefaultRequest());
       await sendItemToClub(sendToClub);
     }
     if (shouldClearSoldItems) {
