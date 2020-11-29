@@ -3,6 +3,7 @@ import { path } from 'ramda';
 
 export const convertSecondsToMs = (s) => (s || 0) * 1000;
 export const convertMinutesToSeconds = (m) => (m || 0) * 60;
+export const convertMsToMinutes = (ms) => (ms / 1000) / 60;
 
 export const sleep = (seconds) => {
   return new Promise((resolve) => setTimeout(resolve, convertSecondsToMs(seconds)));
@@ -50,6 +51,18 @@ export const roundNumber = (value, roundOn) => {
 export const addZero = (num) => num < 10 ? `0${num}` : num;
 
 export const getRandomNumberInRange = (min, max) => (Math.random() * (max - min) + min).toFixed(3);
+
+export const getTheMostRepeatableNumber = (arr) => {
+  if (!arr?.length) {
+    return null;
+  }
+  const occurrences = {};
+  arr.forEach(num => {
+    occurrences[num] = (occurrences[num] || 0) + 1;
+  });
+  const sortedItems = Object.entries(occurrences).sort((a, b) => b[1] - a[1]);
+  return parseFloat(sortedItems[0][0]);
+};
 
 export const getSortHandler = (config) => {
   return (a, b) => {

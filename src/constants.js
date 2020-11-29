@@ -158,9 +158,10 @@ export const RUNNER_STATUS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 3.4,
+  from: 2.8,
   to: 5,
 };
+
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   from: 1,
   to: 1.5,
@@ -182,13 +183,20 @@ export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
 };
 
 export const DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE = {
-  from: 0.6,
-  to: 1,
+  from: 0.2,
+  to: 0.4,
 };
+
+export const FUT_COMMISSION_IN_PERCENT = 5;
 
 export const MAX_PAGES_TO_SEARCH_ON = 4;
 export const SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION = 21;
 export const SEARCH_ITEMS_PAGE_SIZE = 20;
+
+export const SEARCH_ITEMS_PAGE_SIZE_ON_PRICE_CHECK = 47;
+export const MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK = 10;
+export const PRICE_CACHE_LIFE_MINUTES = 30;
+
 export const MAX_PLAYERS_TO_BUY_IN_ONE_STEP = 2;
 
 export const PERCENT_AFTER_WHICH_RESET_MIN_BUY = 40;

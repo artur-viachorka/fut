@@ -1,5 +1,5 @@
 import { first } from 'rxjs/operators';
-import { getRandomNumberInRange, sleep, getSortHandler } from './helper.service';
+import { getRandomNumberInRange, sleep, getSortHandler, getTheMostRepeatableNumber, convertMsToMinutes } from './helper.service';
 import { pauseRunnerSubject, stopRunnerSubject, syncTradepile } from './runner.service';
 import {
   bidPlayerRequest,
@@ -26,6 +26,10 @@ import {
   SEARCH_ITEMS_ORDER_CONFIG,
   HOUR_IN_SECONDS,
   MAX_PLAYERS_TO_BUY_IN_ONE_STEP,
+  FUT_COMMISSION_IN_PERCENT,
+  SEARCH_ITEMS_PAGE_SIZE_ON_PRICE_CHECK,
+  MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK,
+  PRICE_CACHE_LIFE_MINUTES,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -107,6 +111,9 @@ const mapAuctionInfoItems = (result, pageNumber) => {
 const isPageLast = (pageNumber, listLength) => pageNumber === Math.ceil((listLength / 20) - 1);
 
 const searchPlayersOnMarketPaginated = async (params) => {
+  params.type = 'player';
+  params.start = 0;
+  params.num = SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION;
   let isWorking = true;
   pauseRunnerSubject
     .pipe(first())
@@ -144,15 +151,17 @@ export const searchPlayersOnMarket = async (params, step) => {
   if (!auctionInfo?.length) {
     return null;
   }
-  const sortedAuctionInfo = auctionInfo
-    .filter(item =>
-      item
-      && item.buyNowPrice
-      && item.expires > MIN_EXPIRES_TO_BUY
-      && item.tradeState === FUT.TRADE_STATE.active
-      && (step.rating ? item.itemData.rating === step.rating : true)
-    )
-    .sort(getSortHandler(SEARCH_ITEMS_ORDER_CONFIG));
+  const sortedAuctionInfo = auctionInfo.length > 1
+    ? auctionInfo
+      .filter(item =>
+        item
+        && item.buyNowPrice
+        && item.expires > MIN_EXPIRES_TO_BUY
+        && item.tradeState === FUT.TRADE_STATE.active
+        && (step.rating ? item.itemData.rating === step.rating : true)
+      )
+      .sort(getSortHandler(SEARCH_ITEMS_ORDER_CONFIG))
+    : auctionInfo;
   if (!sortedAuctionInfo?.length) {
     return null;
   }
@@ -242,13 +251,104 @@ export const getTransferListLimit = async () => {
   return transferListLimit;
 };
 
-const calculateSellPrice = (buyNowPrice, minPrice, maxPrice) => {
-  return buyNowPrice; // calc buy now
+const findFirstCheapestItems = (auctionInfo) => {
+  return (auctionInfo || []).sort((a, b) => a.buyNowPrice - b.buyNowPrice).slice(0, 5);
 };
 
-export const sellPlayer = async (itemId, buyNowPrice, minPrice, maxPrice) => {
-  const sellPrice = calculateSellPrice(buyNowPrice, minPrice, maxPrice);
-  const minSellPrice = minPrice; // сalculate min sell price
+const findCheapestAuctionItems = async (definitionId, maxPrice) => {
+  const pageSize = SEARCH_ITEMS_PAGE_SIZE_ON_PRICE_CHECK;
+  const maxPages = MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK;
+
+  const params = {
+    type: 'player',
+    start: 0,
+    num: pageSize,
+    maxb: maxPrice,
+    definitionId,
+  };
+
+  let isWorking = true;
+
+  pauseRunnerSubject
+    .pipe(first())
+    .subscribe(() => isWorking = false);
+
+  stopRunnerSubject
+    .pipe(first())
+    .subscribe(() => isWorking = false);
+
+  await sleep(getDelayBeforeDefaultRequest());
+
+  let result = await searchOnTransfermarketRequest(params);
+  let cheapests = findFirstCheapestItems(result?.auctionInfo);
+
+  if (result?.auctionInfo?.length === pageSize) {
+    for (let i = 1; i < maxPages; i++) {
+      await sleep(getSearchRequestDelay());
+      const cheapestBuyNowPrice = cheapests[0]?.buyNowPrice;
+      if (!cheapestBuyNowPrice) {
+        return null;
+      }
+      if (!isWorking) {
+        return null;
+      }
+
+      params.maxb = cheapestBuyNowPrice;
+      params.start = (params.start || 0) + pageSize;
+
+      let searchResult = await searchOnTransfermarketRequest(params);
+
+      const newCheapests = findFirstCheapestItems(searchResult?.auctionInfo);
+      cheapests = [...newCheapests, ...cheapests.slice(newCheapests.length)];
+      if (searchResult?.auctionInfo?.length < pageSize) {
+        break;
+      }
+    }
+  }
+  return cheapests;
+};
+
+const getSellPriceFromLocal = async (definitionId) => {
+  const priceLifeMinutes = PRICE_CACHE_LIFE_MINUTES;
+  const { sellPrices } = await getFromStorage('sellPrices');
+  const item = (sellPrices || {})[definitionId];
+  if (item?.createdTimestamp && item?.price != null) {
+    const now = Date.now();
+    const isExpired = convertMsToMinutes(now - item.createdTimestamp) > priceLifeMinutes;
+    return isExpired ? null : item.price;
+  }
+};
+
+const saveSellPriceLocally = async (definitionId, sellPrice) => {
+  const { sellPrices = {} } = await getFromStorage('sellPrices');
+  sellPrices[definitionId] = {
+    price: sellPrice,
+    createdTimestamp: Date.now(),
+  };
+  await saveToStorage({ sellPrices });
+};
+
+const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice) => {
+  let price = await getSellPriceFromLocal(definitionId);
+  if (!price) {
+    const cheapests = await findCheapestAuctionItems(definitionId, maxPrice);
+    price = getTheMostRepeatableNumber((cheapests || []).map(item => item.buyNowPrice));
+    await saveSellPriceLocally(definitionId, price);
+  }
+  if (!price) {
+    return null;
+  }
+  const commission = price * FUT_COMMISSION_IN_PERCENT / 100;
+  const finalPrice = price - commission;
+  return finalPrice > buyNowPrice && finalPrice > minPrice ? price : null;
+};
+
+export const sellPlayer = async (itemId, definitionId, buyNowPrice, minPrice, maxPrice) => {
+  const sellPrice = await calculateSellPrice(definitionId, buyNowPrice, minPrice, maxPrice);
+  if (!sellPrice) {
+    return null;
+  }
+  const minSellPrice = sellPrice - getFutPriceStep(sellPrice, false);
   await sleep(getDelayBeforeDefaultRequest(true));
   const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
   if (result?.id) {
@@ -269,8 +369,10 @@ export const sellPlayers = async (boughtItems, movedItems) => {
     const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);
     const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
     const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
+    const definitionId = itemInTradepile?.itemData?.assetId;
+
     if (marketDataMinPrice && marketDataMaxPrice) {
-      const sentToAucitonHouseItem = await sellPlayer(item.itemData.id, item.buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
+      const sentToAucitonHouseItem = await sellPlayer(item.itemData.id, definitionId, item.buyNowPrice, marketDataMinPrice, marketDataMaxPrice);
       if (sentToAucitonHouseItem) {
         sellResult.push(sentToAucitonHouseItem);
       }

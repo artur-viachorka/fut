@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
@@ -78,6 +78,12 @@ const Logs = styled.ul`
   }
 `;
 
+const AlwaysScrollToBottom = () => {
+  const elementRef = useRef();
+  useEffect(() => elementRef.current.scrollIntoView());
+  return <div ref={elementRef}/>;
+};
+
 const RunnerStepStatus = ({
   isPaused,
   isStepRunning,
@@ -135,6 +141,7 @@ const RunnerStepStatus = ({
               <span>{log}</span>
             </li>
           ))}
+          <AlwaysScrollToBottom/>
         </Logs>
       )}
       {!isWorking && !isIdle && !logs?.length && (

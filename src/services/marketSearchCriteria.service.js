@@ -200,12 +200,7 @@ const getMarketSearchCriteria = async () => {
       } : null,
       maxBuy,
     },
-    requestParams: reject(equals(null))({
-      num: 21,
-      start: 0,
-      type: 'player',
-      ...params,
-    })
+    requestParams: reject(equals(null))(params)
   };
 };
 

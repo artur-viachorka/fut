@@ -9,6 +9,7 @@ export const transformFutItemFromFUT = (result) => ({
   rating: result.rating,
   marketDataMaxPrice: result.marketDataMaxPrice,
   marketDataMinPrice: result.marketDataMinPrice,
+  assetId: result.assetId,
 });
 
 export const transformAuctionInfoFromFUT = (result) => ({
@@ -39,6 +40,7 @@ export const transformSearchParamsToFUT = (params) => removeEmptyItems({
   start: params.start,
   type: params.type,
   maskedDefId: params.maskedDefId,
+  definitionId: params.definitionId,
   zone: params.zone,
   pos: params.pos,
   lev: params.lev,
