@@ -119,8 +119,8 @@ export const sendItemsToTransferListRequest = async (itemIds) => {
   return await sendItemsTo(itemIds, FUT.PILE.trade);
 };
 
-export const sendItemToClub = async (itemId) => {
-  const result = await sendItemsTo([itemId], FUT.PILE.club);
+export const sendItemToClub = async (itemIds) => {
+  const result = await sendItemsTo(itemIds, FUT.PILE.club);
   if (!result) {
     throw new Error();
   }

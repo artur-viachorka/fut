@@ -18,7 +18,7 @@ export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
     }
     let shouldClearSoldItems = false;
     let updatedAuctionInfo = [...tradepile.auctionInfo];
-
+    let sendToClub = [];
     for (let i = 0; i < tradepile.auctionInfo.length; i++) {
       const tradeItem = tradepile.auctionInfo[i];
       if (skipItemIds.includes(tradeItem.itemData.id)) {
@@ -26,13 +26,16 @@ export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
       }
       if ((tradeItem.tradeState == FUT.TRADE_STATE.expired || tradeItem.tradeState === null) && isUniq(tradeItem, tradepile.duplicateItemIdList)) {
         await sleep(getDelayBeforeDefaultRequest());
-        await sendItemToClub(tradeItem.itemData.id);
+        sendToClub.push(tradeItem.itemData.id);
         updatedAuctionInfo = updatedAuctionInfo.filter(info => info.itemData.id !== tradeItem.itemData.id);
       }
       if (tradeItem.tradeState === FUT.TRADE_STATE.closed && tradeItem.currentBid > 0) {
         updatedAuctionInfo = updatedAuctionInfo.filter(info => info.itemData.id !== tradeItem.itemData.id);
         shouldClearSoldItems = true;
       }
+    }
+    if (sendToClub.length) {
+      await sendItemToClub(sendToClub);
     }
     if (shouldClearSoldItems) {
       await sleep(getDelayBeforeDefaultRequest());
