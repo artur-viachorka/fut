@@ -6,6 +6,7 @@ import {
   sellPlayers,
   sendItemsToTransferList,
   getSearchRequestDelay,
+  getDelayBeforeDefaultRequest,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
 import { CAPTCHA_ERROR_CODE, RUNNER_STATUS } from '../constants';
@@ -19,7 +20,7 @@ export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
 export const setCreditsSubject = new Subject();
 
-let runnerState = {
+const runnerState = {
   credits: null,
   freeSlotsInTransferList: null,
   transferListLimit: null,
@@ -113,7 +114,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
       }
       resolve(result);
     };
-    work();
+    setTimeout(work, getDelayBeforeDefaultRequest());
   });
 };
 

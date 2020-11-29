@@ -158,8 +158,8 @@ export const RUNNER_STATUS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 2.8,
-  to: 5,
+  from: 2.3,
+  to: 3.2,
 };
 
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
@@ -180,11 +180,6 @@ export const LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
 export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
   from: 2,
   to: 2.5,
-};
-
-export const DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE = {
-  from: 0.2,
-  to: 0.4,
 };
 
 export const FUT_COMMISSION_IN_PERCENT = 5;

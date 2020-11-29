@@ -16,7 +16,6 @@ import {
   PERCENT_AFTER_WHICH_RESET_MIN_BUY,
   SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION,
   SEARCH_ITEMS_PAGE_SIZE,
-  DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE,
   MIN_BUY_AFTER_WHICH_RESET_MIN_BUY,
   SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
   LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE,
@@ -40,10 +39,6 @@ export const getSearchRequestDelay = () => {
 
 const getDelayBeforeMovingToTransferList = () => {
   return getRandomNumberInRange(DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE.from, DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE.to);
-};
-
-const getDelayAfterFoundedResultAndBuyRequest = () => {
-  return getRandomNumberInRange(DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE.from, DELAY_AFTER_FOUNDED_RESULT_AND_BUY_REQUEST_RANGE.to);
 };
 
 const getSearchRequestDelayBetweenPages = () => {
@@ -122,7 +117,6 @@ const searchPlayersOnMarketPaginated = async (params) => {
   stopRunnerSubject
     .pipe(first())
     .subscribe(() => isWorking = false);
-  await sleep(getDelayBeforeDefaultRequest());
   let result = await searchOnTransfermarketRequest(params);
   let auctionInfo = mapAuctionInfoItems(result, 0);
   if (auctionInfo.length === SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
@@ -176,7 +170,6 @@ const buyPlayer = async (player) => {
   if (!player?.buyNowPrice || !player?.tradeId || player?.tradeState !== 'active') {
     return;
   }
-  await sleep(getDelayAfterFoundedResultAndBuyRequest());
   const bidResult = await bidPlayerRequest(player);
   const auctionInfo = (bidResult?.auctionInfo || [])[0];
   if (auctionInfo?.tradeId && auctionInfo?.itemData?.id) {
@@ -208,6 +201,7 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
       if ((playersOnPage?.auctionInfo || []).find(auctionItem => auctionItem.tradeId === player.tradeId)) {
         await sleep(getDelayBeforeDefaultRequest());
         const liteData = await getLiteRequest([player.tradeId]);
+        await sleep(getDelayBeforeDefaultRequest());
         const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === player.tradeId && item.tradeState === FUT.TRADE_STATE.active);
         if (!activeTrade) {
           continue;
@@ -216,7 +210,6 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
         continue;
       }
     }
-    await sleep(getDelayBeforeDefaultRequest());
     const boughtResult = await buyPlayer(player);
     if (boughtResult) {
       credits = boughtResult.credits;
@@ -277,11 +270,10 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
     .pipe(first())
     .subscribe(() => isWorking = false);
 
-  await sleep(getDelayBeforeDefaultRequest());
+  await sleep(getSearchRequestDelay());
 
   let result = await searchOnTransfermarketRequest(params);
   let cheapests = findFirstCheapestItems(result?.auctionInfo);
-
   if (result?.auctionInfo?.length === pageSize) {
     for (let i = 1; i < maxPages; i++) {
       await sleep(getSearchRequestDelay());
@@ -328,19 +320,31 @@ const saveSellPriceLocally = async (definitionId, sellPrice) => {
   await saveToStorage({ sellPrices });
 };
 
+const getPriceAfterWithCommission = (price) => {
+  return price - (price * FUT_COMMISSION_IN_PERCENT / 100);
+};
+
 const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice) => {
   let price = await getSellPriceFromLocal(definitionId);
   if (!price) {
     const cheapests = await findCheapestAuctionItems(definitionId, maxPrice);
     price = getTheMostRepeatableNumber((cheapests || []).map(item => item.buyNowPrice));
-    await saveSellPriceLocally(definitionId, price);
   }
   if (!price) {
     return null;
   }
-  const commission = price * FUT_COMMISSION_IN_PERCENT / 100;
-  const finalPrice = price - commission;
-  return finalPrice > buyNowPrice && finalPrice > minPrice ? price : null;
+  const lowerThenMarketPrice = price - getFutPriceStep(price, false);
+  const finalPrice = getPriceAfterWithCommission(lowerThenMarketPrice) > buyNowPrice
+    ? lowerThenMarketPrice
+    : getPriceAfterWithCommission(price) > buyNowPrice
+      ? price
+      : null;
+  const result = finalPrice > minPrice ? finalPrice : null;
+
+  if (result) {
+    await saveSellPriceLocally(definitionId, price);
+  }
+  return result;
 };
 
 export const sellPlayer = async (itemId, definitionId, buyNowPrice, minPrice, maxPrice) => {
