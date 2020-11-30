@@ -220,11 +220,11 @@ const Runner = () => {
       resetScenario(scenario);
     });
 
-    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, text }) => {
-      if (text) {
+    const loggerSubjectSubscription = logRunnerSubject.subscribe(({ stepId, ...log }) => {
+      if (log?.text) {
         setLogs({
           ...logsRef.current,
-          [stepId]: [...(logsRef.current[stepId] || []), text],
+          [stepId]: [...(logsRef.current[stepId] || []), log],
         });
       }
     });

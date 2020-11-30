@@ -14,6 +14,7 @@ const logFoundResult = (stepId) => (players) => {
   logRunnerSubject.next({
     stepId,
     text,
+    success: true,
   });
 };
 
@@ -22,6 +23,7 @@ const logBoughtResult = (stepId) => (boughtItems) => {
     logRunnerSubject.next({
       stepId,
       text: 'Attempt to buy players failed.',
+      error: true,
     });
     return;
   }
@@ -29,6 +31,7 @@ const logBoughtResult = (stepId) => (boughtItems) => {
   logRunnerSubject.next({
     stepId,
     text,
+    success: true,
   });
 };
 
@@ -36,6 +39,7 @@ const logNotEnoughCreditsResult = (stepId) => () => {
   logRunnerSubject.next({
     stepId,
     text: 'Not enough credits to buy player',
+    error: true,
   });
 };
 
@@ -45,6 +49,7 @@ const logMoveToTransferListResult = (stepId) => (movingResult) => {
     logRunnerSubject.next({
       stepId,
       text: `Moved ${movedItems.length} player(s) to transfer list.`,
+      success: true,
     });
   }
 
@@ -53,6 +58,7 @@ const logMoveToTransferListResult = (stepId) => (movingResult) => {
     logRunnerSubject.next({
       stepId,
       text: `Failed to move ${notMovedItems.length} player(s) to transfer list.`,
+      error: true,
     });
   }
   const isListFull = movingResult.find(item => !item.success && item.reason === TRANSFERLIST_FULL.reason && item.errorCode === TRANSFERLIST_FULL.errorCode);
@@ -60,6 +66,7 @@ const logMoveToTransferListResult = (stepId) => (movingResult) => {
     logRunnerSubject.next({
       stepId,
       text: 'Transfer list is full.',
+      error: true,
     });
   }
 };
@@ -74,6 +81,7 @@ const logSentToAuctionHouseResult = (stepId) => (movedToAuctionHouse) => {
     logRunnerSubject.next({
       stepId,
       text,
+      success: true,
     });
   }
   if (notMovedItemsWithCustomError.length) {
@@ -81,12 +89,14 @@ const logSentToAuctionHouseResult = (stepId) => (movedToAuctionHouse) => {
     logRunnerSubject.next({
       stepId,
       text,
+      error: true,
     });
   }
   if (notMovedItemsWithUnknownError.length) {
     logRunnerSubject.next({
       stepId,
       text: `Attempt to move ${notMovedItemsWithUnknownError.length} player(s) to auction house failed.`,
+      error: true,
     });
   }
 };
@@ -96,6 +106,7 @@ const logLeftInUnassign = (stepId) => (movedToUnassign) => {
   logRunnerSubject.next({
     stepId,
     text,
+    success: true,
   });
 };
 
@@ -110,6 +121,7 @@ const logTransferListFull = (stepId) => () => {
   logRunnerSubject.next({
     stepId,
     text: 'Transfer list is full for now.',
+    error: true,
   });
 };
 

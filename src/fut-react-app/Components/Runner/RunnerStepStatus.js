@@ -98,15 +98,21 @@ const Logs = styled.ul`
   flex-direction: column;
   overflow-y: auto;
   font-size: 11px;
+`;
 
-  > li {
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
+const Log = styled.li`
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  
+  > *:first-child {
+    font-size: 13px;
+    ${props => props.success && 'color: #2fa02f;'}
+    ${props => props.error && 'color: #9e2424;'}
+  }
 
-    > span {
-      max-width: 90%;
-    }
+  > span {
+    max-width: 90%;
   }
 `;
 
@@ -181,10 +187,10 @@ const RunnerStepStatus = ({
       {!!logs?.length && (
         <Logs>
           {logs.map((log, index) => (
-            <li key={index} title={log}>
+            <Log success={log.success} error={log.error} key={index} title={log.text}>
               <FaAngleRight/>
-              <span>{log}</span>
-            </li>
+              <span>{log.text}</span>
+            </Log>
           ))}
           <AlwaysScrollToBottom/>
         </Logs>
