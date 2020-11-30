@@ -2,6 +2,7 @@ import { prop } from 'ramda';
 import { Subject } from 'rxjs';
 
 import { TRANSFERLIST_FULL } from '../constants';
+import { CustomFutError } from './error.service';
 
 export const logRunnerSubject = new Subject();
 
@@ -64,16 +65,28 @@ const logMoveToTransferListResult = (stepId) => (movingResult) => {
 };
 
 const logSentToAuctionHouseResult = (stepId) => (movedToAuctionHouse) => {
-  if (movedToAuctionHouse.length) {
-    let text = `Moved ${movedToAuctionHouse.length} player(s) for ${movedToAuctionHouse.map(prop('sellPrice'))} coins to auction house list.`;
+  const movedItems = movedToAuctionHouse.filter(item => !item.error);
+  const notMovedItemsWithCustomError = movedToAuctionHouse.filter(item => item.error && item.error instanceof CustomFutError);
+  const notMovedItemsWithUnknownError = movedToAuctionHouse.filter(item => item.error && !(item.error instanceof CustomFutError));
+
+  if (movedItems.length) {
+    let text = `Moved ${movedItems.length} player(s) for ${movedItems.map(prop('sellPrice'))} coins to auction house list.`;
     logRunnerSubject.next({
       stepId,
       text,
     });
-  } else {
+  }
+  if (notMovedItemsWithCustomError.length) {
+    let text = `Not moved ${notMovedItemsWithCustomError.length} player(s) to auction house in reasons of ${notMovedItemsWithCustomError.map(item => item?.error?.message).filter(Boolean).join(', ')}.`;
     logRunnerSubject.next({
       stepId,
-      text: 'Attempt to move players to auction house failed.',
+      text,
+    });
+  }
+  if (notMovedItemsWithUnknownError.length) {
+    logRunnerSubject.next({
+      stepId,
+      text: `Attempt to move ${notMovedItemsWithUnknownError.length} player(s) to auction house failed.`,
     });
   }
 };

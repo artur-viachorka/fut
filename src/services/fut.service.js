@@ -33,6 +33,8 @@ import {
   PURCHASE_DELAY,
 } from '../constants';
 
+import { CustomFutError } from './error.service';
+
 import { saveToStorage, getFromStorage } from './storage.service';
 
 export const getSearchRequestDelay = () => {
@@ -189,6 +191,7 @@ const buyPlayer = async (player) => {
 export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shouldSkipAfterPurchase, credits) => {
   let boughtItems = [];
   let cantBuyInReasonOfCredits = 0;
+  await sleep(getPurchaseDelay());
   for (let i = 0; i < cheapestPlayers.length; i++) {
     const player = cheapestPlayers[i];
 
@@ -215,8 +218,8 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
         continue;
       }
     }
-    await sleep(getPurchaseDelay());
     const boughtResult = await buyPlayer(player);
+    await sleep(getDelayBeforeDefaultRequest());
     if (boughtResult) {
       credits = boughtResult.credits;
       boughtItems.push(boughtResult.auctionInfo);
@@ -268,10 +271,6 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
 
   let isWorking = true;
 
-  pauseRunnerSubject
-    .pipe(first())
-    .subscribe(() => isWorking = false);
-
   stopRunnerSubject
     .pipe(first())
     .subscribe(() => isWorking = false);
@@ -279,30 +278,23 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
   await sleep(getSearchRequestDelay());
 
   let result = await searchOnTransfermarketRequest(params);
-  console.log('first result', result);
   let cheapests = findFirstCheapestItems(result?.auctionInfo);
-  console.log('first 5 cheap', cheapests);
   if (result?.auctionInfo?.length === pageSize) {
     for (let i = 1; i < maxPages; i++) {
       await sleep(getSearchRequestDelay());
       const cheapestBuyNowPrice = cheapests[0]?.buyNowPrice;
-      console.log('cheapestBuyNowPrice', cheapestBuyNowPrice);
       if (!cheapestBuyNowPrice) {
-        return null;
+        throw new CustomFutError('No prices were found');
       }
       if (!isWorking) {
-        return null;
+        throw new CustomFutError('Runner is stopped');
       }
-
       params.maxb = cheapestBuyNowPrice;
       params.start = (params.start || 0) + pageSize;
 
       let searchResult = await searchOnTransfermarketRequest(params);
-      console.log('next search', searchResult);
       const newCheapests = findFirstCheapestItems(searchResult?.auctionInfo);
-      console.log('newCheapests', newCheapests);
       cheapests = [...newCheapests, ...cheapests.slice(newCheapests.length)];
-      console.log('final cheapests', cheapests);
 
       if (searchResult?.auctionInfo?.length < pageSize) {
         break;
@@ -315,7 +307,6 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
 const getSellPriceFromLocal = async (definitionId) => {
   const priceLifeMinutes = PRICE_CACHE_LIFE_MINUTES;
   const { sellPrices } = await getFromStorage('sellPrices');
-  console.log(sellPrices);
   const item = (sellPrices || {})[definitionId];
   if (item?.createdTimestamp && item?.price != null) {
     const now = Date.now();
@@ -339,50 +330,51 @@ const getPriceAfterWithCommission = (price) => {
 };
 
 const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice) => {
-  console.log('PARAMS', definitionId, buyNowPrice, minPrice, maxPrice);
   let price = await getSellPriceFromLocal(definitionId);
-  console.log('LOCAL SELL PRICE', price);
   if (!price) {
     const cheapests = await findCheapestAuctionItems(definitionId, maxPrice);
     price = getTheMostRepeatableNumber((cheapests || []).map(item => item.buyNowPrice));
   }
   if (!price) {
-    return null;
+    throw new CustomFutError('No prices were found');
   }
   const lowerThenMarketPrice = price - getFutPriceStep(price, false);
-  console.log('PRICE AFTER COMMISSION', getPriceAfterWithCommission(lowerThenMarketPrice), getPriceAfterWithCommission(price));
   const finalPrice = getPriceAfterWithCommission(lowerThenMarketPrice) > buyNowPrice
     ? lowerThenMarketPrice
     : getPriceAfterWithCommission(price) > buyNowPrice
       ? price
       : null;
   const result = finalPrice > minPrice ? finalPrice : null;
-
-  console.log('INFO', lowerThenMarketPrice, finalPrice, result);
-
   if (result) {
     await saveSellPriceLocally(definitionId, price);
+    return result;
+  } else {
+    throw new CustomFutError('Not profitable price');
   }
-  return result;
 };
 
 export const sellPlayer = async (itemId, definitionId, buyNowPrice, minPrice, maxPrice) => {
   setWorkingStatus(RUNNER_STATUS.CALCULATING_SELL_PRICE);
-  const sellPrice = await calculateSellPrice(definitionId, buyNowPrice, minPrice, maxPrice);
-  console.log('FINALLY calculated sell price', sellPrice);
-  if (!sellPrice) {
-    return null;
-  }
-  setWorkingStatus(RUNNER_STATUS.MOVING_TO_AUCTION);
-  const minSellPrice = sellPrice - getFutPriceStep(sellPrice, false);
-  await sleep(getDelayBeforeDefaultRequest(true));
-  const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
-  if (result?.id) {
-    return {
-      itemId,
-      minSellPrice,
-      sellPrice,
-    };
+  try {
+    const sellPrice = await calculateSellPrice(definitionId, buyNowPrice, minPrice, maxPrice);
+    setWorkingStatus(RUNNER_STATUS.MOVING_TO_AUCTION);
+    const minSellPrice = sellPrice - getFutPriceStep(sellPrice, false);
+    await sleep(getDelayBeforeDefaultRequest(true));
+    const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);
+    if (result?.id) {
+      return {
+        itemId,
+        minSellPrice,
+        sellPrice,
+      };
+    }
+  } catch (e) {
+    if (e instanceof CustomFutError) {
+      return {
+        error: e,
+      };
+    }
+    throw e;
   }
 };
 
@@ -393,7 +385,6 @@ export const sellPlayers = async (boughtItems, movedItems) => {
   for (let i = 0; i < boughtAndMovedToTransferListItems.length; i++) {
     const item = boughtAndMovedToTransferListItems[i];
     const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);
-    console.log('ITEM IN TRADEPILE', itemInTradepile);
     const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
     const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
     const definitionId = itemInTradepile?.itemData?.assetId;
