@@ -275,11 +275,14 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
   await sleep(getSearchRequestDelay());
 
   let result = await searchOnTransfermarketRequest(params);
+  console.log('first result', result);
   let cheapests = findFirstCheapestItems(result?.auctionInfo);
+  console.log('first 5 cheap', cheapests);
   if (result?.auctionInfo?.length === pageSize) {
     for (let i = 1; i < maxPages; i++) {
       await sleep(getSearchRequestDelay());
       const cheapestBuyNowPrice = cheapests[0]?.buyNowPrice;
+      console.log('cheapestBuyNowPrice', cheapestBuyNowPrice);
       if (!cheapestBuyNowPrice) {
         return null;
       }
@@ -291,9 +294,12 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
       params.start = (params.start || 0) + pageSize;
 
       let searchResult = await searchOnTransfermarketRequest(params);
-
+      console.log('next search', searchResult);
       const newCheapests = findFirstCheapestItems(searchResult?.auctionInfo);
+      console.log('newCheapests', newCheapests);
       cheapests = [...newCheapests, ...cheapests.slice(newCheapests.length)];
+      console.log('final cheapests', cheapests);
+
       if (searchResult?.auctionInfo?.length < pageSize) {
         break;
       }
@@ -305,6 +311,7 @@ const findCheapestAuctionItems = async (definitionId, maxPrice) => {
 const getSellPriceFromLocal = async (definitionId) => {
   const priceLifeMinutes = PRICE_CACHE_LIFE_MINUTES;
   const { sellPrices } = await getFromStorage('sellPrices');
+  console.log(sellPrices);
   const item = (sellPrices || {})[definitionId];
   if (item?.createdTimestamp && item?.price != null) {
     const now = Date.now();
@@ -314,7 +321,8 @@ const getSellPriceFromLocal = async (definitionId) => {
 };
 
 const saveSellPriceLocally = async (definitionId, sellPrice) => {
-  const { sellPrices = {} } = await getFromStorage('sellPrices');
+  let { sellPrices } = await getFromStorage('sellPrices');
+  sellPrices = sellPrices || {};
   sellPrices[definitionId] = {
     price: sellPrice,
     createdTimestamp: Date.now(),
@@ -327,7 +335,9 @@ const getPriceAfterWithCommission = (price) => {
 };
 
 const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice) => {
+  console.log('PARAMS', definitionId, buyNowPrice, minPrice, maxPrice);
   let price = await getSellPriceFromLocal(definitionId);
+  console.log('LOCAL SELL PRICE', price);
   if (!price) {
     const cheapests = await findCheapestAuctionItems(definitionId, maxPrice);
     price = getTheMostRepeatableNumber((cheapests || []).map(item => item.buyNowPrice));
@@ -336,12 +346,15 @@ const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice)
     return null;
   }
   const lowerThenMarketPrice = price - getFutPriceStep(price, false);
+  console.log('PRICE AFTER COMMISSION', getPriceAfterWithCommission(lowerThenMarketPrice), getPriceAfterWithCommission(price));
   const finalPrice = getPriceAfterWithCommission(lowerThenMarketPrice) > buyNowPrice
     ? lowerThenMarketPrice
     : getPriceAfterWithCommission(price) > buyNowPrice
       ? price
       : null;
   const result = finalPrice > minPrice ? finalPrice : null;
+
+  console.log('INFO', lowerThenMarketPrice, finalPrice, result);
 
   if (result) {
     await saveSellPriceLocally(definitionId, price);
@@ -352,6 +365,7 @@ const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice)
 export const sellPlayer = async (itemId, definitionId, buyNowPrice, minPrice, maxPrice) => {
   setWorkingStatus(RUNNER_STATUS.CALCULATING_SELL_PRICE);
   const sellPrice = await calculateSellPrice(definitionId, buyNowPrice, minPrice, maxPrice);
+  console.log('FINALLY calculated sell price', sellPrice);
   if (!sellPrice) {
     return null;
   }

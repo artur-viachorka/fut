@@ -14,7 +14,7 @@ const Container = styled.div`
   position: relative;
   flex-direction: row;
   width: 100%;
-  height: 160px;
+  height: 170px;
   min-width: 500px;
   margin-bottom: 10px;
   border-radius: 3px;

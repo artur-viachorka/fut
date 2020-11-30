@@ -69,6 +69,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
     pauseRunnerSubject
       .pipe(first())
       .subscribe(() => {
+        setWorkingStatus();
         isWorking = false;
         reject({
           status: RUNNER_STATUS.PAUSE,
@@ -78,6 +79,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
     stopRunnerSubject
       .pipe(first())
       .subscribe(() => {
+        setWorkingStatus();
         isWorking = false;
         resetRunningState();
         reject({
@@ -89,6 +91,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
       .pipe(first())
       .subscribe(({ stepId }) => {
         if (stepId === step.id) {
+          setWorkingStatus();
           isWorking = false;
           resetRunningState();
           resolve();
@@ -105,7 +108,6 @@ export const executeStep = async (step, transferListLimit, logger) => {
         return;
       }
       const result = await stepTickHandler(step, logger);
-      setWorkingStatus();
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
@@ -115,6 +117,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
         work();
         return;
       }
+      setWorkingStatus();
       resolve(result);
     };
     setTimeout(work, getDelayBeforeDefaultRequest());
@@ -192,13 +195,13 @@ const stepTickHandler = async (step, logger) => {
     }
     return { success: true };
   } catch (e) {
-    setWorkingStatus();
     console.error('Error in runner', e);
-    if (e.status === CAPTCHA_ERROR_CODE) {
-      openUTNotification({ text: 'Captcha needed. Reload page and enter captcha.', error: true, infinite: true });
-      return { stop: true };
-    }
-    openUTNotification({ text: e?.errorText || 'Something went wrong in runner. Please, try later.', error: true });
+    const isCaptcha = e.status === CAPTCHA_ERROR_CODE;
+    openUTNotification({
+      text: isCaptcha ? 'Captcha needed. Reload page and enter captcha.' : 'Something went wrong in runner. Please, try later.',
+      error: true,
+      infinite: isCaptcha,
+    });
     return { stop: true };
   }
 };

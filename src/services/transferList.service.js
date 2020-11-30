@@ -44,6 +44,7 @@ export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
     if (shouldNotify) {
       openUTNotification({ text: 'Transfer list was successfully synced.', success: true });
     }
+    await sleep(getDelayBeforeDefaultRequest());
     return {
       ...tradepile,
       auctionInfo: updatedAuctionInfo,

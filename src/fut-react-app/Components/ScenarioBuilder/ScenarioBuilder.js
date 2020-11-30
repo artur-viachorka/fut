@@ -131,7 +131,9 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
     const selectScenarioSubscription = selectScenarioSubject.subscribe(({ scenario }) => {
       setScenario(scenario);
     });
-    return selectScenarioSubscription.unsubscribe;
+    return () => {
+      selectScenarioSubscription.unsubscribe();
+    };
   }, []);
 
   const removeStep = (id) => {

@@ -45,7 +45,9 @@ const FiltersList = () => {
     const addFilterSubscription = addFilterSubject.subscribe(() => {
       loadFilters();
     });
-    return addFilterSubscription.unsubscribe;
+    return () => {
+      addFilterSubscription.unsubscribe();
+    };
   }, []);
 
   const moveFilter = (id, atIndex) => {

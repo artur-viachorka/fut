@@ -64,7 +64,9 @@ const ScenariosList = ({ isReadOnly }) => {
         setSelectedScenario(null);
       }
     });
-    return editScenarioSubscription.unsubscribe;
+    return () => {
+      editScenarioSubscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

@@ -34,8 +34,12 @@ const Header = styled.div`
   padding: 5px;
   border-radius: 4px;
   background: #282238;
-  margin-bottom: 18px;
+  margin-bottom: 25px;
   position: relative;
+  ${props => props.withStatus && `
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  `}
 
   > span {
     color: white;
@@ -64,24 +68,23 @@ const Header = styled.div`
 
 const WorkingStatus = styled.div`
   position: absolute;
-  left: 0;
-  right: 0;
-  background: #282237ad;
+  left: 0px;
+  right: 0px;
+  background: #643acb;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   text-transform: capitalize;
-  bottom: -21px;
-  padding: 0px;
-  height: 25px;
+  bottom: -20px;
+  padding: 0px 0px 0px 10px;
+  height: 20px;
   align-items: center;
-  padding-left: 10px;
   font-size: 12px;
   display: flex;
 
   > span {
     white-space: nowrap;
     overflow: hidden;
-    margin-top: 5px;
+    color: white;
   }
 
   > div {
@@ -131,12 +134,14 @@ const RunnerStepStatus = ({
     const setWorkingStatusSubjectSubscription = setWorkingStatusSubject.subscribe(({ status }) => {
       setWorkingStatus(status);
     });
-    return setWorkingStatusSubjectSubscription.unsubscribe;
+    return () => {
+      setWorkingStatusSubjectSubscription.unsubscribe();
+    };
   }, []);
   return (
     <Container isStepRunning={isStepRunning}>
       {isWorking && (
-        <Header>
+        <Header withStatus>
           <span>
             <FaAngleRight/>
             <title>
@@ -150,12 +155,10 @@ const RunnerStepStatus = ({
               onTimerExceeded={onWorkingTimerExceeded}
               timerSeconds={workingSeconds}
           />
-          {workingStatus && (
-            <WorkingStatus title={workingStatus}>
-              <span>{workingStatus}</span>
-              <Dots/>
-            </WorkingStatus>
-          )}
+          <WorkingStatus title={workingStatus}>
+            <span>{workingStatus || <Hint>Working Status</Hint>}</span>
+            {workingStatus && <Dots/>}
+          </WorkingStatus>
         </Header>
       )}
       {isIdle && (
@@ -187,7 +190,7 @@ const RunnerStepStatus = ({
         </Logs>
       )}
       {!isWorking && !isIdle && !logs?.length && (
-        <Hint>Working Status</Hint>
+        <Hint>Working Logs</Hint>
       )}
     </Container>
   );
