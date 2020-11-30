@@ -60,10 +60,6 @@ export const syncTradepile = async (skipItems) => {
 };
 
 export const executeStep = async (step, transferListLimit, logger) => {
-  if (runnerState.transferListLimit !== transferListLimit) {
-    runnerState.transferListLimit = transferListLimit;
-    await syncTradepile();
-  }
   return new Promise((resolve, reject) => {
     let isWorking = true;
     pauseRunnerSubject
@@ -99,6 +95,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
       });
 
     const work = async () => {
+      console.log('IS WORKING', isWorking);
       if (!isWorking) {
         resolve();
         return;
@@ -107,7 +104,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
         resolve({ skip: true });
         return;
       }
-      const result = await stepTickHandler(step, logger);
+      const result = await stepTickHandler(step, logger, transferListLimit);
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
@@ -128,8 +125,12 @@ export const setWorkingStatus = (status = null) => {
   setWorkingStatusSubject.next({ status });
 };
 
-const stepTickHandler = async (step, logger) => {
+const stepTickHandler = async (step, logger, transferListLimit) => {
   try {
+    if (runnerState.transferListLimit !== transferListLimit) {
+      runnerState.transferListLimit = transferListLimit;
+      await syncTradepile();
+    }
     let params = { ...step.filter.requestParams };
     setWorkingStatus(RUNNER_STATUS.SEARCHING_PLAYERS);
     [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);

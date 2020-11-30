@@ -168,6 +168,11 @@ export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
   to: 3.2,
 };
 
+export const PURCHASE_DELAY = {
+  from: 0.4,
+  to: 0.8,
+};
+
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   from: 1,
   to: 1.5,

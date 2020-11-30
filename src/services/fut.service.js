@@ -30,12 +30,17 @@ import {
   MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK,
   PRICE_CACHE_LIFE_MINUTES,
   RUNNER_STATUS,
+  PURCHASE_DELAY,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
 
 export const getSearchRequestDelay = () => {
   return getRandomNumberInRange(SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.from, SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to);
+};
+
+export const getPurchaseDelay = () => {
+  return getRandomNumberInRange(PURCHASE_DELAY.from, PURCHASE_DELAY.to);
 };
 
 const getDelayBeforeMovingToTransferList = () => {
@@ -202,7 +207,6 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
       if ((playersOnPage?.auctionInfo || []).find(auctionItem => auctionItem.tradeId === player.tradeId)) {
         await sleep(getDelayBeforeDefaultRequest());
         const liteData = await getLiteRequest([player.tradeId]);
-        await sleep(getDelayBeforeDefaultRequest());
         const activeTrade = (liteData?.auctionInfo || []).find(item => item.tradeId === player.tradeId && item.tradeState === FUT.TRADE_STATE.active);
         if (!activeTrade) {
           continue;
@@ -211,8 +215,8 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
         continue;
       }
     }
+    await sleep(getPurchaseDelay());
     const boughtResult = await buyPlayer(player);
-    await sleep(getDelayBeforeDefaultRequest());
     if (boughtResult) {
       credits = boughtResult.credits;
       boughtItems.push(boughtResult.auctionInfo);
@@ -389,6 +393,7 @@ export const sellPlayers = async (boughtItems, movedItems) => {
   for (let i = 0; i < boughtAndMovedToTransferListItems.length; i++) {
     const item = boughtAndMovedToTransferListItems[i];
     const itemInTradepile = tradepile.auctionInfo.find(auctionItem => auctionItem.itemData.id === item.itemData.id);
+    console.log('ITEM IN TRADEPILE', itemInTradepile);
     const marketDataMinPrice = itemInTradepile?.itemData?.marketDataMinPrice;
     const marketDataMaxPrice = itemInTradepile?.itemData?.marketDataMaxPrice;
     const definitionId = itemInTradepile?.itemData?.assetId;
