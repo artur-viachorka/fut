@@ -19,6 +19,7 @@ export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
 export const setCreditsSubject = new Subject();
+export const setWorkingStatusSubject = new Subject();
 
 const runnerState = {
   credits: null,
@@ -41,6 +42,7 @@ const resetRunningState = () => {
 };
 
 export const syncTradepile = async (skipItems) => {
+  setWorkingStatus(RUNNER_STATUS.SYNCING_TRANSFERS);
   skipItems = (skipItems || []).map(item => item.itemData.id);
   const tradepile = await syncTransferListItems(false, skipItems);
   if (!tradepile) {
@@ -103,6 +105,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
         return;
       }
       const result = await stepTickHandler(step, logger);
+      setWorkingStatus();
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
@@ -118,9 +121,14 @@ export const executeStep = async (step, transferListLimit, logger) => {
   });
 };
 
+export const setWorkingStatus = (status = null) => {
+  setWorkingStatusSubject.next({ status });
+};
+
 const stepTickHandler = async (step, logger) => {
   try {
     let params = { ...step.filter.requestParams };
+    setWorkingStatus(RUNNER_STATUS.SEARCHING_PLAYERS);
     [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
     if (runnerState.minBuyNow) {
       params.minb = runnerState.minBuyNow;
@@ -135,6 +143,7 @@ const stepTickHandler = async (step, logger) => {
     );
     if (searchResult) {
       logger.logSearchResult(searchResult.cheapestPlayers);
+      setWorkingStatus(RUNNER_STATUS.BUYING);
       const { credits: remainingCredits, tooLowCredits, boughtItems } = await buyPlayers(
         searchResult,
         params,
@@ -156,6 +165,7 @@ const stepTickHandler = async (step, logger) => {
           await syncTradepile(boughtItems);
         }
         if (runnerState.freeSlotsInTransferList) {
+          setWorkingStatus(RUNNER_STATUS.SENDING_TO_TRANSFER_LIST);
           const moveToTransferListResult = await sendItemsToTransferList(
             boughtItems,
           );
@@ -182,6 +192,7 @@ const stepTickHandler = async (step, logger) => {
     }
     return { success: true };
   } catch (e) {
+    setWorkingStatus();
     console.error('Error in runner', e);
     if (e.status === CAPTCHA_ERROR_CODE) {
       openUTNotification({ text: 'Captcha needed. Reload page and enter captcha.', error: true, infinite: true });

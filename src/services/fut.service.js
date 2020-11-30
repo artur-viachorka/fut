@@ -1,6 +1,6 @@
 import { first } from 'rxjs/operators';
 import { getRandomNumberInRange, sleep, getSortHandler, getTheMostRepeatableNumber, convertMsToMinutes } from './helper.service';
-import { pauseRunnerSubject, stopRunnerSubject, syncTradepile } from './runner.service';
+import { pauseRunnerSubject, stopRunnerSubject, syncTradepile, setWorkingStatus } from './runner.service';
 import {
   bidPlayerRequest,
   searchOnTransfermarketRequest,
@@ -29,6 +29,7 @@ import {
   SEARCH_ITEMS_PAGE_SIZE_ON_PRICE_CHECK,
   MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK,
   PRICE_CACHE_LIFE_MINUTES,
+  RUNNER_STATUS,
 } from '../constants';
 
 import { saveToStorage, getFromStorage } from './storage.service';
@@ -211,6 +212,7 @@ export const buyPlayers = async ({ cheapestPlayers, auctionInfo }, params, shoul
       }
     }
     const boughtResult = await buyPlayer(player);
+    await sleep(getDelayBeforeDefaultRequest());
     if (boughtResult) {
       credits = boughtResult.credits;
       boughtItems.push(boughtResult.auctionInfo);
@@ -348,10 +350,12 @@ const calculateSellPrice = async (definitionId, buyNowPrice, minPrice, maxPrice)
 };
 
 export const sellPlayer = async (itemId, definitionId, buyNowPrice, minPrice, maxPrice) => {
+  setWorkingStatus(RUNNER_STATUS.CALCULATING_SELL_PRICE);
   const sellPrice = await calculateSellPrice(definitionId, buyNowPrice, minPrice, maxPrice);
   if (!sellPrice) {
     return null;
   }
+  setWorkingStatus(RUNNER_STATUS.MOVING_TO_AUCTION);
   const minSellPrice = sellPrice - getFutPriceStep(sellPrice, false);
   await sleep(getDelayBeforeDefaultRequest(true));
   const result = await sendItemToAuctionHouseRequest(itemId, minSellPrice, sellPrice, HOUR_IN_SECONDS);

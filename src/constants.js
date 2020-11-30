@@ -155,6 +155,12 @@ export const RUNNER_STATUS = {
   IDLE: 'idle',
   PAUSE: 'pause',
   STOP: 'stop',
+  SEARCHING_PLAYERS: 'Searching players',
+  CALCULATING_SELL_PRICE: 'calculating sell price',
+  SYNCING_TRANSFERS: 'syncing transfers',
+  MOVING_TO_AUCTION: 'moving to auction',
+  BUYING: 'buying',
+  SENDING_TO_TRANSFER_LIST: 'sending to transfers',
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {

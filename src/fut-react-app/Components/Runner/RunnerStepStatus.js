@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import { setWorkingStatusSubject } from '../../../services/runner.service';
 
 import { FaAngleRight } from 'react-icons/fa';
 import CountdownTimer from '../CountdownTimer';
@@ -33,7 +34,8 @@ const Header = styled.div`
   padding: 5px;
   border-radius: 4px;
   background: #282238;
-  margin-bottom: 5px;
+  margin-bottom: 18px;
+  position: relative;
 
   > span {
     color: white;
@@ -57,6 +59,33 @@ const Header = styled.div`
 
   .countdown-icon {
     font-size: 20px;
+  }
+`;
+
+const WorkingStatus = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #282237ad;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  text-transform: capitalize;
+  bottom: -21px;
+  padding: 0px;
+  height: 25px;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  display: flex;
+
+  > span {
+    white-space: nowrap;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  > div {
+    padding-bottom: 6px;
   }
 `;
 
@@ -97,6 +126,13 @@ const RunnerStepStatus = ({
   onIdleTimerPaused,
   logs,
 }) => {
+  const [workingStatus, setWorkingStatus] = useState(null);
+  useEffect(() => {
+    const setWorkingStatusSubjectSubscription = setWorkingStatusSubject.subscribe(({ status }) => {
+      setWorkingStatus(status);
+    });
+    return setWorkingStatusSubjectSubscription.unsubscribe;
+  }, []);
   return (
     <Container isStepRunning={isStepRunning}>
       {isWorking && (
@@ -114,6 +150,12 @@ const RunnerStepStatus = ({
               onTimerExceeded={onWorkingTimerExceeded}
               timerSeconds={workingSeconds}
           />
+          {workingStatus && (
+            <WorkingStatus title={workingStatus}>
+              <span>{workingStatus}</span>
+              <Dots/>
+            </WorkingStatus>
+          )}
         </Header>
       )}
       {isIdle && (
