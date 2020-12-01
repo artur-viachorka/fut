@@ -37,6 +37,28 @@ export const removeStepFromScenario = (scenario, stepId) => {
   };
 };
 
+export const copyStepInScenario = (scenario, stepId) => {
+  let index = 0;
+  let steps = [...scenario.steps];
+  const stepToCopy = steps.find((step, i) => {
+    if (step.id === stepId) {
+      index = i;
+      return true;
+    }
+  });
+  if (stepToCopy) {
+    const newStep = {
+      ...stepToCopy,
+      id: uuid(),
+    };
+    steps.splice(index + 1, 0, newStep);
+  }
+  return {
+    ...scenario,
+    steps,
+  };
+};
+
 export const getScenarios = async () => {
   const { scenarios } = await getFromStorage('scenarios');
   return scenarios || [];

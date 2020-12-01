@@ -10,7 +10,15 @@ import MarkColorPicker from './MarkColorPicker';
 import TextField from '../Fields/TextField';
 import { DND_TYPES } from '../../../constants';
 import { getSearchFilter } from '../../../services/marketSearchCriteria.service';
-import { createNewScenario, addNewStepToScenario, removeStepFromScenario, saveScenario, copyScenario, deleteScenario } from '../../../services/scenario.service';
+import {
+  createNewScenario,
+  addNewStepToScenario,
+  copyStepInScenario,
+  removeStepFromScenario,
+  saveScenario,
+  copyScenario,
+  deleteScenario,
+} from '../../../services/scenario.service';
 import { FaRegCopy, FaTrash } from 'react-icons/fa';
 import { selectScenarioSubject, editScenarioWithoutSavingSubject } from '../../../contentScript';
 
@@ -138,6 +146,12 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
 
   const removeStep = (id) => {
     const newScenario = removeStepFromScenario(scenario, id);
+    setScenario(newScenario);
+    editScenarioWithoutSavingSubject.next({ scenario: newScenario });
+  };
+
+  const copyStep = (id) => {
+    const newScenario = copyStepInScenario(scenario, id);
     setScenario(newScenario);
     editScenarioWithoutSavingSubject.next({ scenario: newScenario });
   };
@@ -272,6 +286,7 @@ const ScenarioBuilder = ({ isReadOnly, fromRunner, hint, renderStepStatusBar, ac
                       moveStep={moveStep}
                       findStep={findStep}
                       remove={removeStep}
+                      copy={copyStep}
                       key={step.id}
                       step={step}
                       renderStatusBar={renderStepStatusBar}

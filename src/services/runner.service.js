@@ -95,7 +95,6 @@ export const executeStep = async (step, transferListLimit, logger) => {
       });
 
     const work = async () => {
-      console.log('IS WORKING', isWorking); // remove after tested
       if (!isWorking) {
         resolve();
         return;

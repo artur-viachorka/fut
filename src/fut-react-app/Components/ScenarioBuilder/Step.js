@@ -4,6 +4,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import { AiFillCloseCircle, AiFillEdit } from 'react-icons/ai';
 import { IoIosCheckmarkCircle, IoMdCloseCircle } from 'react-icons/io';
+import { FaRegCopy } from 'react-icons/fa';
 
 import Filter from '../Filters/Filter';
 import { DND_TYPES } from '../../../constants';
@@ -64,7 +65,6 @@ const FilterContainer = styled.div`
 
 const Settings = styled.div`
   display: flex;
-  justify-content: center;
   flex-direction: column;
   width: auto;
   padding: 10px 15px 0 15px;
@@ -94,27 +94,45 @@ const Setting = styled.div`
   color: ${(props) => props.isValid ? '#29b29b' : '#b22929'};
 `;
 
-const EditAction = styled.span`
-  position: absolute;
-  left: calc(50% - 6px);
-  top: 3px;
+const Actions = styled.span`
   font-size: 17px;
-  cursor: pointer;
-  transition: all 0.5s ease-out 0s;
-  &:hover {
-    color: grey;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 7px;
+
+  > span {
+    margin-right: 5px;
+    border: 1px solid #7e43f5;
+    padding: 1px;
+    border-radius: 7px;
+    width: 25px;
+    height: 25px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    transition: 0.5s linear all;
+    cursor: pointer;
+
+    &:hover {
+      background: #7e43f5;
+    }
+    ${props => props.isDisabled && `
+      color: grey;
+      cursor: default;
+    `}
+    &:last-child {
+      margin-right: 0;
+    }
   }
-  ${props => props.isDisabled && `
-    color: grey;
-    cursor: default;
-`}
 `;
 
 const Checkmark = styled.span`
   color: ${(props) => props.isActive ? '#29b29b' : '#b22929'};
 `;
 
-const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar, isActive }) => {
+const Step = ({ remove, step, copy, index, isDragging, drag, drop, edit, isReadOnly, renderStatusBar, isActive }) => {
   const [isStepSettingsModalVisible, setIsStepSettingsModalVisible] = useState(false);
   const saveStepSettings = (stepSettings) => {
     edit({
@@ -123,7 +141,6 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
     });
     setIsStepSettingsModalVisible(false);
   };
-
   const changeFilterMaxBuyDebounced = (price) => {
     edit({
       ...step,
@@ -154,6 +171,14 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
       >
         <StepNumber isActive={isActive}>{index + 1}</StepNumber>
         <Settings>
+          <Actions title="Copy" isDisabled={isReadOnly}>
+            <span onClick={() => copy(step.id)}>
+              <FaRegCopy/>
+            </span>
+            <span title="Edit" onClick={() => !isReadOnly && setIsStepSettingsModalVisible(true)}>
+              <AiFillEdit/>
+            </span>
+          </Actions>
           <div>
             <span>Sell on market</span>
             <Checkmark isActive={step.shouldSellOnMarket}>{step.shouldSellOnMarket ? <IoIosCheckmarkCircle/> : <IoMdCloseCircle/>}</Checkmark>
@@ -178,9 +203,6 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
             <span>Rating</span>
             <span>{step.rating || '-'}</span>
           </div>
-          <EditAction isDisabled={isReadOnly} onClick={() => !isReadOnly && setIsStepSettingsModalVisible(true)}>
-            <AiFillEdit/>
-          </EditAction>
         </Settings>
         <Main>
           <FilterContainer>
@@ -199,7 +221,7 @@ const Step = ({ remove, step, index, isDragging, drag, drop, edit, isReadOnly, r
   );
 };
 
-export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly, renderStatusBar, isActive }) => {
+export const DNDStep = ({ edit, remove, copy, step, index, onDragAndDropEnd, findStep, moveStep, isReadOnly, renderStatusBar, isActive }) => {
   const originalIndex = findStep(step.id).index;
 
   const [{ isDragging }, drag] = useDrag({
@@ -235,6 +257,7 @@ export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep,
         drag={drag}
         drop={drop}
         step={step}
+        copy={copy}
         index={index}
         isDragging={isDragging}
         edit={edit}
@@ -248,6 +271,7 @@ export const DNDStep = ({ edit, remove, step, index, onDragAndDropEnd, findStep,
 DNDStep.propTypes = {
   edit: PropTypes.func,
   remove: PropTypes.func,
+  copy: PropTypes.func,
   step: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
   onDragAndDropEnd: PropTypes.func,
@@ -261,6 +285,7 @@ DNDStep.propTypes = {
 Step.propTypes = {
   remove: PropTypes.func,
   step: PropTypes.object.isRequired,
+  copy: PropTypes.func,
   index: PropTypes.number.isRequired,
   isReadOnly: PropTypes.bool,
   isDragging: PropTypes.bool,
