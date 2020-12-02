@@ -1,9 +1,6 @@
 import { FUT_WEB_APP_DATA_TYPE } from '../constants';
 
-export const pinEvent = async (pageId) => {
-  const result = await sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageId });
-  alert(`${result} - outer`);
-};
+export const pinEvent = (pageId) => sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageId });
 
 export const getAppGUID = (() => {
   let storedAppId = null;

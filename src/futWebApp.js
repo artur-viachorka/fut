@@ -1,7 +1,7 @@
 import { FUT_WEB_APP_DATA_TYPE } from './constants';
 
 const pinEvent = async (pageId) => {
-  alert(pageId);
+  alert('pin event', pageId);
   window.services.PIN.sendData(window.PINEventType.PAGE_VIEW, {
     type: window.PIN_PAGEVIEW_EVT_TYPE,
     pgid: pageId,
