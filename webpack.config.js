@@ -4,13 +4,13 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        content: ['babel-polyfill', './src/contentScript.js']
+        content: ['babel-polyfill', './src/contentScript.js'],
+        futWebApp: ['./src/futWebApp.js'],
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].bundle.js'
     },
-    'devtool': 'source-map',
     resolve: {
         modules: [path.join(__dirname, 'src'), 'node_modules']
     },

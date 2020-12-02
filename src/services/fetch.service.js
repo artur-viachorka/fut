@@ -15,16 +15,7 @@ import {
   transformPlayersFromFUT,
 } from './transform.service';
 
-const executeOnPageSpace = (code) => {
-  var script = document.createElement('script');
-  script.id = 'tmpScript';
-  script.textContent =
-  'document.getElementById("tmpScript").textContent = JSON.stringify(' + code + ')';
-  document.documentElement.appendChild(script);
-  let result = document.getElementById('tmpScript').textContent;
-  script.remove();
-  return JSON.parse(result);
-};
+import { getAppGUID, getSessionId } from './futWebApp.service';
 
 const replaceUrlParams = (url, params) => {
   params.forEach(param => url = url.replace(`{${param.name}}`, param.value));
@@ -32,7 +23,7 @@ const replaceUrlParams = (url, params) => {
 };
 
 export const sendRequest = async ({ host, url, params, urlParams, body, method = 'GET', credentials, skipXUtSid }) => {
-  const userId = executeOnPageSpace('window.services.Authentication._sessionUtas.id');
+  const userId = await getSessionId();
   if (!userId) {
     return;
   }
@@ -195,7 +186,7 @@ export const getPriceLimitsRequest = async (itemId) => {
 
 export const getPlayers = async () => {
   try {
-    const appGuid = executeOnPageSpace('window.APP_GUID');
+    const appGuid = await getAppGUID();
     if (!appGuid) {
       return null;
     }

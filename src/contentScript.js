@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 import { initSearchMarketPage } from './services/marketSearchCriteria.service';
-import { waitUntilElementExists, setMutationObserver, initFUTApp } from './services/ui.service';
-import { FUT } from './constants';
+import { waitUntilElementExists, setMutationObserver, initFUTApp, injectScript } from './services/ui.service';
+import { FUT, WEB_APP_BUNDLE_URL } from './constants';
 import { initReactApp } from './fut-react-app';
 
 export const addFilterSubject = new Subject();
@@ -13,6 +13,7 @@ $(() => {
   initReactApp();
   waitUntilElementExists(FUT.PAGE_SELECTORS.rootView)
     .then(() => {
+      injectScript(WEB_APP_BUNDLE_URL);
       setMutationObserver(
         FUT.PAGE_SELECTORS.rootView,
         'addedNodes',

@@ -14,6 +14,8 @@ import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
 import { sleep } from './helper.service';
 
+import { pinEvent } from './futWebApp.service';
+
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
@@ -126,6 +128,7 @@ export const setWorkingStatus = (status = null) => {
 
 const stepTickHandler = async (step, logger, transferListLimit) => {
   try {
+    await pinEvent('Hub - Transfers');
     if (runnerState.transferListLimit !== transferListLimit) {
       runnerState.transferListLimit = transferListLimit;
       await syncTradepile();

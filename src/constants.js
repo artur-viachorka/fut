@@ -303,3 +303,11 @@ export const SEARCH_ITEMS_ORDER_CONFIG = [
     path: ['pageNumber'],
   },
 ];
+
+export const WEB_APP_BUNDLE_URL = './futWebApp.bundle.js';
+
+export const FUT_WEB_APP_DATA_TYPE = {
+  PIN: 'pin',
+  SESSION_ID: 'session-id',
+  APP_GUID: 'app-guid',
+};
