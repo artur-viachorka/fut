@@ -1,9 +1,11 @@
 import { FUT_WEB_APP_DATA_TYPE } from './constants';
 
-const pinEvent = async (pageId) => {
-  window.services.PIN.sendData(window.PINEventType.PAGE_VIEW, {
-    type: window.PIN_PAGEVIEW_EVT_TYPE,
-    pgid: pageId,
+const pinEvents = async (pageIds) => {
+  pageIds.forEach(pageId => {
+    window.services.PIN.sendData(window.PINEventType.PAGE_VIEW, {
+      type: window.PIN_PAGEVIEW_EVT_TYPE,
+      pgid: pageId,
+    });
   });
   return true;
 };
@@ -20,7 +22,7 @@ window.addEventListener('message', async (e) => {
   let result = null;
   switch (e.data.type) {
     case FUT_WEB_APP_DATA_TYPE.PIN:
-      result = await pinEvent(e.data.payload);
+      result = await pinEvents(e.data.payload);
       break;
     case FUT_WEB_APP_DATA_TYPE.SESSION_ID:
       result = getSessionId();

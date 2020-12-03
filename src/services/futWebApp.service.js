@@ -1,9 +1,11 @@
 import { FUT_WEB_APP_DATA_TYPE, PIN_EVENT_DELAY } from '../constants';
 import { sleep } from './helper.service';
 
-export const pinEvent = async (pageId) => {
-  const result = await sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageId });
-  await sleep(PIN_EVENT_DELAY);
+export const pinEvents = async (pageIds, delay = PIN_EVENT_DELAY) => {
+  const result = await sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageIds.filter(Boolean) });
+  if (delay) {
+    await sleep(delay);
+  }
   return result;
 };
 

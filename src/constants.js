@@ -164,8 +164,8 @@ export const RUNNER_STATUS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 2.3,
-  to: 3.2,
+  from: 3,
+  to: 4.3,
 };
 
 export const PURCHASE_DELAY = {
@@ -316,4 +316,7 @@ export const FUT_WEB_APP_DATA_TYPE = {
 export const FUT_WEB_APP_EVENTS = {
   TRANSFERS_HUB: 'Hub - Transfers',
   TRANSFERS_LIST: 'Transfer List - List View',
+  TRANSFER_MARKET_SEARCH: 'Transfer Market Search',
+  TRANSFER_MARKET_SEARCH_RESULT: 'Transfer Market Results - List View',
+  ITEM_DETAIL_VIEW: 'Item - Detail View',
 };

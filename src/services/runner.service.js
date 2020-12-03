@@ -5,16 +5,14 @@ import {
   buyPlayers,
   sellPlayers,
   sendItemsToTransferList,
-  getSearchRequestDelay,
   getDelayBeforeDefaultRequest,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
-import { CAPTCHA_ERROR_CODE, RUNNER_STATUS } from '../constants';
+import { CAPTCHA_ERROR_CODE, RUNNER_STATUS, FUT_WEB_APP_EVENTS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
-import { sleep } from './helper.service';
 
-import { pinEvent } from './futWebApp.service';
+import { pinEvents } from './futWebApp.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -62,6 +60,11 @@ export const syncTradepile = async (skipItems) => {
 };
 
 export const executeStep = async (step, transferListLimit, logger) => {
+  if (runnerState.transferListLimit !== transferListLimit) {
+    runnerState.transferListLimit = transferListLimit;
+    await syncTradepile();
+  }
+  await pinEvents([FUT_WEB_APP_EVENTS.TRANSFERS_HUB]);
   return new Promise((resolve, reject) => {
     let isWorking = true;
     pauseRunnerSubject
@@ -105,13 +108,12 @@ export const executeStep = async (step, transferListLimit, logger) => {
         resolve({ skip: true });
         return;
       }
-      const result = await stepTickHandler(step, logger, transferListLimit);
+      const result = await stepTickHandler(step, logger);
       if (result?.skip) {
         resetRunningState();
         runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
       }
       if (result?.success) {
-        await sleep(getSearchRequestDelay());
         work();
         return;
       }
@@ -126,13 +128,8 @@ export const setWorkingStatus = (status = null) => {
   setWorkingStatusSubject.next({ status });
 };
 
-const stepTickHandler = async (step, logger, transferListLimit) => {
+const stepTickHandler = async (step, logger,) => {
   try {
-    await pinEvent('Hub - Transfers');
-    if (runnerState.transferListLimit !== transferListLimit) {
-      runnerState.transferListLimit = transferListLimit;
-      await syncTradepile();
-    }
     let params = { ...step.filter.requestParams };
     setWorkingStatus(RUNNER_STATUS.SEARCHING_PLAYERS);
     [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
@@ -142,7 +139,6 @@ const stepTickHandler = async (step, logger, transferListLimit) => {
     if (runnerState.minBid) {
       params.micr = runnerState.minBid;
     }
-
     const searchResult = await searchPlayersOnMarket(
       params,
       step,

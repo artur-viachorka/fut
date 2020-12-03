@@ -4,8 +4,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        content: ['babel-polyfill', './src/contentScript.js'],
-        futWebApp: ['babel-polyfill', './src/futWebApp.js'],
+        'babel-polyfill': 'babel-polyfill',
+        futWebApp: './src/futWebApp.js',
+        content: './src/contentScript.js',
     },
     output: {
         path: path.resolve(__dirname, 'dist'),

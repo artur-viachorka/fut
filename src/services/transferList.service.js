@@ -1,7 +1,7 @@
 import { getTradePile, sendItemToClub, clearSoldItems } from './fetch.service';
 import { sleep } from './helper.service';
 import { getDelayBeforeDefaultRequest } from './fut.service';
-import { pinEvent } from './futWebApp.service';
+import { pinEvents } from './futWebApp.service';
 import { openUTNotification } from './notification.service';
 
 import { FUT, FUT_WEB_APP_EVENTS } from '../constants';
@@ -13,8 +13,9 @@ export const isUniq = (item, duplicates) => {
 export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
   try {
     await sleep(getDelayBeforeDefaultRequest());
-    await pinEvent(FUT_WEB_APP_EVENTS.TRANSFERS_HUB);
-    await pinEvent(FUT_WEB_APP_EVENTS.TRANSFERS_LIST);
+    await pinEvents([FUT_WEB_APP_EVENTS.TRANSFERS_HUB]);
+    await pinEvents([FUT_WEB_APP_EVENTS.TRANSFERS_LIST, FUT_WEB_APP_EVENTS.ITEM_DETAIL_VIEW]);
+
     let tradepile = await getTradePile();
     if (!tradepile?.auctionInfo?.length) {
       return;

@@ -198,7 +198,7 @@ export const getPlayers = async () => {
       skipXUtSid: true,
       urlParams: [{ name: 'appGuid', value: appGuid }],
       params: {
-        _: 21046,
+        _: 21052,
       },
     });
     return result ? transformPlayersFromFUT(result) : result;
