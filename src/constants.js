@@ -192,6 +192,7 @@ export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
   from: 2,
   to: 2.5,
 };
+export const PIN_EVENT_DELAY = 2;
 
 export const FUT_COMMISSION_IN_PERCENT = 5;
 
@@ -310,4 +311,9 @@ export const FUT_WEB_APP_DATA_TYPE = {
   PIN: 'pin',
   SESSION_ID: 'session-id',
   APP_GUID: 'app-guid',
+};
+
+export const FUT_WEB_APP_EVENTS = {
+  TRANSFERS_HUB: 'Hub - Transfers',
+  TRANSFERS_LIST: 'Transfer List - List View',
 };

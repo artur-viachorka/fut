@@ -1,6 +1,11 @@
-import { FUT_WEB_APP_DATA_TYPE } from '../constants';
+import { FUT_WEB_APP_DATA_TYPE, PIN_EVENT_DELAY } from '../constants';
+import { sleep } from './helper.service';
 
-export const pinEvent = (pageId) => sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageId });
+export const pinEvent = async (pageId) => {
+  const result = await sendMessage({ type: FUT_WEB_APP_DATA_TYPE.PIN, payload: pageId });
+  await sleep(PIN_EVENT_DELAY);
+  return result;
+};
 
 export const getAppGUID = (() => {
   let storedAppId = null;

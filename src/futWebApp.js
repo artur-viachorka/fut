@@ -1,16 +1,15 @@
 import { FUT_WEB_APP_DATA_TYPE } from './constants';
 
 const pinEvent = async (pageId) => {
-  alert('pin event', pageId);
   window.services.PIN.sendData(window.PINEventType.PAGE_VIEW, {
     type: window.PIN_PAGEVIEW_EVT_TYPE,
     pgid: pageId,
   });
-  window.sendMessage({ type: `${FUT_WEB_APP_DATA_TYPE.PIN}-answer`, payload: true });
+  return true;
 };
 
 const getSessionId = () => {
-  return window.services.Authentication.sessionUtas.id;
+  return window.services.Authentication.getUtasSession().id;
 };
 
 const getAppGUID = () => {
@@ -21,7 +20,7 @@ window.addEventListener('message', async (e) => {
   let result = null;
   switch (e.data.type) {
     case FUT_WEB_APP_DATA_TYPE.PIN:
-      result = await pinEvent(e.data.pageId);
+      result = await pinEvent(e.data.payload);
       break;
     case FUT_WEB_APP_DATA_TYPE.SESSION_ID:
       result = getSessionId();

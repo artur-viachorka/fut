@@ -5,27 +5,24 @@ import { editScenarioSubject } from '../contentScript';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { MAX_SCENARIO_DURATION_IN_HOURS, DEFAULT_WORKING_MINUTES } from '../constants';
 
+const createStep = (filter) => ({
+  id: uuid(),
+  filter,
+  leftInUnassign: true,
+  workingMinutes: DEFAULT_WORKING_MINUTES,
+});
+
 export const createNewScenario = (filter) => {
-  const newStep = {
-    id: uuid(),
-    filter,
-    workingMinutes: DEFAULT_WORKING_MINUTES,
-  };
   return {
     name: 'New Scenario',
-    steps: [newStep],
+    steps: [createStep(filter)],
   };
 };
 
 export const addNewStepToScenario = (scenario, filter) => {
-  const newStep = {
-    id: uuid(),
-    filter,
-    workingMinutes: DEFAULT_WORKING_MINUTES,
-  };
   return {
     ...scenario,
-    steps: scenario.steps.concat(newStep),
+    steps: scenario.steps.concat(createStep(filter)),
   };
 };
 
