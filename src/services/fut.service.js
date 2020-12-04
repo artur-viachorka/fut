@@ -31,11 +31,8 @@ import {
   PRICE_CACHE_LIFE_MINUTES,
   RUNNER_STATUS,
   PURCHASE_DELAY,
-  FUT_WEB_APP_EVENTS,
   PIN_EVENT_DELAY,
 } from '../constants';
-
-import { pinEvents } from './futWebApp.service';
 
 import { CustomFutError } from './error.service';
 
@@ -129,10 +126,8 @@ const searchPlayersOnMarketPaginated = async (params) => {
   stopRunnerSubject
     .pipe(first())
     .subscribe(() => isWorking = false);
-  await pinEvents([FUT_WEB_APP_EVENTS.TRANSFER_MARKET_SEARCH]);
   let result = await searchOnTransfermarketRequest(params);
   let auctionInfo = mapAuctionInfoItems(result, 0);
-  await pinEvents([FUT_WEB_APP_EVENTS.TRANSFER_MARKET_SEARCH_RESULT, auctionInfo.length > 0 ? FUT_WEB_APP_EVENTS.ITEM_DETAIL_VIEW : null], 0);
   if (auctionInfo.length === SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
     for (let i = 1; i < MAX_PAGES_TO_SEARCH_ON; i++) {
       await sleep(getSearchRequestDelayBetweenPages() - PIN_EVENT_DELAY);

@@ -1,4 +1,4 @@
-import { HOST, ROUTES, FUT } from '../constants';
+import { ROUTES, FUT } from '../constants';
 import {
   transformPriceLimitsFromFUT,
   transformSearchResultFromFUT,
@@ -14,56 +14,6 @@ import {
   transformAuctionHouseFromFUT,
   transformPlayersFromFUT,
 } from './transform.service';
-
-import { getAppGUID, getSessionId } from './futWebApp.service';
-
-const replaceUrlParams = (url, params) => {
-  params.forEach(param => url = url.replace(`{${param.name}}`, param.value));
-  return url;
-};
-
-export const sendRequest = async ({ host, url, params, urlParams, body, method = 'GET', credentials, skipXUtSid }) => {
-  const userId = await getSessionId();
-  if (!userId) {
-    return;
-  }
-  if (urlParams) {
-    url = replaceUrlParams(url, urlParams);
-  }
-  url = new URL((host || HOST) + url);
-  if (params) {
-    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-  }
-  if (body) {
-    body = JSON.stringify(body);
-  }
-
-  const requestConfig = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body,
-  };
-
-  if (credentials) {
-    requestConfig.credentials = credentials;
-  }
-
-  if (!skipXUtSid) {
-    requestConfig.headers['X-UT-SID'] = userId;
-  }
-
-  const response = await fetch(url.href, requestConfig);
-  if (!response?.ok) {
-    throw response;
-  }
-  try {
-    return await response.json();
-  } catch (e) {
-    return null;
-  }
-};
 
 export const searchOnTransfermarketRequest = async (params) => {
   try {
@@ -186,17 +136,12 @@ export const getPriceLimitsRequest = async (itemId) => {
 
 export const getPlayers = async () => {
   try {
-    const appGuid = await getAppGUID();
-    if (!appGuid) {
-      return null;
-    }
     const result = await sendRequest({
       url: ROUTES.PLAYERS.url,
       host: ROUTES.PLAYERS.host,
       method: ROUTES.PLAYERS.method,
       credentials: 'same-origin',
       skipXUtSid: true,
-      urlParams: [{ name: 'appGuid', value: appGuid }],
       params: {
         _: 21052,
       },

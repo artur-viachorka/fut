@@ -8,11 +8,9 @@ import {
   getDelayBeforeDefaultRequest,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
-import { CAPTCHA_ERROR_CODE, RUNNER_STATUS, FUT_WEB_APP_EVENTS } from '../constants';
+import { CAPTCHA_ERROR_CODE, RUNNER_STATUS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
-
-import { pinEvents } from './futWebApp.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -64,7 +62,6 @@ export const executeStep = async (step, transferListLimit, logger) => {
     runnerState.transferListLimit = transferListLimit;
     await syncTradepile();
   }
-  await pinEvents([FUT_WEB_APP_EVENTS.TRANSFERS_HUB]);
   return new Promise((resolve, reject) => {
     let isWorking = true;
     pauseRunnerSubject

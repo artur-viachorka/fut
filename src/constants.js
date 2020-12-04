@@ -312,11 +312,3 @@ export const FUT_WEB_APP_DATA_TYPE = {
   SESSION_ID: 'session-id',
   APP_GUID: 'app-guid',
 };
-
-export const FUT_WEB_APP_EVENTS = {
-  TRANSFERS_HUB: 'Hub - Transfers',
-  TRANSFERS_LIST: 'Transfer List - List View',
-  TRANSFER_MARKET_SEARCH: 'Transfer Market Search',
-  TRANSFER_MARKET_SEARCH_RESULT: 'Transfer Market Results - List View',
-  ITEM_DETAIL_VIEW: 'Item - Detail View',
-};

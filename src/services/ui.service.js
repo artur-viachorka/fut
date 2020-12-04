@@ -1,16 +1,6 @@
 import { sleep } from './helper.service';
 import { FUT, REACT_CONTAINER_ID } from '../constants';
 
-export const injectScript = (file) => {
-  if (window.chrome) {
-    const body = document.getElementsByTagName('body')[0];
-    const customScipt = document.createElement('script');
-    customScipt.setAttribute('type', 'text/javascript');
-    customScipt.setAttribute('src', window.chrome.extension.getURL(file));
-    body.appendChild(customScipt);
-  }
-};
-
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
     return Promise.resolve(valueToReturn);
