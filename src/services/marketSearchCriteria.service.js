@@ -7,19 +7,16 @@ import { openUTNotification } from './notification.service';
 import { uuid } from './helper.service';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { waitUntilElementExists } from './ui.service';
-import { getPlayerId } from './players.service';
 
 const getPlayerInfo = async () => {
   const playerAttr = $(FUT.PAGE_SELECTORS.selectPlayerContainer).attr(FUT.CUSTOM_ATTRS.selectedPlayer);
-  let id = null;
   let playerName = null;
   let playerRating = null;
   if (playerAttr) {
     [playerName, playerRating] = playerAttr.split('/');
-    id = await getPlayerId(playerName, playerRating);
   }
   return {
-    value: id || null,
+    value: `${playerName}/${playerRating}`,
     title: playerName,
     rating: playerRating,
   };
@@ -30,10 +27,9 @@ const getQuality = () => {
   const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
-  const value = FUT.QUALITIES[title.toLowerCase()];
 
   return isSelected && value ? {
-    value,
+    value: title,
     title,
     img: src,
   } : {};

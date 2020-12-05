@@ -7,7 +7,6 @@ import ScenarioBuilder from './ScenarioBuilder';
 import Runner from './Runner';
 
 import { syncTransferListItems } from '../../services/transferList.service';
-import { getAllPlayers } from '../../services/players.service';
 import { setLoaderVisibility } from '../../services/ui.service';
 import { MODALS } from '../../constants';
 import ActionsPopup from './ActionsPopup';
@@ -29,28 +28,14 @@ const MainNavigation = () => {
       Icon: VscRunAll,
     },
     {
-      name: 'Sync',
-      group: [
-        {
-          name: 'Sync Players',
-          onClick: async () => {
-            setLoaderVisibility(true);
-            await getAllPlayers(true);
-            setLoaderVisibility(false);
-          },
-          Icon: AiOutlineCloudSync,
-        },
-        {
-          name: 'Sync Transfers',
-          onClick: async () => {
-            setLoaderVisibility(true);
-            await syncTransferListItems(true);
-            setLoaderVisibility(false);
-          },
-          Icon: AiOutlineFileSync,
-        }
-      ],
-    }
+      name: 'Sync Transfers',
+      onClick: async () => {
+        setLoaderVisibility(true);
+        await syncTransferListItems(true);
+        setLoaderVisibility(false);
+      },
+      Icon: AiOutlineFileSync,
+    },
   ];
 
   return (
