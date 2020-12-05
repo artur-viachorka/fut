@@ -9,6 +9,17 @@ export const sleep = (seconds) => {
   return new Promise((resolve) => setTimeout(resolve, convertSecondsToMs(seconds)));
 };
 
+export const triggerMouseEvent = (node, eventType) => {
+  const clickEvent = document.createEvent('MouseEvents');
+  clickEvent.initEvent(eventType, true, true);
+  node.dispatchEvent(clickEvent);
+};
+
+export const click = (node) => {
+  triggerMouseEvent(node, 'mousedown');
+  triggerMouseEvent(node, 'mouseup');
+};
+
 export function debounce(func, seconds, immediate) {
   let timeout;
   return function(...args) {
