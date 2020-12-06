@@ -146,14 +146,7 @@ const Step = ({ remove, step, copy, index, isDragging, drag, drop, edit, isReadO
       ...step,
       filter: {
         ...step.filter,
-        requestParams: {
-          ...step?.filter?.requestParams,
-          maxb: price,
-        },
-        meta: {
-          ...step?.filter?.meta,
-          maxBuy: price,
-        }
+        maxBuy: price,
       }
     });
   };

@@ -25,7 +25,7 @@ export const getFromStorage = async (...keys) => {
 };
 
 $(async() => {
-  const currentStorageVersion = 4;
+  const currentStorageVersion = 2;
   if (chrome && chrome.storage) {
     const { storageVersion } = await getFromStorage('storageVersion');
     if (storageVersion !== currentStorageVersion) {

@@ -1,25 +1,24 @@
-import { reject, equals, isEmpty, dissoc } from 'ramda';
+import { dissoc } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
 import { FUT } from '../constants';
-import { match, parseStringToInt } from './string.serivce';
+import { parseStringToInt } from './string.serivce';
 import { openUTNotification } from './notification.service';
 import { uuid } from './helper.service';
 import { saveToStorage, getFromStorage } from './storage.service';
 import { waitUntilElementExists } from './ui.service';
 
-const getPlayerInfo = async () => {
+const getPlayerInfo = () => {
   const playerAttr = $(FUT.PAGE_SELECTORS.selectPlayerContainer).attr(FUT.CUSTOM_ATTRS.selectedPlayer);
   let playerName = null;
   let playerRating = null;
   if (playerAttr) {
     [playerName, playerRating] = playerAttr.split('/');
   }
-  return {
-    value: `${playerName}/${playerRating}`,
-    title: playerName,
+  return playerName ? {
+    name: playerName,
     rating: playerRating,
-  };
+  } : null;
 };
 
 const getQuality = () => {
@@ -28,11 +27,10 @@ const getQuality = () => {
   const src = input.find('img').attr('src');
   const title = input.find('span.label').text();
 
-  return isSelected && value ? {
-    value: title,
+  return isSelected ? {
     title,
     img: src,
-  } : {};
+  } : null;
 };
 
 const getRarity = () => {
@@ -42,22 +40,21 @@ const getRarity = () => {
   const title = input.find('span.label').text();
 
   return isSelected ? {
-    value: match(src, /(\d*)_(\d*)\.(png|jpeg|jpg)$/),
     title,
     img: src,
-  } : {};
+  } : null;
 };
 
 const getPosition = () => {
   const input = $(FUT.PAGE_SELECTORS.positionInput);
   const isSelected = input.hasClass(FUT.CLASSES.inputHasSelection);
   const title = input.find('span.label').text();
+  const src = input.find('img').attr('src');
 
-  const value = FUT.POSITIONS[title.toLowerCase()];
-  return isSelected && value ? {
-    value,
+  return isSelected ? {
     title,
-  } : {};
+    src,
+  } : null;
 };
 
 const getNation = () => {
@@ -67,7 +64,6 @@ const getNation = () => {
   const title = input.find('span.label').text();
 
   return isSelected ? {
-    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
     title,
     img: src,
   } : null;
@@ -80,7 +76,6 @@ const getLeague = () => {
   const title = input.find('span.label').text();
 
   return isSelected ? {
-    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
     title,
     img: src,
   } : null;
@@ -93,7 +88,6 @@ const getTeam = () => {
   const title = input.find('span.label').text();
 
   return isSelected ? {
-    value: match(src, /(\d*)\.(png|jpeg|jpg)$/),
     title,
     img: src,
   } : null;
@@ -139,71 +133,34 @@ export const addSaveFilterButton = () => {
 };
 
 const getMarketSearchCriteria = async () => {
-  const playerInfo = await getPlayerInfo();
-  const quality = getQuality();
+  const player = await getPlayerInfo();
   const position = getPosition();
+  const quality = getQuality();
   const rarity = getRarity();
   const maxBuy = getMaxBuyNow();
   let nation = getNation();
   let league = getLeague();
   let team = getTeam();
 
-  if (playerInfo.value) {
-    nation = null;
-    league = null;
-    team = null;
-  }
-
-  const params = {
-    maskedDefId: playerInfo.value,
-    ...position.value,
-    ...quality.value,
-    nat: nation ? nation.value : null,
-    leag: league ? league.value : null,
-    team: team ? team.value : null,
-    maxb: maxBuy,
-    rarityIds: rarity.value,
-  };
-
   return {
-    noChanges: Object.values(dissoc('maxb', params)).filter(Boolean).length === 0,
     id: uuid(),
-    meta: {
-      player: playerInfo.value ? {
-        name: playerInfo.title,
-        rating: playerInfo.rating,
-      } : null,
-      quality: !isEmpty(quality) ? {
-        title: quality.title,
-        img: quality.img,
-      } : null,
-      rarity: !isEmpty(rarity) ? {
-        title: rarity.title,
-        img: rarity.img
-      } : null,
-      position: position.title,
-      nation: nation ? {
-        title: nation.title,
-        img: nation.img,
-      } : null,
-      league: league ? {
-        title: league.title,
-        img: league.img,
-      } : null,
-      team: team ? {
-        title: team.title,
-        img: team.img,
-      } : null,
-      maxBuy,
-    },
-    requestParams: reject(equals(null))(params)
+    player,
+    position,
+    quality,
+    rarity,
+    nation,
+    league,
+    team,
+    maxBuy,
   };
 };
 
 const saveSearchFilterToStorage = async () => {
   try {
     const newFilter = await getMarketSearchCriteria();
-    if (newFilter.noChanges) {
+    const isValid = Object.values(dissoc('maxBuy', dissoc('id', newFilter))).filter(Boolean).length > 0 && newFilter.maxBuy;
+
+    if (!isValid) {
       openUTNotification({ text: 'Nothing to add. Select something.', error: true });
       return;
     }
@@ -261,14 +218,7 @@ export const editSearchFilterMaxBuy = async (filterId, newMaxBuy) => {
   let { filters } = await getFromStorage('filters');
   filters = filters.map(filter => filter.id === filterId ? {
     ...filter,
-    meta: {
-      ...filter.meta,
-      maxBuy: newMaxBuy,
-    },
-    requestParams: {
-      ...filter.requestParams,
-      maxb: parseStringToInt(newMaxBuy),
-    }
+    maxBuy: newMaxBuy,
   } : filter);
   await saveToStorage({
     filters

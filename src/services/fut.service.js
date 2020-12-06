@@ -2,13 +2,6 @@ import { first } from 'rxjs/operators';
 import { getRandomNumberInRange, sleep, getSortHandler, getTheMostRepeatableNumber, convertMsToMinutes } from './helper.service';
 import { pauseRunnerSubject, stopRunnerSubject, syncTradepile, setWorkingStatus } from './runner.service';
 import {
-  bidPlayerRequest,
-  searchOnTransfermarketRequest,
-  sendItemsToTransferListRequest,
-  sendItemToAuctionHouseRequest,
-  getLiteRequest,
-} from './fetch.service';
-import {
   SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS,
   SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS,
   MAX_PAGES_TO_SEARCH_ON,
@@ -31,7 +24,6 @@ import {
   PRICE_CACHE_LIFE_MINUTES,
   RUNNER_STATUS,
   PURCHASE_DELAY,
-  PIN_EVENT_DELAY,
 } from '../constants';
 
 import { CustomFutError } from './error.service';
@@ -130,7 +122,7 @@ const searchPlayersOnMarketPaginated = async (params) => {
   let auctionInfo = mapAuctionInfoItems(result, 0);
   if (auctionInfo.length === SEARCH_ITEMS_THAT_SIGNAL_ABOUT_PAGINATION) {
     for (let i = 1; i < MAX_PAGES_TO_SEARCH_ON; i++) {
-      await sleep(getSearchRequestDelayBetweenPages() - PIN_EVENT_DELAY);
+      await sleep(getSearchRequestDelayBetweenPages());
       if (!isWorking) {
         return null;
       }

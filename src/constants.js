@@ -1,49 +1,3 @@
-export const HOST = 'https://utas.external.s2.fut.ea.com/ut/game/fifa21/';
-export const ROUTES = {
-  TRANSFERMARKET: {
-    url: 'transfermarket',
-    method: 'GET',
-  },
-  BID: {
-    url: 'trade/{tradeId}/bid',
-    method: 'PUT',
-  },
-  SOLD: {
-    url: 'trade/sold',
-    method: 'DELETE',
-  },
-  ITEM: {
-    url: 'item',
-    method: 'PUT',
-  },
-  LITE: {
-    url: 'trade/status/lite',
-    method: 'GET',
-  },
-  AUCTIONHOUSE: {
-    url: 'auctionhouse',
-    method: 'POST',
-  },
-  PRICELIMITS: {
-    url: 'marketdata/item/pricelimits',
-    method: 'GET',
-  },
-  PLAYERS: {
-    host: 'https://www.ea.com/fifa/ultimate-team/web-app/',
-    url: 'content/{appGuid}/2021/fut/items/web/players.json',
-    method: 'GET',
-  },
-  TRADEPILE: {
-    url: 'tradepile',
-    method: 'GET',
-  },
-};
-export const CAPTCHA_ERROR_CODE = 458;
-export const TRANSFERLIST_FULL = {
-  errorCode: 473,
-  reason: 'Destination Full',
-};
-
 export const COIN_ICON_SRC = 'images/coinIcon.png';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
 
@@ -192,8 +146,6 @@ export const DELAY_BEFORE_MOVING_TO_TRANSFER_LIST_RANGE = {
   from: 2,
   to: 2.5,
 };
-export const PIN_EVENT_DELAY = 2;
-
 export const FUT_COMMISSION_IN_PERCENT = 5;
 
 export const MAX_PAGES_TO_SEARCH_ON = 4;
@@ -258,34 +210,6 @@ export const FUT = {
   CUSTOM_ATTRS: {
     selectedPlayer: 'data-selected-player',
   },
-  QUALITIES: {
-    'special': { rare: 'SP' },
-    'gold': { lev: 'gold' },
-    'silver': { lev: 'silver' },
-    'bronze': { lev: 'bronze' },
-  },
-  POSITIONS: {
-    'defenders': { zone: 'defense' },
-    'midfielders': { zone: 'midfield' },
-    'attackers': { zone: 'attacker' },
-    'gk': { pos: 'GK' },
-    'rwb': { pos: 'RWB' },
-    'lwb': { pos: 'LWB' },
-    'rb': { pos: 'RB' },
-    'lb': { pos: 'LB' },
-    'cb': { pos: 'CB' },
-    'cdm': { pos: 'CDM' },
-    'cm': { pos: 'CM' },
-    'cam': { pos: 'CAM' },
-    'rm': { pos: 'RM' },
-    'lm': { pos: 'LM' },
-    'rw': { pos: 'RW' },
-    'lw': { pos: 'LW' },
-    'cf': { pos: 'CF' },
-    'lf': { pos: 'LF' },
-    'rf': { pos: 'RF' },
-    'st': { pos: 'ST' },
-  },
 };
 
 export const SEARCH_ITEMS_ORDER_CONFIG = [
@@ -311,4 +235,12 @@ export const FUT_WEB_APP_DATA_TYPE = {
   PIN: 'pin',
   SESSION_ID: 'session-id',
   APP_GUID: 'app-guid',
+};
+
+export const FUT_WEB_APP_EVENTS = {
+  TRANSFERS_HUB: 'Hub - Transfers',
+  TRANSFERS_LIST: 'Transfer List - List View',
+  TRANSFER_MARKET_SEARCH: 'Transfer Market Search',
+  TRANSFER_MARKET_SEARCH_RESULT: 'Transfer Market Results - List View',
+  ITEM_DETAIL_VIEW: 'Item - Detail View',
 };

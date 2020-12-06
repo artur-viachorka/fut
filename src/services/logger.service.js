@@ -1,7 +1,6 @@
 import { prop } from 'ramda';
 import { Subject } from 'rxjs';
 
-import { TRANSFERLIST_FULL } from '../constants';
 import { CustomFutError } from './error.service';
 
 export const logRunnerSubject = new Subject();
@@ -61,7 +60,9 @@ const logMoveToTransferListResult = (stepId) => (movingResult) => {
       error: true,
     });
   }
-  const isListFull = movingResult.find(item => !item.success && item.reason === TRANSFERLIST_FULL.reason && item.errorCode === TRANSFERLIST_FULL.errorCode);
+
+  // todo add handler on full transfers list
+  const isListFull = false;
   if (isListFull) {
     logRunnerSubject.next({
       stepId,

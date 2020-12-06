@@ -1,4 +1,3 @@
-import { getTradePile, sendItemToClub, clearSoldItems } from './fetch.service';
 import { sleep } from './helper.service';
 import { getDelayBeforeDefaultRequest } from './fut.service';
 import { openUTNotification } from './notification.service';

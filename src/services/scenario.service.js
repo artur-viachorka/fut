@@ -62,7 +62,7 @@ export const getScenarios = async () => {
 };
 
 export const isScenarioInputsInvalid = (scenario, shouldNotify) => {
-  const isInvalid = scenario.steps.some(step => !step?.filter?.requestParams?.maxb || !step.workingMinutes);
+  const isInvalid = scenario.steps.some(step => !step?.filter?.maxBuy || !step.workingMinutes);
   if (isInvalid && shouldNotify) {
     openUTNotification({ text: 'Max Buy and Working Minutes are required for every step', error: true });
   }

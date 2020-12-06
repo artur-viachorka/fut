@@ -106,17 +106,17 @@ const InputContainer = styled.div`
   margin-top: 5px;
 `;
 
-const Expired = styled.div`
-  position: absolute;
-  inset: 0px;
+const Position = styled.div`
+
   display: flex;
-  font-size: 11px;
-  z-index: 3;
-  font-weight: bold;
-  color: #892a2a;
-  background: rgb(0 0 0 / 89%);
   justify-content: center;
   align-items: center;
+
+  > img {
+    width: 15px;
+    height: 15px;
+    margin-left: 1px;
+  }
 `;
 
 const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy, isReadOnly }) => {
@@ -136,22 +136,26 @@ const Filter = ({ filter, isDragging, drag, drop, onEditMaxBuy, onDelete, onCopy
         style={{ opacity: isDragging ? 0 : 1 }}
     >
       <Main>
-        {filter.isExpired && <Expired>Filter is expired. Please remove it.</Expired>}
-        {(filter.meta.position || filter.meta.player) && (
+        {(filter.position || filter.player) && (
           <FilterHeader>
-            {filter.meta.player && <span>{`${filter.meta.player.name || ''} ${filter.meta.player.rating || ''}`}</span>}
-            {filter.meta.position && <span>{filter.meta.position}</span>}
+            {filter.player && <span>{`${filter.player.name || ''} ${filter.player.rating || ''}`}</span>}
+            {filter.position && (
+              <Position title={filter.position.title}>
+                <span>{filter.position.title}</span>
+                <FIlterTypeImage src={filter.position.src} alt={filter.position.title}/>
+              </Position>
+            )}
           </FilterHeader>
         )}
         <AdditionalFilterTypes>
           {
-            [filter.meta.quality, filter.meta.rarity, filter.meta.nation, filter.meta.league, filter.meta.team]
+            [filter.quality, filter.rarity, filter.nation, filter.league, filter.team]
               .filter(Boolean)
               .map(filterType => <FIlterTypeImage title={filterType.title} key={filterType.title} src={filterType.img} alt={filterType.title}/>)
           }
         </AdditionalFilterTypes>
         <InputContainer>
-          <BuyNowField isReadOnly={isReadOnly} placeholder="Max buy now" value={filter.meta.maxBuy} onChange={handleInputChange}/>
+          <BuyNowField isReadOnly={isReadOnly} placeholder="Max buy now" value={filter.maxBuy} onChange={handleInputChange}/>
         </InputContainer>
       </Main>
       {(onCopy || onDelete) && (

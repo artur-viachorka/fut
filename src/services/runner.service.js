@@ -8,7 +8,7 @@ import {
   getDelayBeforeDefaultRequest,
   calculateMinBuyNowAndMinBid,
 } from './fut.service';
-import { CAPTCHA_ERROR_CODE, RUNNER_STATUS } from '../constants';
+import { RUNNER_STATUS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
 
@@ -125,9 +125,11 @@ export const setWorkingStatus = (status = null) => {
   setWorkingStatusSubject.next({ status });
 };
 
-const stepTickHandler = async (step, logger,) => {
+const stepTickHandler = async (step, logger) => {
+  // todo rewrite
+  // filter.maxBuy instead of maxb, no requestParams
   try {
-    let params = { ...step.filter.requestParams };
+    let params = { ...step.filter };
     setWorkingStatus(RUNNER_STATUS.SEARCHING_PLAYERS);
     [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
     if (runnerState.minBuyNow) {
@@ -192,7 +194,8 @@ const stepTickHandler = async (step, logger,) => {
     return { success: true };
   } catch (e) {
     console.error('Error in runner', e);
-    const isCaptcha = e.status === CAPTCHA_ERROR_CODE;
+    // todo add captcha handler
+    const isCaptcha = false;
     openUTNotification({
       text: isCaptcha ? 'Captcha needed. Reload page and enter captcha.' : 'Something went wrong in runner. Please, try later.',
       error: true,
