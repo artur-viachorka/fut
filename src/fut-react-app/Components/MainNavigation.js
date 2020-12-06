@@ -10,7 +10,7 @@ import { syncTransferListItems } from '../../services/transferList.service';
 import { setLoaderVisibility } from '../../services/ui.service';
 import { MODALS } from '../../constants';
 import ActionsPopup from './ActionsPopup';
-import { AiOutlineCloudSync, AiOutlineFileSync } from 'react-icons/ai';
+import { AiOutlineFileSync } from 'react-icons/ai';
 import { VscRunAll } from 'react-icons/vsc';
 import { FaCogs } from 'react-icons/fa';
 
