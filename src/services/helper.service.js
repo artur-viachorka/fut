@@ -15,9 +15,21 @@ export const triggerMouseEvent = (node, eventType) => {
   node.dispatchEvent(clickEvent);
 };
 
-export const click = (node) => {
-  triggerMouseEvent(node, 'mousedown');
-  triggerMouseEvent(node, 'mouseup');
+export const triggerEvent = (selector, eventType) => {
+  const node = $(selector)[0];
+  if (node) {
+    const event = document.createEvent('Event');
+    event.initEvent(eventType, true, true);
+    node.dispatchEvent(event);
+  }
+};
+
+export const click = (selector) => {
+  const node = typeof selector === 'string' ? $(selector)[0] : selector;
+  if (node) {
+    triggerMouseEvent(node, 'mousedown');
+    triggerMouseEvent(node, 'mouseup');
+  }
 };
 
 export function debounce(func, seconds, immediate) {

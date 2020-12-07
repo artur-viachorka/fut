@@ -14,6 +14,16 @@ export const waitUntilElementExists = async (selector) => {
   return await waitUntilTrue(() => $(selector).length, $(selector));
 };
 
+export const waitUntilOneOfElementsExists = async (...selectors) => {
+  const existingSelector = selectors.filter(selector => $(selector).length)[0];
+  if (existingSelector) {
+    return Promise.resolve(existingSelector);
+  } else {
+    await sleep(1);
+    return waitUntilOneOfElementsExists(...selectors);
+  }
+};
+
 export const setMutationObserver = (observeSelector, mutationType, configs) => {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {

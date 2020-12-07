@@ -1,16 +1,15 @@
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
 import {
+  initializeFilters,
+  setMinBuyNowAndMinBid,
   searchPlayersOnMarket,
   buyPlayers,
-  sellPlayers,
-  sendItemsToTransferList,
-  getDelayBeforeDefaultRequest,
-  calculateMinBuyNowAndMinBid,
 } from './fut.service';
 import { RUNNER_STATUS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
+import { getDefaultDelay } from './delay.service';
 
 export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
@@ -57,10 +56,26 @@ export const syncTradepile = async (skipItems) => {
   };
 };
 
+const beforeStepSkip = (step) => {
+  resetRunningState();
+  runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
+};
+
 export const executeStep = async (step, transferListLimit, logger) => {
-  if (runnerState.transferListLimit !== transferListLimit) {
-    runnerState.transferListLimit = transferListLimit;
-    await syncTradepile();
+  // if (runnerState.transferListLimit !== transferListLimit) {
+  //   runnerState.transferListLimit = transferListLimit;
+  //   await syncTradepile();
+  // }
+  try {
+    await initializeFilters(step.filter);
+  } catch (e) {
+    openUTNotification({
+      text: e.error.message,
+      error: true,
+      infinite: true,
+    });
+    beforeStepSkip(step);
+    return { skip: true };
   }
   return new Promise((resolve, reject) => {
     let isWorking = true;
@@ -107,8 +122,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
       }
       const result = await stepTickHandler(step, logger);
       if (result?.skip) {
-        resetRunningState();
-        runnerState.skippedStep = step.id; // needed for case when step should be skipped after purchase and pause was pressed.
+        beforeStepSkip(step);
       }
       if (result?.success) {
         work();
@@ -117,7 +131,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
       setWorkingStatus();
       resolve(result);
     };
-    setTimeout(work, getDelayBeforeDefaultRequest());
+    setTimeout(work, getDefaultDelay());
   });
 };
 
@@ -126,22 +140,19 @@ export const setWorkingStatus = (status = null) => {
 };
 
 const stepTickHandler = async (step, logger) => {
-  // todo rewrite
-  // filter.maxBuy instead of maxb, no requestParams
   try {
-    let params = { ...step.filter };
     setWorkingStatus(RUNNER_STATUS.SEARCHING_PLAYERS);
-    [runnerState.minBuyNow, runnerState.minBid] = calculateMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, params.maxb);
-    if (runnerState.minBuyNow) {
-      params.minb = runnerState.minBuyNow;
+    [runnerState.minBuyNow, runnerState.minBid] = await setMinBuyNowAndMinBid(runnerState.minBuyNow, runnerState.minBid, step.filter.maxBuy);
+    const searchResult = await searchPlayersOnMarket(step);
+    if (searchResult) {
+      logger.logSearchResult(searchResult.players);
+      setWorkingStatus(RUNNER_STATUS.BUYING);
+      const buyResult = await buyPlayers(
+        searchResult,
+        step.shouldSkipAfterPurchase,
+      );
     }
-    if (runnerState.minBid) {
-      params.micr = runnerState.minBid;
-    }
-    const searchResult = await searchPlayersOnMarket(
-      params,
-      step,
-    );
+    return;
     if (searchResult) {
       logger.logSearchResult(searchResult.cheapestPlayers);
       setWorkingStatus(RUNNER_STATUS.BUYING);
@@ -197,7 +208,7 @@ const stepTickHandler = async (step, logger) => {
     // todo add captcha handler
     const isCaptcha = false;
     openUTNotification({
-      text: isCaptcha ? 'Captcha needed. Reload page and enter captcha.' : 'Something went wrong in runner. Please, try later.',
+      text: isCaptcha ? 'Captcha needed. Reload page and enter captcha.' : e?.error?.message || 'Something went wrong in runner. Please, try later.',
       error: true,
       infinite: isCaptcha,
     });

@@ -1,7 +1,7 @@
 import { dissoc } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
-import { FUT } from '../constants';
+import { FUT, FILTERS_FIELDS } from '../constants';
 import { parseStringToInt } from './string.serivce';
 import { openUTNotification } from './notification.service';
 import { uuid } from './helper.service';
@@ -132,28 +132,17 @@ export const addSaveFilterButton = () => {
   $(FUT.PAGE_SELECTORS.actionButtonsContainer).append(newButton);
 };
 
-const getMarketSearchCriteria = async () => {
-  const player = await getPlayerInfo();
-  const position = getPosition();
-  const quality = getQuality();
-  const rarity = getRarity();
-  const maxBuy = getMaxBuyNow();
-  let nation = getNation();
-  let league = getLeague();
-  let team = getTeam();
-
-  return {
-    id: uuid(),
-    player,
-    position,
-    quality,
-    rarity,
-    nation,
-    league,
-    team,
-    maxBuy,
-  };
-};
+const getMarketSearchCriteria = async () => ({
+  id: uuid(),
+  [FILTERS_FIELDS.PLAYER]: getPlayerInfo(),
+  [FILTERS_FIELDS.POSITION]: getPosition(),
+  [FILTERS_FIELDS.QUALITY]: getQuality(),
+  [FILTERS_FIELDS.RARITY]: getRarity(),
+  [FILTERS_FIELDS.NATION]: getNation(),
+  [FILTERS_FIELDS.LEAGUE]: getLeague(),
+  [FILTERS_FIELDS.TEAM]: getTeam(),
+  [FILTERS_FIELDS.MAX_BUY]: getMaxBuyNow(),
+});
 
 const saveSearchFilterToStorage = async () => {
   try {

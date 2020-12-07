@@ -11,6 +11,7 @@ export const editScenarioWithoutSavingSubject = new Subject();
 
 $(() => {
   initReactApp();
+  // todo inject script if needed
   waitUntilElementExists(FUT.PAGE_SELECTORS.rootView)
     .then(() => {
       setMutationObserver(

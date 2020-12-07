@@ -132,12 +132,12 @@ export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
   to: 1.5,
 };
 
-export const SHORT_DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
-  from: 1,
-  to: 1.5,
+export const SHORT_DELAY_RANGE = {
+  from: 0.5,
+  to: 1,
 };
 
-export const LONG_DELAY_BEFORE_DEFAULT_REQUEST_RANGE = {
+export const LONG_DELAY_RANGE = {
   from: 2.5,
   to: 3.5,
 };
@@ -157,15 +157,13 @@ export const MAX_PAGES_TO_SEARCH_ON_PRICE_CHECK = 10;
 
 export const PRICE_CACHE_LIFE_MINUTES = 7;
 
-export const MAX_PLAYERS_TO_BUY_IN_ONE_STEP = 2;
+export const MAX_PLAYERS_TO_BUY_IN_ONE_STEP = 1;
 
 export const PERCENT_AFTER_WHICH_RESET_MIN_BUY = 40;
 export const MIN_BUY_AFTER_WHICH_RESET_MIN_BUY = {
   min: 350,
   max: 30000
 };
-
-export const MIN_EXPIRES_TO_BUY = 15;
 
 export const FUT = {
   PILE: {
@@ -179,10 +177,10 @@ export const FUT = {
   },
   PAGE_SELECTORS: {
     selectPlayerContainer:  '.inline-list-select.ut-player-search-control',
-    selectPlayerInput: '.ut-text-input-control',
+    selectPlayerInput: '.inline-list-select.ut-player-search-control input',
     clearPlayerButton: '.flat.inline-list-btn.icon_close.fut_icon.exit-btn',
-    playerResultsListContainer: '.inline-list',
     playerResultsList: '.playerResultsList',
+    playerResultsListButton: '.playerResultsList button',
     qualityInput: '.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(0)',
     rarityInput: '.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(1)',
     positionInput: '.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(2)',
@@ -190,6 +188,8 @@ export const FUT = {
     leagueInput: '.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(5)',
     teamInput: '.ut-item-search-view .inline-list-select.ut-search-filter-control:nth(6)',
     maxBuyNowInput: '.search-prices > div:nth-child(6) input',
+    minBuyNowInput: '.search-prices > div:nth-child(5) input',
+    minBidInput: '.search-prices > div:nth-child(2) input',
     itemSearchView: '.ut-item-search-view',
     actionButton: '.ut-market-search-filters-view .button-container .btn-standard:first',
     actionButtonsContainer: '.ut-market-search-filters-view .button-container',
@@ -198,6 +198,15 @@ export const FUT = {
     rootView: '.ut-root-view',
     openHomeButton: '.ut-tab-bar-item.icon-home',
     appHeader: '.ut-fifa-header-view',
+    resetButton: '.ut-market-search-filters-view .button-container .btn-standard:first',
+    searchButton: '.ut-market-search-filters-view .button-container .btn-standard.call-to-action:first',
+    searchResultsContainer: '.SearchResults',
+    searchResultsListItem: '.SearchResults .ut-pinned-list > ul > li',
+    searchNoResults: '.SearchResults .ut-no-results-view',
+    nextButton: '.pagingContainer > .flat.pagination.next',
+    prevButton: '.pagingContainer > .flat.pagination.prev',
+    playerOverviewRating: '.ut-item-view .playerOverview .rating',
+    playerBuyNow: '.auction > div:nth-child(3) > span.currency-coins',
   },
   CLASSES: {
     inputHasSelection: 'has-selection',
@@ -211,23 +220,6 @@ export const FUT = {
     selectedPlayer: 'data-selected-player',
   },
 };
-
-export const SEARCH_ITEMS_ORDER_CONFIG = [
-  {
-    path: ['buyNowPrice'],
-    isAscending: true,
-  },
-  {
-    path: ['itemData', 'rating'],
-  },
-  {
-    path: ['itemData', 'owners'],
-    isAscending: true,
-  },
-  {
-    path: ['pageNumber'],
-  },
-];
 
 export const WEB_APP_BUNDLE_URL = './futWebApp.bundle.js';
 
@@ -243,4 +235,17 @@ export const FUT_WEB_APP_EVENTS = {
   TRANSFER_MARKET_SEARCH: 'Transfer Market Search',
   TRANSFER_MARKET_SEARCH_RESULT: 'Transfer Market Results - List View',
   ITEM_DETAIL_VIEW: 'Item - Detail View',
+};
+
+export const FILTERS_FIELDS = {
+  PLAYER: 'player',
+  POSITION: 'position',
+  QUALITY: 'quality',
+  RARITY: 'rarity',
+  NATION: 'nation',
+  LEAGUE: 'league',
+  TEAM: 'team',
+  MAX_BUY: 'maxBuy',
+  MIN_BUY: 'minBuy',
+  MIN_BID: 'minBid',
 };
