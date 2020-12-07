@@ -1,5 +1,5 @@
 import { sleep } from './helper.service';
-import { FUT, REACT_CONTAINER_ID } from '../constants';
+import { REACT_CONTAINER_ID } from '../constants';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -70,8 +70,6 @@ export const setLoaderVisibility = (show) => {
     $('.ut-click-shield > .loaderIcon').css('display', 'none');
   }
 };
-
-export const getCreditsFromUi = () => $(FUT.PAGE_SELECTORS.credits).text();
 
 export const initFUTApp = () => {
   $(`#${REACT_CONTAINER_ID}`).css('display', 'block');

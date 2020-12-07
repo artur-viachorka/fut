@@ -15,21 +15,14 @@ export const pauseRunnerSubject = new Subject();
 export const finishWorkingStepSubject = new Subject();
 export const finishIdleStepSubject = new Subject();
 export const stopRunnerSubject = new Subject();
-export const setCreditsSubject = new Subject();
 export const setWorkingStatusSubject = new Subject();
 
 const runnerState = {
-  credits: null,
   freeSlotsInTransferList: null,
   transferListLimit: null,
   skippedStep: null,
   minBuyNow: null,
   minBid: null,
-};
-
-const setCredits = (credits) => {
-  runnerState.credits = credits;
-  setCreditsSubject.next({ credits });
 };
 
 const resetRunningState = () => {
@@ -44,9 +37,7 @@ export const syncTradepile = async (skipItems) => {
   const tradepile = await syncTransferListItems(false, skipItems);
   if (!tradepile) {
     runnerState.freeSlotsInTransferList = null;
-    setCredits(null);
   } else {
-    setCredits(tradepile.credits);
     const itemsInTransferList = tradepile.auctionInfo?.length || runnerState.transferListLimit;
     runnerState.freeSlotsInTransferList = runnerState.transferListLimit - itemsInTransferList;
   }
@@ -152,58 +143,52 @@ const stepTickHandler = async (step, logger) => {
         step.shouldSkipAfterPurchase,
       );
       if (isPurchaseDisabled) {
-        logger.logNotEnoughCreditsResult();
+        logger.logPurchaseDisabled();
         return { skip: true };
       }
       logger.logBoughtResult(boughtItems);
-    }
-    return;
-    if (searchResult) {
-      const { credits: remainingCredits, tooLowCredits, boughtItems } = await buyPlayers(
-        searchResult,
-        params,
-        step.shouldSkipAfterPurchase,
-        runnerState.credits,
-      );
-      logger.logBoughtResult(boughtItems);
-      setCredits(remainingCredits != null ? remainingCredits : runnerState.credits);
-      if (tooLowCredits) {
-       
-      }
       if (boughtItems?.length) {
         if (step.leftInUnassign) {
           logger.logLeftInUnassign(boughtItems);
           return { success: true };
         }
-        if (!runnerState.freeSlotsInTransferList) {
-          await syncTradepile(boughtItems);
-        }
-        if (runnerState.freeSlotsInTransferList) {
-          setWorkingStatus(RUNNER_STATUS.SENDING_TO_TRANSFER_LIST);
-          const moveToTransferListResult = await sendItemsToTransferList(
-            boughtItems,
-          );
-          logger.logMoveToTransferListResult(moveToTransferListResult);
-          const movedItems = moveToTransferListResult.filter(item => item.success);
-          const notMovedItems = moveToTransferListResult.filter(item => !item.success);
-          if (notMovedItems.length) {
-            logger.logLeftInUnassign(notMovedItems);
-          }
-          if (movedItems.length) {
-            runnerState.freeSlotsInTransferList -= movedItems.length;
-            if (step.shouldSellOnMarket) {
-              const sellResult = await sellPlayers(boughtItems, movedItems);
-              logger.logSentToAuctionHouseResult(sellResult);
-            }
-          }
-        } else {
-          logger.logTransferListFull();
-        }
-        if (step.shouldSkipAfterPurchase) {
-          return { skip: true };
-        }
       }
     }
+    // if (searchResult) {
+    //   if (boughtItems?.length) {
+    //     if (step.leftInUnassign) {
+    //       logger.logLeftInUnassign(boughtItems);
+    //       return { success: true };
+    //     }
+    //     if (!runnerState.freeSlotsInTransferList) {
+    //       await syncTradepile(boughtItems);
+    //     }
+    //     if (runnerState.freeSlotsInTransferList) {
+    //       setWorkingStatus(RUNNER_STATUS.SENDING_TO_TRANSFER_LIST);
+    //       const moveToTransferListResult = await sendItemsToTransferList(
+    //         boughtItems,
+    //       );
+    //       logger.logMoveToTransferListResult(moveToTransferListResult);
+    //       const movedItems = moveToTransferListResult.filter(item => item.success);
+    //       const notMovedItems = moveToTransferListResult.filter(item => !item.success);
+    //       if (notMovedItems.length) {
+    //         logger.logLeftInUnassign(notMovedItems);
+    //       }
+    //       if (movedItems.length) {
+    //         runnerState.freeSlotsInTransferList -= movedItems.length;
+    //         if (step.shouldSellOnMarket) {
+    //           const sellResult = await sellPlayers(boughtItems, movedItems);
+    //           logger.logSentToAuctionHouseResult(sellResult);
+    //         }
+    //       }
+    //     } else {
+    //       logger.logTransferListFull();
+    //     }
+    //     if (step.shouldSkipAfterPurchase) {
+    //       return { skip: true };
+    //     }
+    //   }
+    // }
     return { success: true };
   } catch (e) {
     console.error('Error in runner', e);

@@ -34,10 +34,10 @@ const logBoughtResult = (stepId) => (boughtItems) => {
   });
 };
 
-const logNotEnoughCreditsResult = (stepId) => () => {
+const logPurchaseDisabled = (stepId) => () => {
   logRunnerSubject.next({
     stepId,
-    text: 'Purchase disabled: Not enough credits to buy player(s).',
+    text: 'Lot expired or there are no credits to buy player(s).',
     error: true,
   });
 };
@@ -130,7 +130,7 @@ export const getLoggerForStep = (stepId) => {
   return {
     logSearchResult: logFoundResult(stepId),
     logBoughtResult: logBoughtResult(stepId),
-    logNotEnoughCreditsResult: logNotEnoughCreditsResult(stepId),
+    logPurchaseDisabled: logPurchaseDisabled(stepId),
     logMoveToTransferListResult: logMoveToTransferListResult(stepId),
     logSentToAuctionHouseResult: logSentToAuctionHouseResult(stepId),
     logFinishedStep: logFinishedStep(stepId),

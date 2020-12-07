@@ -1,13 +1,11 @@
-import { sleep } from './helper.service';
+import { sleep, click } from './helper.service';
 import { getDefaultDelay } from './delay.service';
 import { openUTNotification } from './notification.service';
 import { getFromStorage, saveToStorage } from './storage.service';
-
+import { goToTransfersPage } from './navigate.service';
 import { FUT } from '../constants';
-
-export const isUniq = (item, duplicates) => {
-  return !duplicates.find(duplicateItem => duplicateItem?.itemId === item?.itemData?.id);
-};
+import { waitUntilElementExists, waitUntilOneOfElementsExists } from './ui.service';
+import { areStringsEqual } from './string.serivce';
 
 export const saveTransferListLimit = async (transferListLimit) => {
   return await saveToStorage({ transferListLimit });
@@ -18,48 +16,57 @@ export const getTransferListLimit = async () => {
   return transferListLimit;
 };
 
-export const syncTransferListItems = async (shouldNotify, skipItemIds = []) => {
-  try {
-    await sleep(getDefaultDelay());
+const getSendToClubButton = () => {
+  const buttons = $(FUT.PAGE_SELECTORS.playerOverviewActions).toArray();
+  return buttons.find(button => areStringsEqual($(button).text(), 'Send to My Club'));
+};
 
-    let tradepile = await getTradePile();
-    if (!tradepile?.auctionInfo?.length) {
-      return;
+const sendItemsToClub = async (sectionOrderNumber) => {
+  await waitUntilOneOfElementsExists(
+    `${FUT.PAGE_SELECTORS.transferListSection}:nth(${sectionOrderNumber}) ${FUT.PAGE_SELECTORS.transferListSectionItems}`,
+    `${FUT.PAGE_SELECTORS.transferListSection}:nth(${sectionOrderNumber}) ${FUT.PAGE_SELECTORS.transferListEmptySection}`
+  );
+  let initialLength = $(`${FUT.PAGE_SELECTORS.transferListSection}:nth(${sectionOrderNumber}) ${FUT.PAGE_SELECTORS.transferListSectionItems}`).length;
+  let i = 0;
+  while (i < initialLength) {
+    const item = $(`${FUT.PAGE_SELECTORS.transferListSection}:nth(${sectionOrderNumber}) ${FUT.PAGE_SELECTORS.transferListSectionItems}:nth(${i})`);
+    if (!item.length) {
+      break;
     }
-    let shouldClearSoldItems = false;
-    let updatedAuctionInfo = [...tradepile.auctionInfo];
-    let sendToClub = [];
-    for (let i = 0; i < tradepile.auctionInfo.length; i++) {
-      const tradeItem = tradepile.auctionInfo[i];
-      if (skipItemIds.includes(tradeItem.itemData.id)) {
-        continue;
-      }
-      if ((tradeItem.tradeState == FUT.TRADE_STATE.expired || tradeItem.tradeState === null) && isUniq(tradeItem, tradepile.duplicateItemIdList)) {
-        sendToClub.push(tradeItem.itemData.id);
-        updatedAuctionInfo = updatedAuctionInfo.filter(info => info.itemData.id !== tradeItem.itemData.id);
-      }
-      if (tradeItem.tradeState === FUT.TRADE_STATE.closed && tradeItem.currentBid > 0) {
-        updatedAuctionInfo = updatedAuctionInfo.filter(info => info.itemData.id !== tradeItem.itemData.id);
-        shouldClearSoldItems = true;
-      }
+    click(item);
+    await sleep(getDefaultDelay());
+    const sendToClubButton = getSendToClubButton();
+    if (sendToClubButton) {
+      click(sendToClubButton);
+    } else {
+      i++;
     }
-    if (sendToClub.length) {
-      await sleep(getDefaultDelay());
-      await sendItemToClub(sendToClub);
+    await sleep(getDefaultDelay());
+  }
+};
+
+const SECTION_ORDER_NUMBER = {
+  SOLD: 0,
+  UNSOLD: 1,
+  AVAILABLE: 2,
+};
+
+export const syncTransferListItems = async (shouldNotify) => {
+  try {
+    await goToTransfersPage();
+    await waitUntilElementExists(`${FUT.PAGE_SELECTORS.transferListSection}:nth(${SECTION_ORDER_NUMBER.SOLD})`);
+    const soldButton = $(`${FUT.PAGE_SELECTORS.transferListSection}:nth(${SECTION_ORDER_NUMBER.SOLD}) ${FUT.PAGE_SELECTORS.transferListSectionHeaderAction}`);
+    if (areStringsEqual(soldButton.text(), 'Clear Sold')) {
+      click(soldButton);
     }
-    if (shouldClearSoldItems) {
-      await sleep(getDefaultDelay());
-      await clearSoldItems();
-    }
+    await sendItemsToClub(SECTION_ORDER_NUMBER.UNSOLD);
+    await sendItemsToClub(SECTION_ORDER_NUMBER.AVAILABLE);
     if (shouldNotify) {
       openUTNotification({ text: 'Transfer list was successfully synced.', success: true });
     }
     await sleep(getDefaultDelay());
-    return {
-      ...tradepile,
-      auctionInfo: updatedAuctionInfo,
-    };
   } catch (e) {
+    console.error(e);
     openUTNotification({ text: 'Error while syncing transfer list items.', error: true });
   }
 };

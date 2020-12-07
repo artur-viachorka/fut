@@ -1,7 +1,7 @@
 import { dissoc } from 'ramda';
 
 import { addFilterSubject } from '../contentScript';
-import { FUT, FILTERS_FIELDS } from '../constants';
+import { FUT, FILTERS_FIELDS, BUY_INPUT_SETTINGS } from '../constants';
 import { parseStringToInt } from './string.serivce';
 import { openUTNotification } from './notification.service';
 import { uuid } from './helper.service';
@@ -153,6 +153,12 @@ const saveSearchFilterToStorage = async () => {
       openUTNotification({ text: 'Nothing to add. Select something.', error: true });
       return;
     }
+
+    if (newFilter.maxBuy < BUY_INPUT_SETTINGS.priceInputRange.min) {
+      openUTNotification({ text: `Max buy now price should be equal or more then ${BUY_INPUT_SETTINGS.priceInputRange.min}`, error: true });
+      return;
+    }
+
     let { filters = [] } = await getFromStorage('filters');
     await saveToStorage({
       filters: [newFilter, ...filters],

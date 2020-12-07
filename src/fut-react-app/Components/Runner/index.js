@@ -17,7 +17,6 @@ import {
   finishStepWork,
   finishStepIdle,
   stopStep,
-  setCreditsSubject,
 } from '../../../services/runner.service';
 import { logRunnerSubject } from '../../../services/logger.service';
 import { convertMinutesToSeconds } from '../../../services/helper.service';
@@ -28,7 +27,6 @@ import { openUTNotification } from '../../../services/notification.service';
 import { getLoggerForStep } from '../../../services/logger.service';
 
 import CountdownTimer from '../CountdownTimer';
-import Coins from '../Coins';
 import NumberField from '../Fields/NumberField';
 
 const Container = styled.div`
@@ -119,11 +117,6 @@ const AccountInfo = styled.div`
   width: 100%;
   justify-content: space-between;
   align-items: center;
-
-  > div:first-child {
-    width: 132px;
-    margin-right: 5px;
-  }
 `;
 
 const Runner = () => {
@@ -140,7 +133,6 @@ const Runner = () => {
   const [runningStatus, setRunningStatus] = useState(null);
   const [scenarioDurationLeft, setScenarioDurationLeft] = useState(null);
   const [transferListLimit, setTransferListLimit] = useState(null);
-  const [currentCredits, setCurrentCredits] = useState(null);
 
   const resetScenario = (scenario) => {
     scenario = scenario ? {
@@ -229,13 +221,11 @@ const Runner = () => {
       }
     });
 
-    const setCreditsSubjectSubscription = setCreditsSubject.subscribe(({ credits }) => setCurrentCredits(credits));
     loadTransferListLimit();
     return () => {
       selectScenarioSubscription.unsubscribe();
       editStepWithoutSavingSubscription.unsubscribe();
       loggerSubjectSubscription.unsubscribe();
-      setCreditsSubjectSubscription.unsubscribe();
       stopStep();
     };
   }, []);
@@ -274,7 +264,6 @@ const Runner = () => {
                 placeholder="Transfer list limit"
                 renderIcon={() => <BiTransferAlt/>}
             />
-            <Coins credits={currentCredits}/>
           </AccountInfo>
           <RunnerInfo>
             <RunnerActions>

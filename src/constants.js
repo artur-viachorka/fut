@@ -191,6 +191,12 @@ export const FUT = {
     minBuyNowInput: '.search-prices > div:nth-child(5) input',
     minBidInput: '.search-prices > div:nth-child(2) input',
     itemSearchView: '.ut-item-search-view',
+    transferHub: '.TransfersHub',
+    transferMarketTile: '.ut-tile-transfer-market',
+    transfersTile: '.ut-tile-transfer-list',
+    mainNavTransfersButton: '.ut-tab-bar-item.icon-transfer',
+    searchMarketView: '.ut-market-search-filters-view',
+    transfersView: '.ut-transfer-list-view',
     actionButton: '.ut-market-search-filters-view .button-container .btn-standard:first',
     actionButtonsContainer: '.ut-market-search-filters-view .button-container',
     credits: '.view-navbar-currency > .view-navbar-currency-coins:first',
@@ -212,7 +218,12 @@ export const FUT = {
     playerDetails: {
       inSlide: '.DetailView .tns-slide-active .player.item',
       inCarousel: '.DetailView .detail-carousel .slider .player.item',
-    }
+    },
+    playerOverviewActions: '.DetailView .DetailPanel .ut-button-group > button:visible > .btn-text',
+    transferListSection: '.ut-transfer-list-view .sectioned-item-list',
+    transferListSectionHeaderAction: '.ut-section-header-view .btn-standard.call-to-action',
+    transferListSectionItems: '.itemList > li',
+    transferListEmptySection: '.ut-empty-section-view',
   },
   CLASSES: {
     inputHasSelection: 'has-selection',
