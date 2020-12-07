@@ -64,7 +64,6 @@ export const syncTransferListItems = async (shouldNotify) => {
     if (shouldNotify) {
       openUTNotification({ text: 'Transfer list was successfully synced.', success: true });
     }
-    await sleep(getDefaultDelay());
   } catch (e) {
     console.error(e);
     openUTNotification({ text: 'Error while syncing transfer list items.', error: true });
