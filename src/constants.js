@@ -119,8 +119,8 @@ export const RUNNER_STATUS = {
 };
 
 export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
-  from: 3,
-  to: 4.3,
+  from: 2.3,
+  to: 3.2,
 };
 
 export const PURCHASE_DELAY = {
