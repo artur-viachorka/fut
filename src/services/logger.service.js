@@ -37,7 +37,7 @@ const logBoughtResult = (stepId) => (boughtItems) => {
 const logNotEnoughCreditsResult = (stepId) => () => {
   logRunnerSubject.next({
     stepId,
-    text: 'Not enough credits to buy player',
+    text: 'Purchase disabled: Not enough credits to buy player(s).',
     error: true,
   });
 };

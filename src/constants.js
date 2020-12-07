@@ -123,8 +123,8 @@ export const SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS = {
 };
 
 export const PURCHASE_DELAY = {
-  from: 0.2,
-  to: 0.6,
+  from: 1,
+  to: 1.5,
 };
 
 export const SEARCH_REQUEST_RANGE_BETWEEN_PAGES_IN_SECONDS = {
@@ -207,6 +207,12 @@ export const FUT = {
     prevButton: '.pagingContainer > .flat.pagination.prev',
     playerOverviewRating: '.ut-item-view .playerOverview .rating',
     playerBuyNow: '.auction > div:nth-child(3) > span.currency-coins',
+    buyNowActionButton: '.DetailPanel > .bidOptions .btn-standard.buyButton.currency-coins',
+    confirmBuyModalOkButton: '.dialog-body > .ut-button-group > button:first-child',
+    playerDetails: {
+      inSlide: '.DetailView .tns-slide-active .player.item',
+      inCarousel: '.DetailView .detail-carousel .slider .player.item',
+    }
   },
   CLASSES: {
     inputHasSelection: 'has-selection',

@@ -25,7 +25,11 @@ export const triggerEvent = (selector, eventType) => {
 };
 
 export const click = (selector) => {
-  const node = typeof selector === 'string' ? $(selector)[0] : selector;
+  const jqueryElement = $(selector);
+  if (!jqueryElement.length) {
+    throw new Error('Nothing to click on');
+  }
+  const node = $(selector)[0];
   if (node) {
     triggerMouseEvent(node, 'mousedown');
     triggerMouseEvent(node, 'mouseup');

@@ -147,15 +147,18 @@ const stepTickHandler = async (step, logger) => {
     if (searchResult) {
       logger.logSearchResult(searchResult.players);
       setWorkingStatus(RUNNER_STATUS.BUYING);
-      const buyResult = await buyPlayers(
+      const { isPurchaseDisabled, boughtItems } = await buyPlayers(
         searchResult,
         step.shouldSkipAfterPurchase,
       );
+      if (isPurchaseDisabled) {
+        logger.logNotEnoughCreditsResult();
+        return { skip: true };
+      }
+      logger.logBoughtResult(boughtItems);
     }
     return;
     if (searchResult) {
-      logger.logSearchResult(searchResult.cheapestPlayers);
-      setWorkingStatus(RUNNER_STATUS.BUYING);
       const { credits: remainingCredits, tooLowCredits, boughtItems } = await buyPlayers(
         searchResult,
         params,
@@ -165,8 +168,7 @@ const stepTickHandler = async (step, logger) => {
       logger.logBoughtResult(boughtItems);
       setCredits(remainingCredits != null ? remainingCredits : runnerState.credits);
       if (tooLowCredits) {
-        logger.logNotEnoughCreditsResult();
-        return { skip: true };
+       
       }
       if (boughtItems?.length) {
         if (step.leftInUnassign) {

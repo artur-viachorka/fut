@@ -1,5 +1,10 @@
 import { goToSearchMarketPage } from './navigate.service';
-import { waitUntilElementExists, setLoaderVisibility, waitUntilOneOfElementsExists } from './ui.service';
+import {
+  setLoaderVisibility,
+  waitUntilElementExists,
+  waitUntilOneOfElementsExists,
+  waitUntilOneOfElementsExistAndConditionIsTrue,
+} from './ui.service';
 import { triggerEvent, click, sleep } from './helper.service';
 import {
   FUT,
@@ -16,6 +21,7 @@ import {
   getSearchRequestDelay,
   getDefaultDelay,
   getSearchRequestDelayBetweenPages,
+  getPurchaseDelay,
 } from './delay.service';
 
 const callFilterHadler = async (filter, filterField) => {
@@ -227,7 +233,7 @@ export const searchPlayersOnMarket = async (step) => {
     currentPage,
   } = await loadPlayers();
   return {
-    players: calculateCheapestPlayers(players, step.rating),
+    players: calculateCheapestPlayers(players, step.rating).slice(0, MAX_PLAYERS_TO_BUY_IN_ONE_STEP),
     currentPage,
   };
 };
@@ -266,16 +272,69 @@ const findPlayerItemByBuyNowPrice = (buyNowPrice) => {
     });
 };
 
+const checkIsPlayerBuyed = async () => {
+  const getReturnValue = (elem) => elem.hasClass('won') ? true : elem.hasClass('expired') ? false : null;
+  const condition = (elem) => elem.hasClass('won') || elem.hasClass('expired');
+  return await waitUntilOneOfElementsExistAndConditionIsTrue(
+    {
+      selector: FUT.PAGE_SELECTORS.playerDetails.inSlide,
+      condition,
+      getReturnValue,
+    },
+    {
+      selector: FUT.PAGE_SELECTORS.playerDetails.inCarousel,
+      condition,
+      getReturnValue,
+    }
+  );
+};
+
+const buyPlayer = async (player) => {
+  click(player.item);
+  await sleep(getDefaultDelay());
+  const buyButton = $(FUT.PAGE_SELECTORS.buyNowActionButton);
+  if (buyButton.is(':disabled')) {
+    return {
+      isPurchaseDisabled: true,
+    };
+  }
+  click(buyButton);
+  await waitUntilElementExists(FUT.PAGE_SELECTORS.confirmBuyModalOkButton);
+  await sleep(getPurchaseDelay());
+  click(FUT.PAGE_SELECTORS.confirmBuyModalOkButton);
+  const isBought = await checkIsPlayerBuyed();
+  return {
+    isBought,
+    buyNowPrice: player.buyNowPrice,
+  };
+};
+
 export const buyPlayers = async (searchResult, shouldSkipAfterPurchase) => {
+  let boughtItems = [];
+  let isPurchaseDisabledCount = 0;
   const { players, currentPage } = searchResult;
-  for (let i = 0; i < MAX_PLAYERS_TO_BUY_IN_ONE_STEP; i++) {
+  for (let i = 0; i < players.length; i++) {
     const player = players[i];
     if (player.page !== currentPage) {
       await moveBetweenPages(currentPage, player.page);
       player.item = findPlayerItemByBuyNowPrice(player.buyNowPrice);
     }
-    if ($(player.item).length) {
-      click(player.item);
+    const buyResult = await buyPlayer(player);
+    if (buyResult.isPurchaseDisabled) {
+      isPurchaseDisabledCount++;
+    }
+    if (buyResult.isPurchaseDisabled || !buyResult.isBought) {
+      continue;
+    }
+    if (buyResult.isBought) {
+      boughtItems.push(buyResult);
+      if (shouldSkipAfterPurchase) {
+        break;
+      }
     }
   }
+  return {
+    boughtItems,
+    isPurchaseDisabled: isPurchaseDisabledCount === players.length,
+  };
 };

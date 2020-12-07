@@ -24,6 +24,21 @@ export const waitUntilOneOfElementsExists = async (...selectors) => {
   }
 };
 
+export const waitUntilOneOfElementsExistAndConditionIsTrue = async (...items) => {
+  const existingItem = items.map(item => {
+    const elem = $(item.selector);
+    return elem.length && item.condition(elem) ? {
+      value: item.getReturnValue(elem),
+    } : null;
+  }).filter(Boolean)[0];
+  if (existingItem) {
+    return Promise.resolve(existingItem.value);
+  } else {
+    await sleep(1);
+    return waitUntilOneOfElementsExistAndConditionIsTrue(...items);
+  }
+};
+
 export const setMutationObserver = (observeSelector, mutationType, configs) => {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
