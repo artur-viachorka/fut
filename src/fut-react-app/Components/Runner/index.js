@@ -25,7 +25,7 @@ import { getTransferListLimit, saveTransferListLimit } from '../../../services/t
 import { parseStringToInt } from '../../../services/string.serivce';
 import { openUTNotification } from '../../../services/notification.service';
 import { getLoggerForStep } from '../../../services/logger.service';
-
+import { setLoaderVisibility } from '../../../services/ui.service';
 import CountdownTimer from '../CountdownTimer';
 import NumberField from '../Fields/NumberField';
 
@@ -169,6 +169,7 @@ const Runner = () => {
   };
 
   const start = async (runningStep, transferLimit) => {
+    setLoaderVisibility(true);
     const requestInterval = SEARCH_REQUEST_INTERVAL_RANGE_IN_SECONDS.to;
     const steps = getLeftoverSteps(selectedScenario.steps, runningStep, requestInterval);
     try {
@@ -195,10 +196,12 @@ const Runner = () => {
         logger.logFinishedStep();
       }
       stop();
+      setLoaderVisibility(false);
     } catch (e) {
       if (e?.status === RUNNER_STATUS.STOP) {
         stop();
       }
+      setLoaderVisibility(false);
       console.error(e);
     }
   };

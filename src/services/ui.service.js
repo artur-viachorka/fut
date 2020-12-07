@@ -1,5 +1,5 @@
 import { sleep } from './helper.service';
-import { REACT_CONTAINER_ID } from '../constants';
+import { REACT_CONTAINER_ID, FUT, LOADER_GIF } from '../constants';
 
 export const waitUntilTrue = async (conditionCheck, valueToReturn) => {
   if (conditionCheck()) {
@@ -62,12 +62,11 @@ export const setMutationObserver = (observeSelector, mutationType, configs) => {
 };
 
 export const setLoaderVisibility = (show) => {
+  const loader = $(`<div class="${FUT.CUSTOM_CLASSES.loader}"></div>`).append(`<img src="${LOADER_GIF}"/>`);
   if (show) {
-    $('.ut-click-shield').addClass('showing');
-    $('.ut-click-shield > .loaderIcon').css('display', 'block');
+    $('body').append(loader);
   } else {
-    $('.ut-click-shield').removeClass('showing');
-    $('.ut-click-shield > .loaderIcon').css('display', 'none');
+    $(`.${FUT.CUSTOM_CLASSES.loader}`).remove();
   }
 };
 

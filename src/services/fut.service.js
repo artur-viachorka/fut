@@ -1,6 +1,5 @@
 import { goToSearchMarketPage } from './navigate.service';
 import {
-  setLoaderVisibility,
   waitUntilElementExists,
   waitUntilOneOfElementsExists,
   waitUntilOneOfElementsExistAndConditionIsTrue,
@@ -33,7 +32,6 @@ const resetFilters = () => click(FUT.PAGE_SELECTORS.resetButton);
 
 export const initializeFilters = async (filters, skipReset) => {
   try {
-    setLoaderVisibility(true);
     await goToSearchMarketPage();
     if (!skipReset) {
       resetFilters();
@@ -47,9 +45,7 @@ export const initializeFilters = async (filters, skipReset) => {
         await callFilterHadler(filter, filterField);
       }
     }
-    setLoaderVisibility(false);
   } catch (e) {
-    setLoaderVisibility(false);
     console.error(e);
     throw new CustomFutError('Can`t initialize filters. Some inputs were not found. Contact developers.');
   }

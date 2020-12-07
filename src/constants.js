@@ -1,4 +1,5 @@
 export const COIN_ICON_SRC = 'images/coinIcon.png';
+export const LOADER_GIF = 'images/loader.gif';
 export const BACKGROUND_1 = 'images/backgrounds/BG_Tablet-Web-1080p.jpg';
 
 export const HOUR_IN_SECONDS = 3600;
@@ -232,6 +233,7 @@ export const FUT = {
   CUSTOM_CLASSES: {
     headerActionsContainer: 'header-custom-buttons-container',
     addFilterButton: 'custom-button-add-filter',
+    loader: 'custom-fut-loader',
   },
   CUSTOM_ATTRS: {
     selectedPlayer: 'data-selected-player',

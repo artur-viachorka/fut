@@ -84,3 +84,21 @@
   border-color: #7b797b;
   background-color: transparent;
 }
+
+.custom-fut-loader {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgb(0 0 0 / 72%);
+  z-index: 99;
+}
+
+.custom-fut-loader img {
+  width: 100px;
+  height: 100px;
+}

@@ -1,5 +1,6 @@
 import { waitUntilElementExists } from './ui.service';
-import { click } from './helper.service';
+import { click, sleep } from './helper.service';
+import { getDefaultDelay } from './delay.service';
 import { FUT } from '../constants';
 
 export const goToSearchMarketPage = async () => {
@@ -7,6 +8,7 @@ export const goToSearchMarketPage = async () => {
   if (!isAlreadyOnMarketPage) {
     await waitUntilElementExists(FUT.PAGE_SELECTORS.mainNavTransfersButton);
     click(FUT.PAGE_SELECTORS.mainNavTransfersButton);
+    await sleep(getDefaultDelay());
     const transferMarketTileButton = `${FUT.PAGE_SELECTORS.transferHub} ${FUT.PAGE_SELECTORS.transferMarketTile}`;
     await waitUntilElementExists(transferMarketTileButton);
     click(transferMarketTileButton);
@@ -20,8 +22,8 @@ export const goToTransfersPage = async () => {
   if (!isAlreadyOnTransfersPage) {
     await waitUntilElementExists(FUT.PAGE_SELECTORS.mainNavTransfersButton);
     click(FUT.PAGE_SELECTORS.mainNavTransfersButton);
+    await sleep(getDefaultDelay());
     const transfersTileButton = `${FUT.PAGE_SELECTORS.transferHub} ${FUT.PAGE_SELECTORS.transfersTile}`;
-
     await waitUntilElementExists(transfersTileButton);
     click(transfersTileButton);
   }

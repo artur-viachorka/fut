@@ -9,6 +9,7 @@ import {
 import { RUNNER_STATUS } from '../constants';
 import { openUTNotification } from './notification.service';
 import { syncTransferListItems } from './transferList.service';
+import { goToSearchMarketPage } from './navigate.service';
 import { getDefaultDelay } from './delay.service';
 
 export const pauseRunnerSubject = new Subject();
@@ -112,6 +113,7 @@ export const executeStep = async (step, transferListLimit, logger) => {
         return;
       }
       const result = await stepTickHandler(step, logger);
+      await goToSearchMarketPage();
       if (result?.skip) {
         beforeStepSkip(step);
       }
